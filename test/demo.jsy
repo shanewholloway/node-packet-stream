@@ -1,0 +1,33 @@
+require('source-map-support').install()
+import {packetStreamParser} from '../dist/parser'
+import {arrayBufferConcat} from '../dist/ab_utils'
+
+const psp = packetStreamParser()
+const asMsg = (body, header) => psp.packMessage @:
+  id_router: 0xaaaaaaaa
+  body: Buffer.from @ body
+  header: Buffer.from @ header || ''
+
+if 1 ::
+  //log_complete @ 'feed:', psp.feed @ asMsg @ 'body', 'hdr.'
+  let mz = @#
+    asMsg @ '', ''
+    asMsg @ 'A', 'BBB'
+    asMsg @ 'CC', 'DDDDD'
+    asMsg @ 'EEEE', 'FFFFFFFF'
+
+  console.log @ mz.map @ e => Buffer.from(e)
+  mz = arrayBufferConcat @ mz
+  console.log @ Buffer.from @ mz
+  log_complete @ 'Multiple:', psp.feed @ mz
+
+
+function log_complete(prefix, complete) ::
+  complete.forEach @ e => ::
+    e.body = Buffer(e.sliceBody()).toString()
+    e.header = Buffer(e.sliceHeader()).toString()
+
+  console.log @ `\n${prefix}`
+  console.dir @ complete, @: colors: true
+  return complete
+

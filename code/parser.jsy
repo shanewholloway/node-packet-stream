@@ -1,0 +1,146 @@
+import {asArrayBuffer, arrayBufferConcat} from './ab_utils'
+
+
+/*
+  0123456789ab -- 12-byte message packet
+  
+  01.......... -- uint16 signature = 0xFE 0xED
+  ..23 ....... -- uint16 packet length
+
+  ....4....... -- uint8 ttl hops
+
+  .....5...... -- uint8 header type
+  ......67.... -- uint8 header length
+
+  ........89ab -- uint32 id_router
+                    4-byte random space allows 1 million nodes with
+                    0.02% chance of two nodes selecting the same id
+ */
+const pkt_header_size = 12, little_endian=true
+
+export default packetStreamParser
+export function packetStreamParser(options={}) ::
+  const default_ttl = options.ttl || 127
+  const decrement_ttl = null != options.decrement_ttl
+    ? !! options.decrement_ttl
+    : true
+
+  const signature = options.signature || 0xedfe
+  let tip=null, qByteLen = 0, q = []
+
+  return Object.assign @ feed, @{}
+    signature, pkt_header_size, little_endian
+    feed, parseHeader, packMessage
+
+
+  function feed(dataArray) ::
+    dataArray = asArrayBuffer @ dataArray, `packetStreamParser::feed 'dataArray' parameter`
+    q.push @ dataArray
+    qByteLen += dataArray.byteLength
+
+    const complete = []
+    while 1 ::
+      const msg = parseTipMessage()
+      if undefined === msg ::
+        return complete
+      complete.push @ msg
+
+
+  function parseTipMessage() ::
+    if null === tip ::
+      if qByteLen < pkt_header_size ::
+        return
+
+      else if q.length > 1 ::
+        q = @[] arrayBufferConcat(q, qByteLen)
+
+      tip = parseHeader @ q[0]
+
+    if qByteLen < tip.len ::
+      return
+
+    let bytes = 0, n = 0
+    while bytes < tip.len ::
+      bytes += q[n++].byteLength
+
+    const trailingBytes = bytes - tip.len
+    if 0 === trailingBytes :: // we have an exact length match
+      const parts = q.splice(0, n)
+      qByteLen -= tip.len
+
+      return tipAsMessage @ parts
+
+    else :: // we have trailing bytes on the last array
+      const parts = 1 === q.length ? [] : q.splice(0, n-1)
+      const tail = q[0]
+
+      parts.push @ tail.slice(0, -trailingBytes)
+      q[0] = tail.slice(-trailingBytes)
+      qByteLen -= tip.len
+
+      return tipAsMessage @ parts
+
+  function tipAsMessage(parts) ::
+    const msg_obj = tip.msg_obj
+    const ab_msg = arrayBufferConcat @ parts, tip.len
+    tip = null
+
+    return Object.defineProperties @ msg_obj, @:
+      _raw_: {value: ab_msg}
+
+  function parseHeader(array) ::
+    array = array || array.buffer
+    const dv = new DataView @ array, 0, pkt_header_size
+    const sig = dv.getUint16 @ 0, little_endian
+    if signature !== sig ::
+      throw new Error @ `Packet stream framing error (found: ${sig.toString(16)} expected: ${signature.toString(16)})`
+
+    // up to 64k packet length; length includes header
+    dv.len = dv.getUint16 @ 2, little_endian
+    const header_len = dv.getUint16 @ 4, little_endian
+    const type = dv.getUint8 @ 6, little_endian
+
+    let ttl = dv.getUint8 @ 7, little_endian
+    if decrement_ttl ::
+      ttl = Math.max @ 0, ttl - 1
+      dv.setUint8 @ 7, ttl, little_endian
+
+    const id_router = dv.getUint32 @ 8, little_endian
+
+    dv.msg_obj = Object.assign @
+      Object.create @ msg_obj_proto, @:
+        body_offset: @{} value: pkt_header_size + header_len
+
+      @{} type, ttl, id_router
+    return dv
+
+  function packMessage({type, ttl, id_router, header, body}) ::
+    header = asArrayBuffer(header, 'header')
+    body = asArrayBuffer(body, 'body')
+
+    const len = pkt_header_size + header.byteLength + body.byteLength
+    if len > 0xffff :: throw new Error @ `Packet too large`
+
+    const array = new ArrayBuffer(len)
+
+    const dv = new DataView @ array, 0, pkt_header_size
+    dv.setUint16 @  0, signature, little_endian
+    dv.setUint16 @  2, len, little_endian
+    dv.setUint16 @  4, header.byteLength, little_endian
+    dv.setUint8  @  6, type || 0, little_endian
+    dv.setUint8  @  7, ttl || default_ttl, little_endian
+    dv.setUint32 @  8, id_router, little_endian
+
+    const u8 = new Uint8Array(array)
+    u8.set @ new Uint8Array(header), pkt_header_size
+    u8.set @ new Uint8Array(body), pkt_header_size + header.byteLength
+    return array
+
+
+
+const msg_obj_proto = @:
+  sliceBody() ::
+    return this._raw_.slice @ this.body_offset
+  sliceHeader() ::
+    return this._raw_.slice @ pkt_header_size, this.body_offset
+
