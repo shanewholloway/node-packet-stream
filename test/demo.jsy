@@ -1,6 +1,5 @@
 require('source-map-support').install()
 import {packetStreamParser} from '../dist/parser'
-import {arrayBufferConcat} from '../dist/ab_utils'
 
 const psp = packetStreamParser()
 const asMsg = (body, header) => psp.packMessage @:
@@ -17,7 +16,7 @@ if 1 ::
     asMsg @ 'EEEE', 'FFFFFFFF'
 
   console.log @ mz.map @ e => Buffer.from(e)
-  mz = arrayBufferConcat @ mz
+  mz = Buffer.concat @ mz
   console.log @ Buffer.from @ mz
   log_complete @ 'Multiple:', psp.feed @ mz
 

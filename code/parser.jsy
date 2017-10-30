@@ -1,6 +1,3 @@
-import {asArrayBuffer, arrayBufferConcat} from './ab_utils'
-
-
 /*
   0123456789ab -- 12-byte message packet
   
@@ -16,7 +13,7 @@ import {asArrayBuffer, arrayBufferConcat} from './ab_utils'
                     4-byte random space allows 1 million nodes with
                     0.02% chance of two nodes selecting the same id
  */
-const pkt_header_size = 12, little_endian=true
+const pkt_header_size = 12
 
 export default packetStreamParser
 export function packetStreamParser(options={}) ::
@@ -29,14 +26,15 @@ export function packetStreamParser(options={}) ::
   let tip=null, qByteLen = 0, q = []
 
   return Object.assign @ feed, @{}
-    signature, pkt_header_size, little_endian
+    signature, pkt_header_size
     feed, parseHeader, packMessage
 
 
-  function feed(dataArray) ::
-    dataArray = asArrayBuffer @ dataArray, `packetStreamParser::feed 'dataArray' parameter`
-    q.push @ dataArray
-    qByteLen += dataArray.byteLength
+  function feed(data_buffer) ::
+    if ! Buffer.isBuffer @ data_buffer ::
+      throw new TypeError @ `Expect packetStreamParser::feed 'data_buffer' parameter as a Buffer instance`
+    q.push @ data_buffer
+    qByteLen += data_buffer.byteLength
 
     const complete = []
     while 1 ::
@@ -52,23 +50,24 @@ export function packetStreamParser(options={}) ::
         return
 
       else if q.length > 1 ::
-        q = @[] arrayBufferConcat(q, qByteLen)
+        q = @[] Buffer.concat(q)
 
       tip = parseHeader @ q[0]
 
-    if qByteLen < tip.len ::
+    const len = tip.packet_len
+    if qByteLen < len ::
       return
 
-    let bytes = 0, n = 0
-    while bytes < tip.len ::
+    let bytes = 0, n = 0, msg_buffer
+    while bytes < len ::
       bytes += q[n++].byteLength
 
-    const trailingBytes = bytes - tip.len
+    const trailingBytes = bytes - len
     if 0 === trailingBytes :: // we have an exact length match
       const parts = q.splice(0, n)
-      qByteLen -= tip.len
+      qByteLen -= len
 
-      return tipAsMessage @ parts
+      msg_buffer = Buffer.concat @ parts
 
     else :: // we have trailing bytes on the last array
       const parts = 1 === q.length ? [] : q.splice(0, n-1)
@@ -76,66 +75,58 @@ export function packetStreamParser(options={}) ::
 
       parts.push @ tail.slice(0, -trailingBytes)
       q[0] = tail.slice(-trailingBytes)
-      qByteLen -= tip.len
+      qByteLen -= len
 
-      return tipAsMessage @ parts
+      msg_buffer = Buffer.concat @ parts
 
-  function tipAsMessage(parts) ::
-    const msg_obj = tip.msg_obj
-    const ab_msg = arrayBufferConcat @ parts, tip.len
-    tip = null
+    ::
+      const msg_obj = Object.defineProperties @ tip, @:
+        _raw_: @{} value: msg_buffer
 
-    return Object.defineProperties @ msg_obj, @:
-      _raw_: {value: ab_msg}
+      tip = null
+      return msg_obj
 
-  function parseHeader(array) ::
-    array = array || array.buffer
-    const dv = new DataView @ array, 0, pkt_header_size
-    const sig = dv.getUint16 @ 0, little_endian
+  function parseHeader(buf) ::
+    const sig = buf.readUInt16LE @ 0
     if signature !== sig ::
       throw new Error @ `Packet stream framing error (found: ${sig.toString(16)} expected: ${signature.toString(16)})`
 
     // up to 64k packet length; length includes header
-    dv.len = dv.getUint16 @ 2, little_endian
-    const header_len = dv.getUint16 @ 4, little_endian
-    const type = dv.getUint8 @ 6, little_endian
+    const packet_len = buf.readUInt16LE @ 2
+    const header_len = Math.min @ packet_len - pkt_header_size, buf.readUInt16LE @ 4
+    const type = buf.readUInt8 @ 6
 
-    let ttl = dv.getUint8 @ 7, little_endian
+    let ttl = buf.readUInt8 @ 7
     if decrement_ttl ::
       ttl = Math.max @ 0, ttl - 1
-      dv.setUint8 @ 7, ttl, little_endian
+      buf.writeUInt8 @ ttl, 7
 
-    const id_router = dv.getUint32 @ 8, little_endian
+    const id_router = buf.readUInt32LE @ 8
 
-    dv.msg_obj = Object.assign @
+    const msg_obj = Object.assign @
       Object.create @ msg_obj_proto, @:
+        packet_len: @{} value: packet_len
         body_offset: @{} value: pkt_header_size + header_len
 
       @{} type, ttl, id_router
-    return dv
+    return msg_obj
 
   function packMessage({type, ttl, id_router, header, body}) ::
-    header = asArrayBuffer(header, 'header')
-    body = asArrayBuffer(body, 'body')
+    header = Buffer.isBuffer(header) ? header : Buffer.from(header || '')
+    body = Buffer.isBuffer(body) ? body : Buffer.from(body || '')
 
     const len = pkt_header_size + header.byteLength + body.byteLength
     if len > 0xffff :: throw new Error @ `Packet too large`
 
-    const array = new ArrayBuffer(len)
+    const pkt = Buffer.allocUnsafe @ pkt_header_size
+    pkt.writeUInt16LE @ signature, 0
+    pkt.writeUInt16LE @ len, 2
+    pkt.writeUInt16LE @ header.byteLength, 4
+    pkt.writeUInt8 @ type || 0, 6
+    pkt.writeUInt8 @ ttl || default_ttl, 7
+    pkt.writeUInt32LE @ id_router, 8
 
-    const dv = new DataView @ array, 0, pkt_header_size
-    dv.setUint16 @  0, signature, little_endian
-    dv.setUint16 @  2, len, little_endian
-    dv.setUint16 @  4, header.byteLength, little_endian
-    dv.setUint8  @  6, type || 0, little_endian
-    dv.setUint8  @  7, ttl || default_ttl, little_endian
-    dv.setUint32 @  8, id_router, little_endian
-
-    const u8 = new Uint8Array(array)
-    u8.set @ new Uint8Array(header), pkt_header_size
-    u8.set @ new Uint8Array(body), pkt_header_size + header.byteLength
-    return array
-
+    return Buffer.concat @# pkt, header, body
 
 
 const msg_obj_proto = @:
