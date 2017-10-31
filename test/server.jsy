@@ -41,6 +41,8 @@ class PacketMessageHub extends BaseHub ::
         sendMsgRaw.bind(null, sock)
 
 function sendMsgRaw(sock, msg, asPromise) ::
+  if null === msg ::
+    return void sock.end()
   if ! asPromise ::
     return void sock.write(msg)
   return new Promise @ function (resolve, reject) ::

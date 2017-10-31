@@ -45,15 +45,23 @@ class MessageRouter ::
         const id_router = msg.id_router
 
         if id_self === id_router ::
-          this.dispatch_self @ msg
+          const handler = this.dispSelfByType[msg.type]
+          if undefined === handler ::
+            this.dnu_dispatch_self(msg)
+          else handler @ this, msg
 
         else if 0 !== id_router ::
-          const sendMsgRaw = this.peers.get(id_router)
-          if undefined !== sendMsgRaw ::
-            sendMsgRaw(msg)
+          const relayMsgRaw = this.routes.get(id_router)
+          if undefined === relayMsgRaw ::
+            this.dispatch_unknown_route(id_router, msg)
+          else if false === relayMsgRaw(msg) ::
+            this.routes.delete(id_router)
 
-        else ::
-          this.dispatch_control(msg, sendMsgRaw)
+        else :: // 0 === id_router // control message
+          const handler = this.dispControlByType[msg.type]
+          if undefined === handler ::
+            this.dnu_dispatch_control(msg, sendMsgRaw)
+          else handler @ this, msg, sendMsgRaw
 
     return Object.defineProperties @ this, @:
       id_self: @: value: id_self
@@ -62,27 +70,26 @@ class MessageRouter ::
       ec_id_hmac: @: value: ec_id_hmac
 
 
-  dispatch_self(msg) ::
-    console.log @ "TODO: implement dispatch_self", msg
+  dnu_dispatch_self(msg) ::
+    console.warn @ "dnu_dispatch_self", msg.type, msg
 
+  dispatch_unknown_route(id_router, msg) ::
+    console.log @ "TODO: implement dispatch_unknown_route", msg
 
-  peers = new Map()
+  routes = new Map()
   registerRoute(id_router, sendMsgRaw) ::
     console.log @ 'add peer:', id_router, '<==>', this.id_self
-    this.peers.set @ id_router, sendMsgRaw
+    this.routes.set @ id_router, sendMsgRaw
   unregisterRoute(id_router) ::
-    return this.peers.delete @ id_router
+    return this.routes.delete @ id_router
   imposterRoute(id_router) ::
 
+  dispControlByType = Object.create @ this.dispControlByType
+  dnu_dispatch_control(msg, sendMsgRaw) ::
+    console.warn @ "dnu_dispatch_control", msg.type, msg
 
-  byControlType = Object.create @ this.byControlType
-  dispatch_control(msg, sendMsgRaw) ::
-    const handler = this.byControlType[msg.type]
-    if undefined !== handler ::
-      return handler @ this, msg, sendMsgRaw
-
-MessageRouter.prototype.byControlType = Object.assign @ {}
-  channel_setup.byControlType
+MessageRouter.prototype.dispControlByType = Object.assign @ {}
+  channel_setup.dispControlByType
 
 
 export function connectPacketStream(pktParser, stream, on_recv_messages) ::

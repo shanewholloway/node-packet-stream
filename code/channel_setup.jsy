@@ -11,7 +11,7 @@ export function pack_olleh(ec_pub_id, hmac_secret) ::
     header: ec_pub_id
     body: hmac_secret
 
-export const byControlType = @{}
+export const dispControlByType = @{}
   0x01: function recv_hello(dispatch, msg, sendMsgRaw) ::
     const header = msg.sliceHeader()
     const hmac_secret = dispatch.ec_id_hmac @ header
