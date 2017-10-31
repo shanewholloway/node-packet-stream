@@ -8,6 +8,15 @@ const asMsg = (body, header) => packMessage @:
   header: Buffer.from @ header || ''
 
 if 1 ::
+  const buf = asMsg @ 'body', 'header'
+  const ans = psp.parseHeader @ buf
+  console.log @
+  console.dir @ ans, @: colors: true, showHidden: true
+  console.log @ buf.byteLength
+  console.log @ buf
+  console.log @
+
+if 1 ::
   //log_complete @ 'feed:', psp.feed @ asMsg @ 'body', 'hdr.'
   let mz = @#
     asMsg @ '', ''

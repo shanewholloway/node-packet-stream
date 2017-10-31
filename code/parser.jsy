@@ -1,22 +1,28 @@
 /*
-  0123456789ab -- 12-byte message packet
+  0123456789ab     -- 12-byte packet header (control)
+  0123456789abcdef -- 16-byte packet header (routing)
   
-  01.......... -- uint16 signature = 0xFE 0xED
-  ..23 ....... -- uint16 packet length
+  01.............. -- uint16 signature = 0xFE 0xED
+  ..23 ........... -- uint16 packet length
 
-  ....4....... -- uint8 ttl hops
+  ....4........... -- uint8 ttl hops
 
-  .....5...... -- uint8 header type
-  ......67.... -- uint8 header length
+  .....5.......... -- uint8 header type
+  ......67........ -- uint8 header length
 
-  ........89ab -- uint32 id_router
-                    4-byte random space allows 1 million nodes with
-                    0.02% chance of two nodes selecting the same id
+  ........89ab.... -- uint32 id_router
+                      4-byte random space allows 1 million nodes with
+                      0.02% chance of two nodes selecting the same id
+
+  ............cdef -- uint32 id_target (when id_router !== 0)
+                      4-byte random space allows 1 million nodes with
+                      0.02% chance of two nodes selecting the same id
  */
-export const pkt_header_size = 12
+export const pkt_control_header_size = 12
+export const pkt_routing_header_size = 16
 export const signature = 0xedfe
 export const pkt_details = @{}
-  signature, pkt_header_size
+  signature, pkt_control_header_size, pkt_routing_header_size
 
 
 export default packetStreamParser
@@ -50,13 +56,14 @@ export function packetStreamParser(options={}) ::
 
   function parseTipMessage() ::
     if null === tip ::
-      if qByteLen < pkt_header_size ::
+      if qByteLen < pkt_control_header_size ::
         return
 
       else if q.length > 1 ::
         q = @[] Buffer.concat(q)
 
       tip = parseHeader @ q[0]
+      if null === tip :: return
 
     const len = tip.packet_len
     if qByteLen < len ::
@@ -97,7 +104,7 @@ export function packetStreamParser(options={}) ::
 
     // up to 64k packet length; length includes header
     const packet_len = buf.readUInt16LE @ 2
-    const header_len = Math.min @ packet_len - pkt_header_size, buf.readUInt16LE @ 4
+    let header_len = buf.readUInt16LE @ 4
     const type = buf.readUInt8 @ 6
 
     let ttl = buf.readUInt8 @ 7
@@ -106,40 +113,65 @@ export function packetStreamParser(options={}) ::
       buf.writeUInt8 @ ttl, 7
 
     const id_router = buf.readUInt32LE @ 8
+    let id_target, header_offset
+    if 0 === id_router ::
+      header_offset = pkt_control_header_size
+    else if pkt_routing_header_size > buf.byteLength ::
+      return null // this buffer is fragmented before id_target
+    else ::
+      id_target = buf.readUInt32LE @ 12
+      header_offset = pkt_routing_header_size
 
+    let body_offset = header_offset + header_len
+    if body_offset > packet_len ::
+      body_offset = null // invalid message construction
+      
     const msg_obj = Object.assign @
       Object.create @ msg_obj_proto, @:
+        header_offset: @{} value: header_offset
+        body_offset: @{} value: body_offset
         packet_len: @{} value: packet_len
-        body_offset: @{} value: pkt_header_size + header_len
 
-      @{} type, ttl, id_router
+      @{} type, ttl, id_router, id_target
     return msg_obj
 
 const msg_obj_proto = @:
   sliceBody() ::
     return this._raw_.slice @ this.body_offset
   sliceHeader() ::
-    return this._raw_.slice @ pkt_header_size, this.body_offset
+    return this._raw_.slice @ this.header_offset, this.body_offset
 
 
 
 export function packMessage(...args) ::
-  let {type, ttl, id_router, header, body} = Object.assign @ {}, ...args
+  let {type, ttl, id_router, id_target, header, body} = Object.assign @ {}, ...args
   header = _asBuffer(header)
   body = _asBuffer(body)
 
-  const len = pkt_header_size + header.byteLength + body.byteLength
-  if len > 0xffff :: throw new Error @ `Packet too large`
+  const pkt_header_size = id_router
+    ? pkt_routing_header_size
+    : pkt_control_header_size
+  const packet_len = pkt_header_size + header.byteLength + body.byteLength
+  if packet_len > 0xffff :: throw new Error @ `Packet too large`
 
-  const pkt = Buffer.allocUnsafe @ pkt_header_size
+  const pkt = Buffer.alloc @ pkt_header_size
   pkt.writeUInt16LE @ signature, 0
-  pkt.writeUInt16LE @ len, 2
+  pkt.writeUInt16LE @ packet_len, 2
   pkt.writeUInt16LE @ header.byteLength, 4
   pkt.writeUInt8 @ type || 0, 6
   pkt.writeUInt8 @ ttl || 31, 7
-  pkt.writeUInt32LE @ id_router || 0, 8
+  if ! id_router ::
+    pkt.writeUInt32LE @ 0, 8
+    if id_target ::
+      throw new Error @ `Invalid id_target for control packet`
+  else ::
+    pkt.writeUInt32LE @ id_router, 8
+    pkt.writeUInt32LE @ id_target || 0, 12
 
-  return Buffer.concat @# pkt, header, body
+  const buf = Buffer.concat @# pkt, header, body
+  if packet_len !== buf.byteLength ::
+    throw new Error @ `Packed message length mismatch (library error)`
+  return buf
 
 
 function _asBuffer(buf) ::
