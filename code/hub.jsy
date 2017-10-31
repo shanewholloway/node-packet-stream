@@ -1,5 +1,4 @@
 import {packetStreamParser} from './parser'
-import {pack_hello} from './channel_setup'
 import {MessageRouter} from './router'
 
 export class PacketMessageHub ::
@@ -7,20 +6,13 @@ export class PacketMessageHub ::
     const router = this._init_router()
     Object.defineProperties @ this, @{}
       router: @{} value: router
-      id_self: @{} value: router.id_self
       _packetStream: @{} value: packetStreamParser()
 
-  _init_router() :: return new MessageRouter()
-
-  _send_routing_handshake(sendMsgRaw) ::
-    if 'function' !== typeof sendMsgRaw ::
-      throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
-
-    const msg_hello = pack_hello @ this.router.ec_pub_id
-    sendMsgRaw @ msg_hello
+  _init_router() ::
+    return new MessageRouter()
 
   on_connect_peer(stream, sendMsgRaw) ::
-    this._send_routing_handshake(sendMsgRaw)
+    this.router.sendRoutingHandshake(sendMsgRaw)
 
     const dispatch = this.router.dispatch
     return connectPacketStream @
