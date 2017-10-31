@@ -19,29 +19,36 @@ export class PacketMessageHub ::
     if 'function' !== typeof sendMsgRaw ::
       throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
 
-    sendMsgRaw @ this._msg_hello 
+    sendMsgRaw @ this._msg_hello // invite to connect as routing peer
     const dispatch = this.router.dispatch
     return connectPacketStream @
       this._packetStream.clone(), stream
-      msgList => dispatch(msgList, sendMsgRaw)
+      msgList => dispatch @ msgList, sendMsgRaw
 
 
 class MessageRouter ::
   constructor() ::
-    ::
+    :: // create a closure over the EC private credentials
       const ec_priv_id = createECDH('prime256v1')
       var ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
-      var ec_id_hmac = function (ec_pub_other, expected) ::
+      var ec_id_hmac = function (ec_pub_other, reverse) ::
         const secret = ec_priv_id.computeSecret(ec_pub_other)
         return createHmac('sha256', secret)
-          .update @ expected ? ec_pub_other : ec_pub_id
+          .update @ reverse ? ec_pub_other : ec_pub_id
           .digest()
 
     const id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
+    const dispatch = this.bindDispatchClosure(id_self)
 
-    // bind dispatch as a closure over id_self
-    const dispatch = (msgList, sendMsgRaw) => ::
-      for const msg of msgList ::
+    return Object.defineProperties @ this, @:
+      id_self: @: value: id_self
+      ec_pub_id: @: value: ec_pub_id
+      dispatch: @: value: dispatch
+      ec_id_hmac: @: value: ec_id_hmac
+
+  bindDispatchClosure(id_self) ::
+    const dispatch_one = (msg, sendMsgRaw) => ::
+      try ::
         const id_router = msg.id_router
 
         if id_self === id_router ::
@@ -55,20 +62,24 @@ class MessageRouter ::
           if undefined === relayMsgRaw ::
             this.dispatch_unknown_route(id_router, msg)
           else if false === relayMsgRaw(msg) ::
-            this.routes.delete(id_router)
+            this.unregisterRoute(id_router)
 
         else :: // 0 === id_router // control message
           const handler = this.dispControlByType[msg.type]
           if undefined === handler ::
             this.dnu_dispatch_control(msg, sendMsgRaw)
           else handler @ this, msg, sendMsgRaw
+      catch err ::
+        this.on_error_in_dispatch(err, msg, sendMsgRaw)
 
-    return Object.defineProperties @ this, @:
-      id_self: @: value: id_self
-      ec_pub_id: @: value: ec_pub_id
-      dispatch: @: value: dispatch
-      ec_id_hmac: @: value: ec_id_hmac
+    const pqueue = promiseQueue()
+    return (msgList, sendMsgRaw) => ::
+      const pq = pqueue() // pq will dispatch during Promise resolutions
+      for const msg of msgList ::
+        pq.then @ () => dispatch_one(msg, sendMsgRaw)
 
+  on_error_in_dispatch(err, msg) ::
+    console.log @ 
 
   dnu_dispatch_self(msg) ::
     console.warn @ "dnu_dispatch_self", msg.type, msg
@@ -112,4 +123,15 @@ export function connectPacketStream(pktParser, stream, on_recv_messages) ::
       stream = undefined
 
       err ? reject(err) : resolve()
+
+function promiseQueue(nextPromise=() => Promise.resolve()) ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = nextPromise()
+      tip.then @ clear_tip
+    return tip
+
+  function clear_tip() ::
+    tip = null
 
