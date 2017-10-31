@@ -1,0 +1,98 @@
+import {createECDH, createHmac} from 'crypto'
+import {dispControlByType as channelSetupByType} from './channel_setup'
+
+export class MessageRouter ::
+  constructor() ::
+    :: // create a closure over the EC private credentials
+      const ec_priv_id = createECDH('prime256v1')
+      var ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
+      var ec_id_hmac = function (ec_pub_other, reverse) ::
+        const secret = ec_priv_id.computeSecret(ec_pub_other)
+        return createHmac('sha256', secret)
+          .update @ reverse ? ec_pub_other : ec_pub_id
+          .digest()
+
+    const id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
+    const dispatch = this.bindDispatchClosure(id_self)
+
+    return Object.defineProperties @ this, @:
+      id_self: @: value: id_self
+      ec_pub_id: @: value: ec_pub_id
+      dispatch: @: value: dispatch
+      ec_id_hmac: @: value: ec_id_hmac
+
+  bindDispatchClosure(id_self) ::
+    const dispatch_one = (msg, sendMsgRaw) => ::
+      try ::
+        const id_router = msg.id_router
+
+        if id_self === id_router ::
+          const handler = this.dispSelfByType[msg.type]
+          if undefined === handler ::
+            this.dnu_dispatch_self(msg)
+          else handler @ this, msg
+
+        else if 0 !== id_router ::
+          const relayMsgRaw = this.routes.get(id_router)
+          if undefined === relayMsgRaw ::
+            this.dispatch_unknown_route(id_router, msg)
+          else if false === relayMsgRaw(msg) ::
+            this.unregisterRoute(id_router)
+
+        else :: // 0 === id_router // control message
+          const handler = this.dispControlByType[msg.type]
+          if undefined === handler ::
+            this.dnu_dispatch_control(msg, sendMsgRaw)
+          else handler @ this, msg, sendMsgRaw
+      catch err ::
+        this.on_error_in_dispatch(err, msg, sendMsgRaw)
+
+    const pqueue = this.promiseQueue()
+    return (msgList, sendMsgRaw) => ::
+      const pq = pqueue() // pq will dispatch during Promise resolutions
+      for const msg of msgList ::
+        pq.then @ () => dispatch_one(msg, sendMsgRaw)
+
+  on_error_in_dispatch(err, msg) ::
+    console.log @ 
+
+  dnu_dispatch_self(msg) ::
+    console.warn @ "dnu_dispatch_self", msg.type, msg
+
+  dispatch_unknown_route(id_router, msg) ::
+    console.log @ "TODO: implement dispatch_unknown_route", msg
+
+  routes = new Map()
+  registerRoute(id_router, sendMsgRaw) ::
+    console.log @ 'add peer:', id_router, '<==>', this.id_self
+    this.routes.set @ id_router, sendMsgRaw
+  unregisterRoute(id_router) ::
+    return this.routes.delete @ id_router
+  imposterRoute(id_router) ::
+
+  dispControlByType = Object.create @ this.dispControlByType
+  dnu_dispatch_control(msg, sendMsgRaw) ::
+    console.warn @ "dnu_dispatch_control", msg.type, msg
+
+
+
+MessageRouter.prototype.dispControlByType = Object.assign @ {}
+  channelSetupByType
+
+Object.assign @ MessageRouter.prototype, @{}
+  promiseQueue
+export default MessageRouter
+
+
+
+function promiseQueue(nextPromise=() => Promise.resolve()) ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = nextPromise()
+      tip.then @ clear_tip
+    return tip
+
+  function clear_tip() ::
+    tip = null
+
