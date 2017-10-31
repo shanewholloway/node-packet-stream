@@ -5,22 +5,7 @@ import {PacketMessageHub as BaseHub} from '../dist/hub'
 import {packMessage} from '../dist/parser'
 import {json_codec} from '../dist/codecs'
 
-function pack_json_msg(msg_obj) ::
-  if null != msg_obj.header ::
-    msg_obj.header = json_codec.encode @ msg_obj.header
-  if null != msg_obj.body ::
-    msg_obj.body = json_codec.encode @ msg_obj.body
-  return packMessage(msg_obj)
-
-function send_json_msg(sock, msg_obj) ::
-  return new Promise @ function (resolve, reject) ::
-    msg_obj = pack_json_msg @ msg_obj
-    sock.write @ msg_obj
-      function (err) :: err ? reject(err) : resolve()
-
 class PacketMessageHub extends BaseHub ::
-  sendMsg = send_json_msg
-
   connect(options) ::
     if 'string' === typeof options ::
       const {hostname:host, port} = new URL(options)
@@ -30,8 +15,6 @@ class PacketMessageHub extends BaseHub ::
       this.on_connect_peer @ sock
         sendMsgRaw.bind(null, sock)
 
-    if 'function' === typeof this.sendMsg ::
-      sock.sendMsg = this.sendMsg.bind(this, sock)
     return sock
 
   createServer() ::
@@ -55,15 +38,39 @@ if 1 ::
     hub.createServer()
       .listen(8080, '127.0.0.1')
       //.unref()
+    var id_hub = hub.router.id_self
+
+    hub.router.registerTarget @ 123, (msg, router) => ::
+      const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
+      const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+      console.log @ 'target got message!', @: header, body
 
   ::
     const hub = new PacketMessageHub()
     const sock = hub.connect('tcp://127.0.0.1:8080')
-    sock.sendMsg @:
+    send_json_msg @ sock, @:
+      id_router: id_hub
+      id_target: 123
       header: @: bonkers: true
 
   ::
     const hub = new PacketMessageHub()
     const sock = hub.connect @: host:'127.0.0.1', port: 8080
-    sock.sendMsg @:
+    send_json_msg @ sock, @:
+      id_router: id_hub
+      id_target: 123
       body: @: hello: 'there'
+
+
+
+function pack_json_msg(msg_obj) ::
+  if null != msg_obj.header ::
+    msg_obj.header = json_codec.encode @ msg_obj.header
+  if null != msg_obj.body ::
+    msg_obj.body = json_codec.encode @ msg_obj.body
+  return packMessage(msg_obj)
+
+function send_json_msg(sock, msg_obj) ::
+  sock.write @ pack_json_msg @ msg_obj
+
+

@@ -28,10 +28,12 @@ export class MessageRouter ::
         const id_router = msg.id_router
 
         if id_self === id_router ::
-          const handler = this.dispSelfByType[msg.type]
-          if undefined === handler ::
+          const id_target = msg.id_target
+          const target = this.targets.get(id_target)
+          if undefined === target ::
             this.dnu_dispatch_self(msg)
-          else handler @ this, msg
+          else if false === target(msg, this) ::
+            this.unregisterTarget(id_target)
 
         else if 0 !== id_router ::
           const relayMsgRaw = this.routes.get(id_router)
@@ -61,24 +63,34 @@ export class MessageRouter ::
     console.error @ 'Error during msg dispatch\n  msg:', msg, '\n', err, '\n'
 
   dnu_dispatch_self(msg) ::
-    console.warn @ 'dnu_dispatch_self', msg.type, msg
-
+    console.warn @ 'dnu_dispatch_self', msg.id_target.toString(16), msg
+  targets = new Map()
+  registerTarget(id_target, target) ::
+    if 'function' !== typeof target ::
+      throw new TypeError @ `Expected 'target' to be a function`
+    console.log @ `add target: ${this.id_self}/${id_target}`
+    return this.targets.set @ id_target, target
+  unregisterTarget(id_target) ::
+    console.log @ `remove target: ${this.id_self}/${id_target}`
+    return this.targets.delete @ id_target
 
   dispatch_unknown_route(id_router, msg) ::
     console.log @ 'TODO: implement dispatch_unknown_route', msg
 
   routes = new Map()
   registerRoute(id_router, sendMsgRaw) ::
-    console.log @ 'add peer:', id_router, '<==>', this.id_self
+    if 'function' !== typeof sendMsgRaw ::
+      throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
+    console.log @ `add peer: ${id_router} <==> ${this.id_self}`
     this.routes.set @ id_router, sendMsgRaw
   unregisterRoute(id_router) ::
+    console.log @ `remove peer: ${id_router} <==> ${this.id_self}`
     return this.routes.delete @ id_router
   imposterRoute(id_router) ::
 
   sendRoutingHandshake(sendMsgRaw) ::
     if 'function' !== typeof sendMsgRaw ::
       throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
-
     sendMsgRaw @ pack_hello @ this.ec_pub_id
 
 
