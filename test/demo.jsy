@@ -1,8 +1,8 @@
 require('source-map-support').install()
-import {packetStreamParser} from '../dist/parser'
+import {packetStreamParser, packMessage} from '../dist/parser'
 
 const psp = packetStreamParser()
-const asMsg = (body, header) => psp.packMessage @:
+const asMsg = (body, header) => packMessage @:
   id_router: 0xaaaaaaaa
   body: Buffer.from @ body
   header: Buffer.from @ header || ''

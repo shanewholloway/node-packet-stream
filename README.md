@@ -1,2 +1,2 @@
-# js-packet-stream
+# packet-stream
 

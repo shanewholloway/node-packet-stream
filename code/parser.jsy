@@ -13,35 +13,39 @@
                     4-byte random space allows 1 million nodes with
                     0.02% chance of two nodes selecting the same id
  */
-const pkt_header_size = 12
+export const pkt_header_size = 12
+export const signature = 0xedfe
+export const pkt_details = @{}
+  signature, pkt_header_size
+
 
 export default packetStreamParser
 export function packetStreamParser(options={}) ::
-  const default_ttl = options.ttl || 127
-  const decrement_ttl = null != options.decrement_ttl
-    ? !! options.decrement_ttl
-    : true
+  const decrement_ttl =
+    null == options.decrement_ttl
+      ? true : !! options.decrement_ttl
 
-  const signature = options.signature || 0xedfe
   let tip=null, qByteLen = 0, q = []
 
   return Object.assign @ feed, @{}
-    signature, pkt_header_size
-    feed, parseHeader, packMessage
+    feed, clone, parseHeader, packMessage
+    pkt_details
 
+  function clone(opt) ::
+    opt = Object.assign @ {}, options, opt
+    return packetStreamParser(opt)
 
-  function feed(data_buffer) ::
+  function feed(data_buffer, complete=[]) ::
     if ! Buffer.isBuffer @ data_buffer ::
       throw new TypeError @ `Expect packetStreamParser::feed 'data_buffer' parameter as a Buffer instance`
     q.push @ data_buffer
     qByteLen += data_buffer.byteLength
 
-    const complete = []
     while 1 ::
       const msg = parseTipMessage()
-      if undefined === msg ::
-        return complete
-      complete.push @ msg
+      if undefined !== msg ::
+        complete.push @ msg
+      else return complete
 
 
   function parseTipMessage() ::
@@ -111,22 +115,22 @@ export function packetStreamParser(options={}) ::
       @{} type, ttl, id_router
     return msg_obj
 
-  function packMessage({type, ttl, id_router, header, body}) ::
-    header = Buffer.isBuffer(header) ? header : Buffer.from(header || '')
-    body = Buffer.isBuffer(body) ? body : Buffer.from(body || '')
+export function packMessage({type, ttl, id_router, header, body}) ::
+  header = Buffer.isBuffer(header) ? header : Buffer.from(header || '')
+  body = Buffer.isBuffer(body) ? body : Buffer.from(body || '')
 
-    const len = pkt_header_size + header.byteLength + body.byteLength
-    if len > 0xffff :: throw new Error @ `Packet too large`
+  const len = pkt_header_size + header.byteLength + body.byteLength
+  if len > 0xffff :: throw new Error @ `Packet too large`
 
-    const pkt = Buffer.allocUnsafe @ pkt_header_size
-    pkt.writeUInt16LE @ signature, 0
-    pkt.writeUInt16LE @ len, 2
-    pkt.writeUInt16LE @ header.byteLength, 4
-    pkt.writeUInt8 @ type || 0, 6
-    pkt.writeUInt8 @ ttl || default_ttl, 7
-    pkt.writeUInt32LE @ id_router, 8
+  const pkt = Buffer.allocUnsafe @ pkt_header_size
+  pkt.writeUInt16LE @ signature, 0
+  pkt.writeUInt16LE @ len, 2
+  pkt.writeUInt16LE @ header.byteLength, 4
+  pkt.writeUInt8 @ type || 0, 6
+  pkt.writeUInt8 @ ttl || 31, 7
+  pkt.writeUInt32LE @ id_router, 8
 
-    return Buffer.concat @# pkt, header, body
+  return Buffer.concat @# pkt, header, body
 
 
 const msg_obj_proto = @:

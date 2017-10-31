@@ -1,0 +1,111 @@
+require('source-map-support').install()
+import {URL} from 'url'
+import {createServer, createConnection} from 'net'
+import {packetStreamParser} from '../dist/parser'
+import {packMessage} from '../dist/parser'
+import {json_codec} from '../dist/codecs'
+
+function pack_json_msg(msg_obj) ::
+  if null != msg_obj.header ::
+    msg_obj.header = json_codec.encode @ msg_obj.header
+  if null != msg_obj.body ::
+    msg_obj.body = json_codec.encode @ msg_obj.body
+  return packMessage(msg_obj)
+
+function send_json_msg(sock, msg_obj) ::
+  return new Promise @ function (resolve, reject) ::
+    msg_obj = pack_json_msg @ msg_obj
+    sock.write @ msg_obj
+      function (err) :: err ? reject(err) : resolve()
+
+class MessageHub ::
+  sendMsg = send_json_msg
+  constructor() ::
+    this._packetStream = packetStreamParser()
+
+  connect(options) ::
+    if 'string' === typeof options ::
+      const {hostname:host, port} = new URL(options)
+      options = @{} host, port
+
+    const sock = createConnection @ options, () => ::
+      this.on_connect_peer @ sock
+
+    if 'function' === typeof this.sendMsg ::
+      sock.sendMsg = this.sendMsg.bind(this, sock)
+    return sock
+
+  createServer() ::
+    const svr = createServer @ sock => ::
+      this.on_connect_peer @ sock
+
+    svr.on @ 'listen', () => ::
+      this.on_connect_server @ svr
+    return svr
+
+  on_connect_server(sock) ::
+
+  on_connect_peer(sock) ::
+    sock.setKeepAlive(true).setNoDelay().unref()
+    if 'function' === typeof this.sendMsg ::
+      sock.sendMsg = this.sendMsg.bind(this, sock)
+
+    const remote = `${sock.remoteAddress}:${sock.remotePort}`
+    return connectPacketStream @ this._packetStream.clone(), sock
+      function (msgList) ::
+        console.log @ `on_recv_messages [${remote}]`, msgList.length
+        let type = 0
+        for const msg of msgList ::
+          type = Math.max @ type, msg.type
+          console.log @# msg
+            msg._raw_.byteLength
+            msg.sliceHeader().toString()
+            msg.sliceBody().toString()
+
+        if 0 === type ::
+          sock.sendMsg @: type:1
+
+
+function connectPacketStream(pktParser, sock, on_recv_messages) ::
+  return new Promise @ (resolve, reject) => ::
+    sock.on @ 'error', shutdown
+    sock.on @ 'close', shutdown
+    sock.on @ 'data', async data => ::
+      try ::
+        var msgList = pktParser.feed @ data
+      catch err ::
+        return shutdown(err)
+
+      if 0 < msgList.length ::
+        on_recv_messages(msgList)
+
+    function shutdown(err) ::
+      if undefined === sock :: return
+      pktParser = undefined
+      sock.end()
+
+      if null == err ::
+        resolve(sock)
+      else ::
+        err.sock = sock
+        reject(err)
+
+      sock = undefined
+
+if 1 ::
+  const hub = new MessageHub()
+  hub.createServer()
+    .listen(8080, '127.0.0.1')
+    //.unref()
+
+if 1 ::
+  const hub = new MessageHub()
+  const sock = hub.connect('tcp://127.0.0.1:8080')
+  sock.sendMsg @:
+    header: @: bonkers: true
+
+if 1 ::
+  const hub = new MessageHub()
+  const sock = hub.connect @: host:'127.0.0.1', port: 8080
+  sock.sendMsg @:
+    body: @: hello: 'there'

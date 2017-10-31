@@ -4,14 +4,16 @@ function asWriteHeader(packMessage) ::
     throw new TypeError @ `Expected packMessage function from packetStreamParser`
   return packMessage
 
-export function utf8_codec() ::
+export const utf8_codec = create_utf8_codec()
+export function create_utf8_codec() ::
   return @:
     encode(str) ::
-      return Buffer.from(str).buffer
+      return Buffer.from(str)
     decode(buf_body) ::
       return Buffer.from(buf_body).toString('utf-8')
 
-export function json_codec(codec = utf8_codec()) ::
+export const json_codec = create_json_codec()
+export function create_json_codec(codec = utf8_codec) ::
   return @:
     encode(obj) ::
       return codec.encode @ JSON.stringify @ obj
