@@ -3,16 +3,17 @@ import {dispControlByType as channelSetupByType} from './channel_setup'
 
 export class MessageRouter ::
   constructor() ::
-    :: // create a closure over the EC private credentials
-      const ec_priv_id = createECDH('prime256v1')
-      var ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
-      var ec_id_hmac = function (ec_pub_other, reverse) ::
+    var id_self, ec_pub_id, ec_id_hmac
+    while ! id_self :: // create a closure over the EC private credentials
+      let ec_priv_id = createECDH('prime256v1')
+      ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
+      id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
+      ec_id_hmac = function (ec_pub_other, reverse) ::
         const secret = ec_priv_id.computeSecret(ec_pub_other)
         return createHmac('sha256', secret)
           .update @ reverse ? ec_pub_other : ec_pub_id
           .digest()
 
-    const id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
     const dispatch = this.bindDispatchClosure(id_self)
 
     return Object.defineProperties @ this, @:
@@ -34,6 +35,8 @@ export class MessageRouter ::
 
         else if 0 !== id_router ::
           const relayMsgRaw = this.routes.get(id_router)
+          if 0 >= msg.ttl :: return
+
           if undefined === relayMsgRaw ::
             this.dispatch_unknown_route(id_router, msg)
           else if false === relayMsgRaw(msg) ::
