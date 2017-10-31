@@ -1,5 +1,6 @@
 require('source-map-support').install()
 import {URL} from 'url'
+import {createECDH, createHmac} from 'crypto'
 import {createServer, createConnection} from 'net'
 import {packetStreamParser} from '../dist/parser'
 import {packMessage} from '../dist/parser'
@@ -18,10 +19,23 @@ function send_json_msg(sock, msg_obj) ::
     sock.write @ msg_obj
       function (err) :: err ? reject(err) : resolve()
 
-class MessageHub ::
+class PacketMessageHub ::
   sendMsg = send_json_msg
   constructor() ::
-    this._packetStream = packetStreamParser()
+    const ec_priv_id = createECDH('prime256v1')
+    const ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
+    Object.defineProperties @ this, @{}
+      _packetStream: @{} value: packetStreamParser()
+      id_route: @{} value: ec_pub_id.readUInt32LE(4)
+      ec_pub_id: @{} value: ec_pub_id, enumerable: true
+      ec_priv_id: @{} value() :: return ec_priv_id
+
+  ec_id_hmac(ec_pub_other) ::
+    const secret = this.ec_priv_id().computeSecret(ec_pub_other)
+    return @:
+      id_route: ec_pub_other.readUInt32LE(4)
+      answer: createHmac('sha256', secret).update(ec_pub_other).digest()
+      expect: createHmac('sha256', secret).update(this.ec_pub_id).digest()
 
   connect(options) ::
     if 'string' === typeof options ::
@@ -93,19 +107,31 @@ function connectPacketStream(pktParser, sock, on_recv_messages) ::
       sock = undefined
 
 if 1 ::
-  const hub = new MessageHub()
-  hub.createServer()
-    .listen(8080, '127.0.0.1')
-    //.unref()
+  ::
+    const hub = new PacketMessageHub()
+    hub.createServer()
+      .listen(8080, '127.0.0.1')
+      //.unref()
+
+  ::
+    const hub = new PacketMessageHub()
+    const sock = hub.connect('tcp://127.0.0.1:8080')
+    sock.sendMsg @:
+      header: @: bonkers: true
+
+  ::
+    const hub = new PacketMessageHub()
+    const sock = hub.connect @: host:'127.0.0.1', port: 8080
+    sock.sendMsg @:
+      body: @: hello: 'there'
 
 if 1 ::
-  const hub = new MessageHub()
-  const sock = hub.connect('tcp://127.0.0.1:8080')
-  sock.sendMsg @:
-    header: @: bonkers: true
+  const hub_a = new PacketMessageHub()
+  const hub_b = new PacketMessageHub()
 
-if 1 ::
-  const hub = new MessageHub()
-  const sock = hub.connect @: host:'127.0.0.1', port: 8080
-  sock.sendMsg @:
-    body: @: hello: 'there'
+  const ans_a = hub_a.ec_id_hmac @ hub_b.ec_pub_id, 'A', 'B'
+
+  const ans_b = hub_b.ec_id_hmac @ hub_a.ec_pub_id, 'B', 'A'
+
+  console.log @ ans_a
+  console.log @ ans_b
