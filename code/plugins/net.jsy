@@ -1,0 +1,34 @@
+import {URL} from 'url'
+import {createServer, createConnection} from 'net'
+
+module.exports = exports = net_plugin
+export default net_plugin
+export function net_plugin(hub) ::
+  return hub.net = @:
+    connect(...args) ::
+      if 1 === args.length && 'string' === typeof args[0] ::
+        const {hostname:host, port} = new URL(args[0])
+        args = @# @{} host, port
+
+      const sock = createConnection @ ...args, () => ::
+        hub.on_connect_peer @ sock
+          sendMsgRaw.bind(null, sock)
+
+      return sock
+
+    createServer() ::
+      return createServer @ sock => ::
+        sock.unref()
+        sock.setNoDelay()
+        sock.setKeepAlive(true)
+
+        hub.on_connect_peer @ sock
+          sendMsgRaw.bind(null, sock)
+
+function sendMsgRaw(sock, msg, asPromise) ::
+  if null === msg ::
+    return void sock.end()
+  if ! asPromise ::
+    return void sock.write(msg)
+  return new Promise @ function (resolve, reject) ::
+    sock.write @ msg, err => err ? reject(err) : resolve()

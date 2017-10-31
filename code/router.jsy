@@ -48,7 +48,7 @@ export class MessageRouter ::
           const handler = this.dispControlByType[msg.type]
           if undefined === handler ::
             this.dnu_dispatch_control(msg, sendMsgRaw)
-          else handler @ this, msg, sendMsgRaw
+          else handler(this, msg, sendMsgRaw)
       catch err ::
         this.on_error_in_dispatch(err, msg, sendMsgRaw)
 

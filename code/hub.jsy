@@ -1,15 +1,32 @@
 import {packetStreamParser} from './parser'
 import {MessageRouter} from './router'
 
-export class PacketMessageHub ::
+export class MessageHub ::
   constructor() ::
     const router = this._init_router()
     Object.defineProperties @ this, @{}
       router: @{} value: router
       _packetStream: @{} value: packetStreamParser()
 
+    if this.pluginList ::
+      this.plugin @ ... this.pluginList
+
   _init_router() ::
     return new MessageRouter()
+
+  plugin(...pluginFunctions) ::
+    for const plugin of pluginFunctions ::
+      plugin(this)
+    return this
+
+  static plugin(...pluginFunctions) ::
+    const pluginList = [].concat @
+      this.prototype.pluginList || []
+      pluginFunctions
+
+    class PacketMessageHub_PI extends MessageHub ::
+    PacketMessageHub_PI.prototype.pluginList = pluginList
+    return PacketMessageHub_PI
 
   on_connect_peer(stream, sendMsgRaw) ::
     this.router.sendRoutingHandshake(sendMsgRaw)

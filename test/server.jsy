@@ -1,41 +1,18 @@
 require('source-map-support').install()
 import {URL} from 'url'
 import {createServer, createConnection} from 'net'
-import {PacketMessageHub as BaseHub} from '../dist/hub'
+import {MessageHub} from '../dist/hub'
+import tcp_plugin from '../dist/plugins/net'
 import {packMessage} from '../dist/parser'
 import {json_codec} from '../dist/codecs'
 
-class PacketMessageHub extends BaseHub ::
-  connect(options) ::
-    if 'string' === typeof options ::
-      const {hostname:host, port} = new URL(options)
-      options = @{} host, port
-
-    const sock = createConnection @ options, () => ::
-      this.on_connect_peer @ sock
-        sendMsgRaw.bind(null, sock)
-
-    return sock
-
-  createServer() ::
-    return createServer @ sock => ::
-      sock.setKeepAlive(true).setNoDelay().unref()
-      this.on_connect_peer @ sock
-        sendMsgRaw.bind(null, sock)
-
-function sendMsgRaw(sock, msg, asPromise) ::
-  if null === msg ::
-    return void sock.end()
-  if ! asPromise ::
-    return void sock.write(msg)
-  return new Promise @ function (resolve, reject) ::
-    sock.write @ msg, err => err ? reject(err) : resolve()
-
+const Hub = MessageHub
+  .plugin @ tcp_plugin
 
 if 1 ::
   ::
-    const hub = new PacketMessageHub()
-    hub.createServer()
+    const hub = new Hub()
+    hub.net.createServer()
       .listen(8080, '127.0.0.1')
       //.unref()
     var id_hub = hub.router.id_self
@@ -46,16 +23,16 @@ if 1 ::
       console.log @ 'target got message!', @: header, body
 
   ::
-    const hub = new PacketMessageHub()
-    const sock = hub.connect('tcp://127.0.0.1:8080')
+    const hub = new Hub()
+    const sock = hub.net.connect('tcp://127.0.0.1:8080')
     send_json_msg @ sock, @:
       id_router: id_hub
       id_target: 123
       header: @: bonkers: true
 
   ::
-    const hub = new PacketMessageHub()
-    const sock = hub.connect @: host:'127.0.0.1', port: 8080
+    const hub = new Hub()
+    const sock = hub.net.connect @: host:'127.0.0.1', port: 8080
     send_json_msg @ sock, @:
       id_router: id_hub
       id_target: 123
