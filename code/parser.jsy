@@ -115,9 +115,18 @@ export function packetStreamParser(options={}) ::
       @{} type, ttl, id_router
     return msg_obj
 
-export function packMessage({type, ttl, id_router, header, body}) ::
-  header = Buffer.isBuffer(header) ? header : Buffer.from(header || '')
-  body = Buffer.isBuffer(body) ? body : Buffer.from(body || '')
+const msg_obj_proto = @:
+  sliceBody() ::
+    return this._raw_.slice @ this.body_offset
+  sliceHeader() ::
+    return this._raw_.slice @ pkt_header_size, this.body_offset
+
+
+
+export function packMessage(...args) ::
+  let {type, ttl, id_router, header, body} = Object.assign @ {}, ...args
+  header = _asBuffer(header)
+  body = _asBuffer(body)
 
   const len = pkt_header_size + header.byteLength + body.byteLength
   if len > 0xffff :: throw new Error @ `Packet too large`
@@ -128,14 +137,18 @@ export function packMessage({type, ttl, id_router, header, body}) ::
   pkt.writeUInt16LE @ header.byteLength, 4
   pkt.writeUInt8 @ type || 0, 6
   pkt.writeUInt8 @ ttl || 31, 7
-  pkt.writeUInt32LE @ id_router, 8
+  pkt.writeUInt32LE @ id_router || 0, 8
 
   return Buffer.concat @# pkt, header, body
 
 
-const msg_obj_proto = @:
-  sliceBody() ::
-    return this._raw_.slice @ this.body_offset
-  sliceHeader() ::
-    return this._raw_.slice @ pkt_header_size, this.body_offset
+function _asBuffer(buf) ::
+  if Buffer.isBuffer(buf) ::
+    return buf
+  if Array.isArray(buf) ::
+    if Number.isSafeInteger @ buf[0] ::
+      return Buffer.from(buf)
+    else ::
+      return Buffer.concat @ buf.map @ _asBuffer
+  return Buffer.from(buf || '')
 

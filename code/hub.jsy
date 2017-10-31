@@ -1,0 +1,105 @@
+import {createECDH, createHmac} from 'crypto'
+
+import {packMessage} from './parser'
+import {packetStreamParser} from './parser'
+import * as channel_setup from './channel_setup'
+
+export class PacketMessageHub ::
+  constructor() ::
+    const router = new MessageRouter()
+    const id_self = router.id_self
+
+    Object.defineProperties @ this, @{}
+      id_self: @{} value: id_self
+      router: @{} value: router
+      _packetStream: @{} value: packetStreamParser()
+      _msg_hello: @{} value: channel_setup.pack_hello @ router.ec_pub_id
+
+  on_connect_peer(stream, sendMsgRaw) ::
+    if 'function' !== typeof sendMsgRaw ::
+      throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
+
+    sendMsgRaw @ this._msg_hello 
+    const dispatch = this.router.dispatch
+    return connectPacketStream @
+      this._packetStream.clone(), stream
+      msgList => dispatch(msgList, sendMsgRaw)
+
+
+class MessageRouter ::
+  constructor() ::
+    ::
+      const ec_priv_id = createECDH('prime256v1')
+      var ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
+      var ec_id_hmac = function (ec_pub_other, expected) ::
+        const secret = ec_priv_id.computeSecret(ec_pub_other)
+        return createHmac('sha256', secret)
+          .update @ expected ? ec_pub_other : ec_pub_id
+          .digest()
+
+    const id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
+
+    // bind dispatch as a closure over id_self
+    const dispatch = (msgList, sendMsgRaw) => ::
+      for const msg of msgList ::
+        const id_router = msg.id_router
+
+        if id_self === id_router ::
+          this.dispatch_self @ msg
+
+        else if 0 !== id_router ::
+          const sendMsgRaw = this.peers.get(id_router)
+          if undefined !== sendMsgRaw ::
+            sendMsgRaw(msg)
+
+        else ::
+          this.dispatch_control(msg, sendMsgRaw)
+
+    return Object.defineProperties @ this, @:
+      id_self: @: value: id_self
+      ec_pub_id: @: value: ec_pub_id
+      dispatch: @: value: dispatch
+      ec_id_hmac: @: value: ec_id_hmac
+
+  peers = new Map()
+  registerRoute(id_router, sendMsgRaw) ::
+    console.log @ 'add peer:', id_router, '<==>', this.id_self
+    this.peers.set @ id_router, sendMsgRaw
+  unregisterRoute(id_router) ::
+    return this.peers.delete @ id_router
+  imposterRoute(id_router) ::
+
+  dispatch_control(msg, sendMsgRaw) ::
+    const handler = this._byControlType[msg.type]
+    if undefined !== handler ::
+      return handler @ this, msg, sendMsgRaw
+
+  dispatch_self(msg) ::
+    console.log @ "TODO: implement dispatch_self", msg
+
+MessageRouter.prototype._byControlType = Object.assign @ {}
+  channel_setup.byControlType
+    
+
+
+export function connectPacketStream(pktParser, stream, on_recv_messages) ::
+  return new Promise @ (resolve, reject) => ::
+    stream.on @ 'error', shutdown
+    stream.on @ 'close', shutdown
+    stream.on @ 'data', data => ::
+      try ::
+        var msgList = pktParser.feed @ data
+        if 0 < msgList.length ::
+          on_recv_messages(msgList)
+      catch err ::
+        return shutdown(err)
+
+
+    function shutdown(err) ::
+      if undefined === stream :: return
+      pktParser = undefined
+      stream.end()
+      stream = undefined
+
+      err ? reject(err) : resolve()
+

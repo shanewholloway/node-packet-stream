@@ -1,0 +1,32 @@
+import {packMessage} from './parser'
+
+export function pack_hello(ec_pub_id) ::
+  return packMessage @:
+    type: 0x01, id_router: 0
+    header: ec_pub_id
+
+export function pack_olleh(ec_pub_id, hmac_secret) ::
+  return packMessage @:
+    type: 0x02, id_router: 0
+    header: ec_pub_id
+    body: hmac_secret
+
+export const byControlType = @{}
+  0x01: function recv_hello(dispatch, msg, sendMsgRaw) ::
+    const header = msg.sliceHeader()
+    const hmac_secret = dispatch.ec_id_hmac @ header
+    sendMsgRaw @ pack_olleh @
+      dispatch.ec_pub_id, hmac_secret
+    return true
+
+  0x02: function recv_olleh(dispatch, msg, sendMsgRaw) ::
+    const header = msg.sliceHeader()
+    const hmac_secret = dispatch.ec_id_hmac @ header, true
+    const body = msg.sliceBody()
+    if 0 === hmac_secret.compare @ body ::
+      const id_router = header.readUInt32LE(8)
+      dispatch.registerRoute @ id_router, sendMsgRaw
+    else ::
+      dispatch.imposterRoute @ id_router
+    return true
+

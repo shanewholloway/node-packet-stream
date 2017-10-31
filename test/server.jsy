@@ -1,8 +1,7 @@
 require('source-map-support').install()
 import {URL} from 'url'
-import {createECDH, createHmac} from 'crypto'
 import {createServer, createConnection} from 'net'
-import {packetStreamParser} from '../dist/parser'
+import {PacketMessageHub as BaseHub} from '../dist/hub'
 import {packMessage} from '../dist/parser'
 import {json_codec} from '../dist/codecs'
 
@@ -19,23 +18,8 @@ function send_json_msg(sock, msg_obj) ::
     sock.write @ msg_obj
       function (err) :: err ? reject(err) : resolve()
 
-class PacketMessageHub ::
+class PacketMessageHub extends BaseHub ::
   sendMsg = send_json_msg
-  constructor() ::
-    const ec_priv_id = createECDH('prime256v1')
-    const ec_pub_id = ec_priv_id.generateKeys(null, 'compressed')
-    Object.defineProperties @ this, @{}
-      _packetStream: @{} value: packetStreamParser()
-      id_route: @{} value: ec_pub_id.readUInt32LE(4)
-      ec_pub_id: @{} value: ec_pub_id, enumerable: true
-      ec_priv_id: @{} value() :: return ec_priv_id
-
-  ec_id_hmac(ec_pub_other) ::
-    const secret = this.ec_priv_id().computeSecret(ec_pub_other)
-    return @:
-      id_route: ec_pub_other.readUInt32LE(4)
-      answer: createHmac('sha256', secret).update(ec_pub_other).digest()
-      expect: createHmac('sha256', secret).update(this.ec_pub_id).digest()
 
   connect(options) ::
     if 'string' === typeof options ::
@@ -44,67 +28,24 @@ class PacketMessageHub ::
 
     const sock = createConnection @ options, () => ::
       this.on_connect_peer @ sock
+        sendMsgRaw.bind(null, sock)
 
     if 'function' === typeof this.sendMsg ::
       sock.sendMsg = this.sendMsg.bind(this, sock)
     return sock
 
   createServer() ::
-    const svr = createServer @ sock => ::
+    return createServer @ sock => ::
+      sock.setKeepAlive(true).setNoDelay().unref()
       this.on_connect_peer @ sock
+        sendMsgRaw.bind(null, sock)
 
-    svr.on @ 'listen', () => ::
-      this.on_connect_server @ svr
-    return svr
+function sendMsgRaw(sock, msg, asPromise) ::
+  if ! asPromise ::
+    return void sock.write(msg)
+  return new Promise @ function (resolve, reject) ::
+    sock.write @ msg, err => err ? reject(err) : resolve()
 
-  on_connect_server(sock) ::
-
-  on_connect_peer(sock) ::
-    sock.setKeepAlive(true).setNoDelay().unref()
-    if 'function' === typeof this.sendMsg ::
-      sock.sendMsg = this.sendMsg.bind(this, sock)
-
-    const remote = `${sock.remoteAddress}:${sock.remotePort}`
-    return connectPacketStream @ this._packetStream.clone(), sock
-      function (msgList) ::
-        console.log @ `on_recv_messages [${remote}]`, msgList.length
-        let type = 0
-        for const msg of msgList ::
-          type = Math.max @ type, msg.type
-          console.log @# msg
-            msg._raw_.byteLength
-            msg.sliceHeader().toString()
-            msg.sliceBody().toString()
-
-        if 0 === type ::
-          sock.sendMsg @: type:1
-
-
-function connectPacketStream(pktParser, sock, on_recv_messages) ::
-  return new Promise @ (resolve, reject) => ::
-    sock.on @ 'error', shutdown
-    sock.on @ 'close', shutdown
-    sock.on @ 'data', async data => ::
-      try ::
-        var msgList = pktParser.feed @ data
-      catch err ::
-        return shutdown(err)
-
-      if 0 < msgList.length ::
-        on_recv_messages(msgList)
-
-    function shutdown(err) ::
-      if undefined === sock :: return
-      pktParser = undefined
-      sock.end()
-
-      if null == err ::
-        resolve(sock)
-      else ::
-        err.sock = sock
-        reject(err)
-
-      sock = undefined
 
 if 1 ::
   ::
@@ -124,14 +65,3 @@ if 1 ::
     const sock = hub.connect @: host:'127.0.0.1', port: 8080
     sock.sendMsg @:
       body: @: hello: 'there'
-
-if 1 ::
-  const hub_a = new PacketMessageHub()
-  const hub_b = new PacketMessageHub()
-
-  const ans_a = hub_a.ec_id_hmac @ hub_b.ec_pub_id, 'A', 'B'
-
-  const ans_b = hub_b.ec_id_hmac @ hub_a.ec_pub_id, 'B', 'A'
-
-  console.log @ ans_a
-  console.log @ ans_b
