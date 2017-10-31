@@ -61,6 +61,11 @@ class MessageRouter ::
       dispatch: @: value: dispatch
       ec_id_hmac: @: value: ec_id_hmac
 
+
+  dispatch_self(msg) ::
+    console.log @ "TODO: implement dispatch_self", msg
+
+
   peers = new Map()
   registerRoute(id_router, sendMsgRaw) ::
     console.log @ 'add peer:', id_router, '<==>', this.id_self
@@ -69,17 +74,15 @@ class MessageRouter ::
     return this.peers.delete @ id_router
   imposterRoute(id_router) ::
 
+
+  byControlType = Object.create @ this.byControlType
   dispatch_control(msg, sendMsgRaw) ::
-    const handler = this._byControlType[msg.type]
+    const handler = this.byControlType[msg.type]
     if undefined !== handler ::
       return handler @ this, msg, sendMsgRaw
 
-  dispatch_self(msg) ::
-    console.log @ "TODO: implement dispatch_self", msg
-
-MessageRouter.prototype._byControlType = Object.assign @ {}
+MessageRouter.prototype.byControlType = Object.assign @ {}
   channel_setup.byControlType
-    
 
 
 export function connectPacketStream(pktParser, stream, on_recv_messages) ::
