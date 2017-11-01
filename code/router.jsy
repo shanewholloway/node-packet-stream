@@ -68,6 +68,8 @@ export class MessageRouter ::
   registerTarget(id_target, target) ::
     if 'function' !== typeof target ::
       throw new TypeError @ `Expected 'target' to be a function`
+    if this.targets.has @ id_target ::
+      return false
     console.log @ `add target: ${this.id_self}/${id_target}`
     return this.targets.set @ id_target, target
   unregisterTarget(id_target) ::
@@ -81,6 +83,8 @@ export class MessageRouter ::
   registerRoute(id_router, sendMsgRaw) ::
     if 'function' !== typeof sendMsgRaw ::
       throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
+    if this.routes.has @ id_router ::
+      return false
     console.log @ `add peer: ${id_router} <==> ${this.id_self}`
     this.routes.set @ id_router, sendMsgRaw
   unregisterRoute(id_router) ::
