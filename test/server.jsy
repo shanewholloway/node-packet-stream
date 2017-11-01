@@ -4,50 +4,54 @@ import {createServer, createConnection} from 'net'
 import {MessageHub} from '../dist/hub'
 import tcp_plugin from '../dist/plugins/net'
 import {packMessage} from '../dist/parser'
-import {json_codec} from '../dist/codecs'
 
 const Hub = MessageHub
   .plugin @ tcp_plugin
 
-if 1 ::
-  ::
-    const hub = new Hub()
-    hub.net.createServer()
-      .listen(8080, '127.0.0.1')
-      //.unref()
-    var id_hub = hub.router.id_self
+async function main_server() ::
+  const hub = new Hub()
+  const svr = hub.net.createServer()
+    .listen(8080, '127.0.0.1')
 
-    hub.router.registerTarget @ 123, (msg, router) => ::
-      const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
-      const body = JSON.parse @ msg.sliceBody().toString() || 'null'
-      console.log @ 'target got message!', @: header, body
+  setTimeout @
+    () => ::
+      console.log @ 'Allowing server to expire…'
+      svr.unref()
+    1000
 
-  ::
-    const hub = new Hub()
-    const sock = hub.net.connect('tcp://127.0.0.1:8080')
-    send_json_msg @ sock, @:
-      id_router: id_hub
-      id_target: 123
-      header: @: bonkers: true
+  hub.router.registerTarget @ 123, (msg, router) => ::
+    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
+    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    console.log @ 'target got message!', @: header, body
 
-  ::
-    const hub = new Hub()
-    const sock = hub.net.connect @: host:'127.0.0.1', port: 8080
-    send_json_msg @ sock, @:
-      id_router: id_hub
-      id_target: 123
-      body: @: hello: 'there'
+  return hub.router.id_self
 
+async function main_client_one(id_hub) ::
+  const hub = new Hub()
+  const sendMsgRaw = await hub.net.connect('tcp://127.0.0.1:8080')
+  sendMsgRaw @ pack_json_msg @:
+    id_router: id_hub
+    id_target: 123
+    header: @: bonkers: true
+
+async function main_client_two(id_hub) ::
+  const hub = new Hub()
+  const sendMsgRaw = await hub.net.connect @: host:'127.0.0.1', port: 8080
+  sendMsgRaw @ pack_json_msg @:
+    id_router: id_hub
+    id_target: 123
+    body: @: hello: 'there'
 
 
 function pack_json_msg(msg_obj) ::
   if null != msg_obj.header ::
-    msg_obj.header = json_codec.encode @ msg_obj.header
+    msg_obj.header = JSON.stringify @ msg_obj.header
   if null != msg_obj.body ::
-    msg_obj.body = json_codec.encode @ msg_obj.body
+    msg_obj.body = JSON.stringify @ msg_obj.body
   return packMessage(msg_obj)
 
-function send_json_msg(sock, msg_obj) ::
-  sock.write @ pack_json_msg @ msg_obj
 
-
+if module === require.main ::
+  main_server().then @ id_hub => ::
+    main_client_one @ id_hub
+    main_client_two @ id_hub

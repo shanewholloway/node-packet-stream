@@ -10,25 +10,51 @@ export function net_plugin(hub) ::
         const {hostname:host, port} = new URL(args[0])
         args = @# @{} host, port
 
-      const sock = createConnection @ ...args, () => ::
-        hub.on_connect_peer @ sock
-          sendMsgRaw.bind(null, sock)
+      return new Promise @ (resolve, reject) => ::
+        createConnection @ ...args, function () ::
+          const sock = this
+          const sendMsgRaw = bindSendMsgRaw(sock)
+          resolve(sendMsgRaw)
 
-      return sock
+          hub.on_connect_peer @ sock, sendMsgRaw
+          .catch @ console.error
 
-    createServer() ::
-      return createServer @ sock => ::
-        sock.unref()
-        sock.setNoDelay()
-        sock.setKeepAlive(true)
+        .on @ 'error', reject
 
-        hub.on_connect_peer @ sock
-          sendMsgRaw.bind(null, sock)
+    createServer(onPeer) ::
+      const svr = createServer @ sock => ::
+        const sendMsgRaw = bindSendMsgRaw(sock, hub)
 
-function sendMsgRaw(sock, msg, asPromise) ::
-  if null === msg ::
-    return void sock.end()
-  if ! asPromise ::
-    return void sock.write(msg)
-  return new Promise @ function (resolve, reject) ::
-    sock.write @ msg, err => err ? reject(err) : resolve()
+        hub.on_connect_peer @ sock, sendMsgRaw
+        .catch @ console.error
+
+        if 'function' === typeof onPeer ::
+          onPeer @ sendMsgRaw
+        else if 'string' === typeof onPeer ::
+          svr.emit @ onPeer, sendMsgRaw
+
+      return svr
+
+export function bindSendMsgRaw(sock) ::
+  sock.unref()
+  sock.setNoDelay()
+  sock.setKeepAlive(true)
+
+  sendMsgRaw.conn_info = @{}
+    ip_remote: @{}
+      address: sock.remoteAddress
+      port: sock.remotePort
+
+    ip_local: @{}
+      address: sock.localAddress
+      port: sock.localPort
+
+  return sendMsgRaw
+
+  function sendMsgRaw(msg, asPromise) ::
+    if null === msg ::
+      return void sock.end()
+    if ! asPromise ::
+      return void sock.write(msg)
+    return new Promise @ function (resolve, reject) ::
+      sock.write @ msg, err => err ? reject(err) : resolve()
