@@ -1,25 +1,34 @@
 import {packMessage} from './parser'
 
+export const dispControlByType = @{}
+  0xf0: recv_hello
+  0xf1: recv_olleh
+  0xfe: recv_pong
+  0xff: recv_ping
+
+
+
 export function pack_hello(ec_pub_id) ::
   return packMessage @:
-    type: 0xff, id_router: 0
-    header: ec_pub_id
+    id_router: 0, type: 0xf0
+    header: ec_pub_id // buffer
 
-export function pack_olleh(ec_pub_id, hmac_secret) ::
-  return packMessage @:
-    type: 0xfe, id_router: 0
-    header: ec_pub_id
-    body: hmac_secret
-
-export const dispControlByType = @{}
-  0xff: function recv_hello(dispatch, msg, sendMsgRaw) ::
+function recv_hello(dispatch, msg, sendMsgRaw) ::
     const header = msg.sliceHeader()
     const hmac_secret = dispatch.ec_id_hmac @ header
     sendMsgRaw @ pack_olleh @
       dispatch.ec_pub_id, hmac_secret
     return true
 
-  0xfe: function recv_olleh(dispatch, msg, sendMsgRaw) ::
+
+
+function pack_olleh(ec_pub_id, hmac_secret) ::
+  return packMessage @:
+    id_router: 0, type: 0xf1
+    header: ec_pub_id // buffer
+    body: hmac_secret // buffer
+
+function recv_olleh(dispatch, msg, sendMsgRaw) ::
     const header = msg.sliceHeader()
     const hmac_secret = dispatch.ec_id_hmac @ header, true
     const body = msg.sliceBody()
@@ -29,4 +38,33 @@ export const dispControlByType = @{}
     else ::
       dispatch.imposterRoute @ id_router
     return true
+
+
+
+export function pack_pingpong(pong) ::
+  return packMessage @:
+    id_router: 0, type: pong ? 0xfe : 0xff
+    body: new Date().toISOString()
+
+function recv_pong(dispatch, msg, sendMsgRaw) ::
+  const local = new Date()
+
+  try ::
+    const remote = new Date @ msg.sliceBody().toString()
+    const delta = remote - local
+    sendMsgRaw.ts_pong = @{} delta, remote, local
+  catch err ::
+    sendMsgRaw.ts_pong = @{} local
+
+function recv_ping(dispatch, msg, sendMsgRaw) ::
+  const local = new Date()
+
+  sendMsgRaw @ pack_pingpong @ true
+
+  try ::
+    const remote = new Date @ msg.sliceBody().toString()
+    const delta = remote - local
+    sendMsgRaw.ts_ping = @{} delta, remote, local
+  catch err ::
+    sendMsgRaw.ts_ping = @{} local
 
