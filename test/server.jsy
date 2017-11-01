@@ -28,16 +28,16 @@ async function main_server() ::
 
 async function main_client_one(id_hub) ::
   const hub = new Hub()
-  const sendMsgRaw = await hub.net.connect('tcp://127.0.0.1:8080')
-  sendMsgRaw @ pack_json_msg @:
+  const channel = await hub.net.connect('tcp://127.0.0.1:8080')
+  channel.sendJSON @:
     id_router: id_hub
     id_target: 123
     header: @: bonkers: true
 
 async function main_client_two(id_hub) ::
   const hub = new Hub()
-  const sendMsgRaw = await hub.net.connect @: host:'127.0.0.1', port: 8080
-  sendMsgRaw @ pack_json_msg @:
+  const channel = await hub.net.connect @: host:'127.0.0.1', port: 8080
+  channel.sendJSON @:
     id_router: id_hub
     id_target: 123
     body: @: hello: 'there'

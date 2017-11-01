@@ -1,0 +1,17 @@
+
+export class MessageChannel ::
+  sendRaw() :: throw new Error @ `Instance responsiblity`
+  pack() :: throw new Error @ `Instance responsiblity`
+
+  sendJSON(msg_obj, ...args) ::
+    const msg = this.packJSON(msg_obj)
+    return this.sendRaw @ msg, ...args
+
+  packJSON(msg_obj) ::
+    if undefined !== msg_obj.header ::
+      msg_obj.header = JSON.stringify @ msg_obj.header
+    if undefined !== msg_obj.body ::
+      msg_obj.body = JSON.stringify @ msg_obj.body
+
+    return this.pack(msg_obj)
+

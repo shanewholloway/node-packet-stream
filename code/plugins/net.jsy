@@ -13,11 +13,8 @@ export function net_plugin(hub) ::
       return new Promise @ (resolve, reject) => ::
         createConnection @ ...args, function () ::
           const sock = this
-          const sendMsgRaw = bindSendMsgRaw(sock)
-          resolve(sendMsgRaw)
-
-          hub.on_connect_peer @ sock, sendMsgRaw
-          .catch @ console.error
+          const sendMsgRaw = bindSendMsgRaw(sock, hub)
+          resolve(sendMsgRaw.api)
 
         .on @ 'error', reject
 
@@ -25,22 +22,19 @@ export function net_plugin(hub) ::
       const svr = createServer @ sock => ::
         const sendMsgRaw = bindSendMsgRaw(sock, hub)
 
-        hub.on_connect_peer @ sock, sendMsgRaw
-        .catch @ console.error
-
         if 'function' === typeof onPeer ::
-          onPeer @ sendMsgRaw
+          onPeer @ sendMsgRaw.api
         else if 'string' === typeof onPeer ::
-          svr.emit @ onPeer, sendMsgRaw
+          svr.emit @ onPeer, sendMsgRaw.api
 
       return svr
 
-export function bindSendMsgRaw(sock) ::
+export function bindSendMsgRaw(sock, hub) ::
   sock.unref()
   sock.setNoDelay()
   sock.setKeepAlive(true)
 
-  sendMsgRaw.conn_info = @{}
+  const conn_info = @{}
     ip_remote: @{}
       address: sock.remoteAddress
       port: sock.remotePort
@@ -49,6 +43,12 @@ export function bindSendMsgRaw(sock) ::
       address: sock.localAddress
       port: sock.localPort
 
+  sendMsgRaw.api = Object.create @
+    hub._api_channel, @:
+      sendRaw: @: value: sendMsgRaw
+      conn_info: @: value: conn_info, enumerable: true
+
+  hub.on_connect_peer @ sock, sendMsgRaw
   return sendMsgRaw
 
   function sendMsgRaw(msg, asPromise) ::

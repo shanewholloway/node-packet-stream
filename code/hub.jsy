@@ -1,18 +1,30 @@
 import {packetStreamParser} from './parser'
 import {MessageRouter} from './router'
+import {MessageChannel} from './channel'
 
 export class MessageHub ::
   constructor() ::
     const router = this._init_router()
+    const _packetStream = this._init_packetStreamParser()
+    const _api_channel = this._init_channelAPI(_packetStream)
+
     Object.defineProperties @ this, @{}
       router: @{} value: router
-      _packetStream: @{} value: packetStreamParser()
+      _packetStream: @{} value: _packetStream
+      _api_channel: @{} value: _api_channel
 
     if this.pluginList ::
       this.plugin @ ... this.pluginList
 
   _init_router() ::
     return new MessageRouter()
+
+  _init_packetStreamParser() ::
+    return packetStreamParser()
+  _init_channelAPI(packetStream) ::
+    return Object.defineProperties @
+      new MessageChannel(), @:
+        pack: @: value: packetStream.packMessage
 
   plugin(...pluginFunctions) ::
     for const plugin of pluginFunctions ::
@@ -36,7 +48,7 @@ export class MessageHub ::
     this.router.sendRoutingHandshake(sendMsgRaw)
 
     const dispatch = this.router.dispatch
-    return connectPacketStream @
+    sendMsgRaw.shutdown = connectPacketStream @
       this._packetStream.clone(), stream
       msgList => dispatch @ msgList, sendMsgRaw
 
