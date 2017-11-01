@@ -24,8 +24,12 @@ export class MessageHub ::
       this.prototype.pluginList || []
       pluginFunctions
 
-    class PacketMessageHub_PI extends MessageHub ::
-    PacketMessageHub_PI.prototype.pluginList = pluginList
+    const BaseHub = this._BaseHub_ || MessageHub
+    class PacketMessageHub_PI extends BaseHub ::
+    Object.defineProperties @ PacketMessageHub_PI.prototype, @:
+      pluginList: @{} value: Object.freeze @ pluginList
+    Object.defineProperties @ PacketMessageHub_PI, @:
+      _BaseHub_: @{} value: BaseHub
     return PacketMessageHub_PI
 
   on_connect_peer(stream, sendMsgRaw) ::
