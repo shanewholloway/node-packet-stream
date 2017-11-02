@@ -1,0 +1,33 @@
+import @{}
+  createServer as _tls_createServer
+  connect as _tls_connect
+from 'tls'
+
+import {net_common} from './net'
+
+
+module.exports = exports = tls_plugin
+export default tls_plugin
+export function tls_plugin(plugin_options={}) ::
+  function as_tls_url() :: return `tls://${this.address}:${this.port}`
+
+  return function(hub) ::
+    const _common_ = net_common(hub, as_tls_url)
+
+    const net_api = @: connect, createServer
+    hub._connectByProtocol.set @ 'tls:', connect
+    return hub.net = net_api
+
+
+    function connect(...args) ::
+      args = _common_.unpackConnectArgs(args)
+      return new Promise @ (resolve, reject) => ::
+        _tls_connect @ ...args, function () ::
+          resolve @ _common_.bindChannel @ this
+        .on @ 'error', reject
+
+    function createServer(options, onPeer) ::
+      const svr = _tls_createServer @ options, sock => ::
+        on_peer @ _common_.bindChannel(sock)
+      const on_peer = _common_.bindOnPeer(svr, onPeer)
+      return svr

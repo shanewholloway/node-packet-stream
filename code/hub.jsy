@@ -1,3 +1,4 @@
+import {URL} from 'url'
 import {packetStreamParser} from './parser'
 import {MessageRouter} from './router'
 import {MessageChannel} from './channel'
@@ -45,6 +46,18 @@ export class MessageHub ::
     Object.defineProperties @ PacketMessageHub_PI, @:
       _BaseHub_: @{} value: BaseHub
     return PacketMessageHub_PI
+
+
+  _connectByProtocol = new Map() // provided by plugins…
+  connect(conn_url) ::
+    if 'string' === typeof conn_url ::
+      conn_url = new URL(conn_url)
+
+    const connect = this._connectByProtocol.get(conn_url.protocol)
+    if connect ::
+      return connect(conn_url)
+    else throw new Error @ `Connection protocol "${conn_url.protocol}" not registered for "${conn_url.toString()}"`
+
 
   on_connect_peer_stream(stream, sendMsgRaw) ::
     this.router.sendRoutingHandshake(sendMsgRaw)

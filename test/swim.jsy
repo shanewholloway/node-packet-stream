@@ -59,14 +59,18 @@ async function main_swim_service(swim_port, ctx, meta) ::
 
 
 if module === require.main ::
+
+  let _last_port = 2770
+  const pickAPort = () => ++ _last_port
+
   main_swim_core @ 2700, @{}
     topics: @# 'core'
 
   .then @ ctx => Promise.all @#
-    main_swim_service @ 2777, ctx, @{}
-      topics: @# 'service_one'
-    main_swim_service @ 2778, ctx, @{}
-      topics: @# 'service_two'
+    main_swim_service @ pickAPort(), ctx, @{}
+      topics: @# 'service_one', 'test'
+    main_swim_service @ pickAPort(), ctx, @{}
+      topics: @# 'service_two', 'test'
 
   .catch @ console.error
 

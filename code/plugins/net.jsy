@@ -1,43 +1,68 @@
 import {URL} from 'url'
-import {createServer, createConnection} from 'net'
+import @{}
+  createServer as _net_createServer
+  createConnection as _net_createConnection
+from 'net'
 
 module.exports = exports = net_plugin
 export default net_plugin
 export function net_plugin(plugin_options={}) ::
+  function as_tcp_url() :: return `tcp://${this.address}:${this.port}`
+
   return function(hub) ::
-    const api = {}
-    hub.net = api
-    return Object.assign @ api, @:
-      connect(...args) ::
-        if 1 === args.length && 'string' === typeof args[0] ::
-          const {hostname:host, port} = new URL(args[0])
+    const _common_ = net_common(hub, as_tcp_url)
+
+    const net_api = @: connect, createServer
+    hub._connectByProtocol.set @ 'tcp:', connect
+    return hub.net = net_api
+
+
+    function connect(...args) ::
+      args = _common_.unpackConnectArgs(args)
+      console.log @ args
+      return new Promise @ (resolve, reject) => ::
+        _net_createConnection @ ...args, function() ::
+          resolve @ _common_.bindChannel @ this
+        .on @ 'error', reject
+
+    function createServer(onPeer) ::
+      const svr = _net_createServer @ function (sock) ::
+        on_peer @ _common_.bindChannel(sock)
+      const on_peer = _common_.bindOnPeer(svr, onPeer)
+      return _common_.init_server(svr)
+
+
+
+export function net_common(hub, asURL) ::
+  // shared implementation between net/tcp and tls implementations
+  return @:
+    init_server(svr) ::
+      svr.conn_info = function () ::
+        const {address, port} = svr.address()
+        return @{} ip_server: @{} address, port, asURL
+      return svr
+
+    bindOnPeer(svr, onPeer) ::
+      if 'function' === typeof onPeer ::
+        return onPeer
+      if 'string' === typeof onPeer ::
+        return channel => svr.emit @ onPeer, channel
+      return () => null
+
+    bindChannel(sock) ::
+      return bindSendMsgRaw(sock, hub, asURL).api
+
+    unpackConnectArgs(args) ::
+      if 1 === args.length ::
+        const conn_url = args[0]
+        if 'string' === typeof conn_url || conn_url instanceof URL ::
+          const {hostname:host, port} = new URL(conn_url)
           args = @# @{} host, port
+      return args
 
-        return new Promise @ (resolve, reject) => ::
-          createConnection @ ...args, function () ::
-            const sock = this
-            const sendMsgRaw = bindSendMsgRaw(sock, hub)
-            resolve(sendMsgRaw.api)
 
-          .on @ 'error', reject
 
-      createServer(onPeer) ::
-        const svr = createServer @ sock => ::
-          const sendMsgRaw = bindSendMsgRaw(sock, hub)
-
-          if 'function' === typeof onPeer ::
-            onPeer @ sendMsgRaw.api
-          else if 'string' === typeof onPeer ::
-            svr.emit @ onPeer, sendMsgRaw.api
-
-        svr.conn_info = function () ::
-          const {address, port} = svr.address()
-          return @{} ip_server: @{} address, port, asURL
-
-        return svr
-
-function asURL() :: return `tcp://${this.address}:${this.port}`
-export function bindSendMsgRaw(sock, hub) ::
+export function bindSendMsgRaw(sock, hub, asURL) ::
   sock.unref()
   sock.setNoDelay()
   sock.setKeepAlive(true)
@@ -66,3 +91,5 @@ export function bindSendMsgRaw(sock, hub) ::
       return void sock.write(msg)
     return new Promise @ function (resolve, reject) ::
       sock.write @ msg, err => err ? reject(err) : resolve()
+
+

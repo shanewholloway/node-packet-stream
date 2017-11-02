@@ -14,11 +14,10 @@ export function swim_plugin(plugin_options={}) ::
     hub.createSWIM = createSWIM
 
     function assignSWIMMeta(meta, ...args) ::
-      const {id_self: id_route, ec_pub_id, ec_signed_id} = hub.router
-      const id_info = ec_signed_id 
+      const {id_self: id_route, ec_pub_id} = hub.router
+      const id_info = ec_pub_id 
         ? @{} id_route
               ec_pub_id: ec_pub_id.toString('base64')
-              ec_signed_id: ec_signed_id.toString('base64')
         : @{} id_route
 
       return Object.assign @ {}, meta, ...args, id_info
