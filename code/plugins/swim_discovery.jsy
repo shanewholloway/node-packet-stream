@@ -1,0 +1,76 @@
+const SWIM = require('swim')
+
+export const swim_config = @{}
+  interval: 100
+  joinTimeout: 300
+  pingTimeout: 30
+  pingReqTimeout: 80
+  pingReqGroupSize: 2
+
+module.exports = exports = swim_plugin
+export default swim_plugin
+export function swim_plugin(plugin_options={}) ::
+  return function (hub) ::
+    hub.createSWIM = createSWIM
+
+    function assignSWIMMeta(meta, ...args) ::
+      const {id_self: id_route, ec_pub_id, ec_signed_id} = hub.router
+      const id_info = ec_signed_id 
+        ? @{} id_route
+              ec_pub_id: ec_pub_id.toString('base64')
+              ec_signed_id: ec_signed_id.toString('base64')
+        : @{} id_route
+
+      return Object.assign @ {}, meta, ...args, id_info
+
+    function createSWIM({host, meta, channel}) ::
+      let conn_info = 'function' === typeof channel 
+        ? channel : channel.conn_info
+      if conn_info ::
+        const {ip_server, ip_local} = conn_info()
+        channel = (ip_server || ip_local).asURL()
+
+      meta = assignSWIMMeta @ meta, channel && @{} channel
+      const swim = new SWIM @: local: @{} host, meta
+      return new SwimDiscovery @ swim
+
+const swim_state_lut = @[] 'alive', 'suspect', 'dead'
+
+export class SwimDiscovery ::
+  constructor(swim) ::
+    Object.defineProperties @ this, @:
+      swim: @: value: swim
+      byId: @: value: new Map()
+
+    swim.on @ 'update', evt => ::
+      this._on_updateEntry @
+        evt.meta, swim_state_lut[evt.state], evt.host
+
+  bootstrap(swim_hosts=[], swim_port) ::
+    const swim = this.swim
+    if 'string' === typeof swim_hosts ::
+      dns.resolve @ swim_hosts, (err, hosts) => ::
+        swim_hosts = hosts.map @ host => `${host}:${swim_port}`
+        swim.bootstrap @ swim_hosts
+      return this
+
+    else if Array.isArray @ swim_hosts ::
+      if swim_port ::
+        swim_hosts = swim_hosts.map @ host => `${host}:${swim_port}`
+      swim.bootstrap @ swim_hosts
+      return this
+
+    throw new TypeError @ `Unexpected 'swim_hosts' parameter format.`
+
+
+  _on_updateEntry(meta, swim_state, swim_host) ::
+    meta.swim_state = swim_state
+    meta.swim_host = swim_host
+
+    const {byId} = this, {id_route, ec_pub_id} = meta
+    const cur = byId.get(id_route)
+    if undefined !== cur && ec_pub_id != cur.ec_pub_id ::
+      return // refuse to override existing entries with mismatched ec_pub_id
+
+    this.byId.set @ meta.id_route, meta
+

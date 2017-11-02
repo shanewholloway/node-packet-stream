@@ -7,9 +7,13 @@
   "main": "dist/index.js",
   "dependencies": {},
   "devDependencies": {
-    "babel-preset-jsy": "^0.9.2",
     "babel-cli": "^6.26.0",
-    "nodemon": "*"
+    "babel-preset-jsy": "^0.9.2",
+    "ec-pem": "^0.16.0",
+    "hashbelt": "^0.2.0",
+    "hashring": "^3.2.0",
+    "nodemon": "*",
+    "swim": "^0.3.2"
   },
   "babel": {
     "presets": [

@@ -1,0 +1,79 @@
+require('source-map-support').install()
+import {MessageHub} from '../dist/hub'
+import tcp_plugin from '../dist/plugins/net'
+import swim_plugin from '../dist/plugins/swim_discovery'
+
+
+const Hub = MessageHub.plugin @
+  tcp_plugin()
+  swim_plugin()
+
+
+
+async function main_swim_core(swim_port, meta) ::
+  const hub = new Hub()
+  const svr = hub.net.createServer()
+
+  return new Promise @ (resolve, reject) => ::
+    svr.once @ 'error', reject
+    svr.listen @ 8080, '127.0.0.1', function () ::
+      const my_swim_host = `127.0.0.1:${swim_port}`
+
+      const swimDisco = logSWIMEvents @ hub.createSWIM @:
+        meta, host: my_swim_host, channel: svr
+
+      swimDisco.bootstrap() // this core is the bootstrap!
+
+      resolve @:
+        swim_hosts: @# my_swim_host
+        core_addr: 'tcp://127.0.0.1:8080'
+
+      setTimeout @ dumpTable, 1000
+      setInterval @ dumpTable, 15000
+
+      function dumpTable() ::
+        console.log @ '\nbyId table:'
+        console.dir @
+          Array.from @ swimDisco.byId.values()
+          @: colors: true
+        console.log @ '\n'
+
+
+
+
+async function main_swim_service(swim_port, ctx, meta) ::
+  const hub = new Hub()
+  const svr = hub.net.createServer()
+
+  return new Promise @ (resolve, reject) => ::
+    svr.once @ 'error', reject
+    svr.listen @ 0, '127.0.0.1', function () ::
+      const swimDisco = logSWIMEvents @ hub.createSWIM @:
+        meta, host: `127.0.0.1:${swim_port}`, channel: svr
+
+      swimDisco.bootstrap @ ctx.swim_hosts
+
+      resolve()
+
+
+
+
+if module === require.main ::
+  main_swim_core @ 2700, @{}
+    topics: @# 'core'
+
+  .then @ ctx => Promise.all @#
+    main_swim_service @ 2777, ctx, @{}
+      topics: @# 'service_one'
+    main_swim_service @ 2778, ctx, @{}
+      topics: @# 'service_two'
+
+  .catch @ console.error
+
+
+
+
+function logSWIMEvents(swimDisco) ::
+  swimDisco.swim.on @ 'error', err => :: console.log @ 'swim error', err
+  swimDisco.swim.on @ 'ready', () => :: console.log @ 'swim ready'
+  return swimDisco

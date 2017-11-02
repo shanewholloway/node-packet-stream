@@ -3,52 +3,53 @@ import {createServer, createConnection} from 'net'
 
 module.exports = exports = net_plugin
 export default net_plugin
-export function net_plugin(hub) ::
-  const api = {}
-  hub.net = api
-  return Object.assign @ api, @:
-    connect(...args) ::
-      if 1 === args.length && 'string' === typeof args[0] ::
-        const {hostname:host, port} = new URL(args[0])
-        args = @# @{} host, port
+export function net_plugin(plugin_options={}) ::
+  return function(hub) ::
+    const api = {}
+    hub.net = api
+    return Object.assign @ api, @:
+      connect(...args) ::
+        if 1 === args.length && 'string' === typeof args[0] ::
+          const {hostname:host, port} = new URL(args[0])
+          args = @# @{} host, port
 
-      return new Promise @ (resolve, reject) => ::
-        createConnection @ ...args, function () ::
-          const sock = this
+        return new Promise @ (resolve, reject) => ::
+          createConnection @ ...args, function () ::
+            const sock = this
+            const sendMsgRaw = bindSendMsgRaw(sock, hub)
+            resolve(sendMsgRaw.api)
+
+          .on @ 'error', reject
+
+      createServer(onPeer) ::
+        const svr = createServer @ sock => ::
           const sendMsgRaw = bindSendMsgRaw(sock, hub)
-          resolve(sendMsgRaw.api)
 
-        .on @ 'error', reject
+          if 'function' === typeof onPeer ::
+            onPeer @ sendMsgRaw.api
+          else if 'string' === typeof onPeer ::
+            svr.emit @ onPeer, sendMsgRaw.api
 
-    createServer(onPeer) ::
-      const svr = createServer @ sock => ::
-        const sendMsgRaw = bindSendMsgRaw(sock, hub)
+        svr.conn_info = function () ::
+          const {address, port} = svr.address()
+          return @{} ip_server: @{} address, port, asURL
 
-        if 'function' === typeof onPeer ::
-          onPeer @ sendMsgRaw.api
-        else if 'string' === typeof onPeer ::
-          svr.emit @ onPeer, sendMsgRaw.api
+        return svr
 
-      return svr
-
+function asURL() :: return `tcp://${this.address}:${this.port}`
 export function bindSendMsgRaw(sock, hub) ::
   sock.unref()
   sock.setNoDelay()
   sock.setKeepAlive(true)
 
-  const conn_info = @{}
-    ip_remote: @{}
-      address: sock.remoteAddress
-      port: sock.remotePort
-
-    ip_local: @{}
-      address: sock.localAddress
-      port: sock.localPort
+  const conn_info = () => @:
+    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
+    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
 
   sendMsgRaw.api = Object.create @
     hub._api_channel, @:
       sendRaw: @: value: sendMsgRaw
-      conn_info: @: value: conn_info, enumerable: true
+      conn_info: @: value: conn_info
 
   hub.on_connect_peer_stream @
     sock, sendMsgRaw
