@@ -45,14 +45,15 @@ export function swim_plugin(plugin_options) ::
         @: local: @{} host, meta
 
       const swim = new SWIM @ swim_opts
-      return new SwimDiscovery @ swim
+      return new SwimDiscovery @ hub, swim
 
 const swim_state_lut = @[] 'alive', 'suspect', 'dead'
 
 export class SwimDiscovery ::
-  constructor(swim) ::
+  constructor(hub, swim) ::
     const byId = new Map()
     Object.defineProperties @ this, @:
+      hub: @: value: hub
       swim: @: value: swim
       byId: @: value: byId
 
@@ -82,6 +83,19 @@ export class SwimDiscovery ::
 
     throw new TypeError @ `Unexpected 'swim_hosts' parameter format.`
 
+  registerRouterDiscovery(hub) ::
+    if null == hub :: hub = this.hub
+
+    const resolveRouterId = async id_router => ::
+      const entry = this.byId.get(id_router)
+      if undefined === entry :: return
+
+      const chan = await hub.connect @ entry.channel
+      return chan.sendMsgObj
+
+    hub.router._routeDiscovery.push @ resolveRouterId
+    return this
+      
 
   _on_updateEntry(meta, swim_state, swim_host) ::
     const {byId} = this, {id_router, ec_pub_id} = meta

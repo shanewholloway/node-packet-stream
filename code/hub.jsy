@@ -7,12 +7,13 @@ export class MessageHub ::
   constructor() ::
     const router = this._init_router()
     const _packetStream = this._init_packetStreamParser()
-    const _api_channel = this._init_channelAPI(_packetStream)
-
+    const _api_channel = this._init_channelAPI(router, _packetStream)
+    const _api_internal = this._init_internalAPI(router, _packetStream)
     Object.defineProperties @ this, @{}
       router: @{} value: router
       _packetStream: @{} value: _packetStream
       _api_channel: @{} value: _api_channel
+      _api_internal: @{} value: _api_internal
 
     if this.pluginList ::
       this.plugin @ ... this.pluginList
@@ -22,12 +23,21 @@ export class MessageHub ::
 
   _init_packetStreamParser() ::
     return packetStreamParser()
-  _init_channelAPI(packetStream) ::
+  _init_channelAPI(router, packetStream) ::
     return Object.defineProperties @
       new MessageChannel(), @:
         pack: @: value: packetStream.packMessage
         hub: @: value: this
-        router: @: value: this.router
+        router: @: value: router
+  _init_internalAPI(router, packetStream) ::
+    const api_internal = Object.defineProperties @
+      new MessageChannel(), @:
+        pack: @: value: packetStream.packMessageObj
+        hub: @: value: this
+        router: @: value: router
+
+    bindDispatchMsgRaw(api_internal)
+    return api_internal
 
   plugin(...pluginFunctions) ::
     for const plugin of pluginFunctions ::
@@ -48,8 +58,14 @@ export class MessageHub ::
     return PacketMessageHub_PI
 
 
+  connect_self() ::
+    return Object.create @ this._api_internal
+
   _connectByProtocol = new Map() // provided by plugins…
   connect(conn_url) ::
+    if null == conn_url ::
+      return this.connect_self()
+
     if 'string' === typeof conn_url ::
       conn_url = new URL(conn_url)
 
@@ -87,3 +103,13 @@ export function connectPacketStream(pktParser, stream, on_recv_messages) ::
 
       err ? reject(err) : resolve()
 
+
+export function bindDispatchMsgRaw(api_internal) ::
+  const dispatch = api_internal.router.dispatch
+  dispatchMsgRaw.api = Object.defineProperties @ api_internal, @:
+    sendRaw: @: value: dispatchMsgRaw
+  return dispatchMsgRaw
+
+  function dispatchMsgRaw(msg, asPromise) ::
+    dispatch @ [msg], dispatchMsgRaw
+    if asPromise :: return Promise.resolve()

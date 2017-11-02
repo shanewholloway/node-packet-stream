@@ -34,7 +34,7 @@ export function packetStreamParser(options={}) ::
   let tip=null, qByteLen = 0, q = []
 
   return Object.assign @ feed, @{}
-    feed, clone, parseHeader, packMessage
+    feed, clone, parseHeader, packMessage, packMessageObj
     pkt_details
 
   function clone(opt) ::
@@ -133,6 +133,13 @@ export function packetStreamParser(options={}) ::
         packet_len: @{} value: packet_len
 
       @{} type, ttl, id_router, id_target
+    return msg_obj
+
+  function packMessageObj(...args) ::
+    const msg_buffer = packMessage @ ...args
+    const msg_obj = parseHeader @ msg_buffer
+    Object.defineProperties @ msg_obj, @:
+      _raw_: @{} value: msg_buffer
     return msg_obj
 
 const msg_obj_proto = @:

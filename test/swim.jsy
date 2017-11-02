@@ -52,14 +52,15 @@ async function main_swim_service(swim_port, ctx, meta) ::
 async function main_demo(server) ::
   const {hub, swimDisco} = await server
   dumpTableEverySoOften(swimDisco)
+  swimDisco.registerRouterDiscovery()
 
+  const channel = hub.connect_self()
   setInterval @ pingOneAtRandom, 1000
 
   async function pingOneAtRandom() ::
     const lst = Array.from @ swimDisco.byId.values()
     const one = lst @[] 0 | @ Math.random() * lst.length
 
-    const channel = await hub.connect(one.channel)
     channel.sendJSON @:
       id_router: one.id_router
       body: @{} hello: 'yup'

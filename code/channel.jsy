@@ -3,6 +3,11 @@ export class MessageChannel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
   pack() :: throw new Error @ `Instance responsiblity`
 
+  get sendMsgObj() ::
+    const sendRaw = this.sendRaw
+    return (msg_obj, asPromise) =>
+      sendRaw @ msg_obj._raw_, asPromise
+
   sendJSON(msg_obj, ...args) ::
     const msg = this.packJSON(msg_obj)
     return this.sendRaw @ msg, ...args
