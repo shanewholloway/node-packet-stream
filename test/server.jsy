@@ -1,9 +1,6 @@
 require('source-map-support').install()
-import {URL} from 'url'
-import {createServer, createConnection} from 'net'
 import {MessageHub} from '../dist/hub'
 import tcp_plugin from '../dist/plugins/net'
-import {packMessage} from '../dist/parser'
 
 const Hub = MessageHub
   .plugin @ tcp_plugin
@@ -41,14 +38,6 @@ async function main_client_two(id_hub) ::
     id_router: id_hub
     id_target: 123
     body: @: hello: 'there'
-
-
-function pack_json_msg(msg_obj) ::
-  if null != msg_obj.header ::
-    msg_obj.header = JSON.stringify @ msg_obj.header
-  if null != msg_obj.body ::
-    msg_obj.body = JSON.stringify @ msg_obj.body
-  return packMessage(msg_obj)
 
 
 if module === require.main ::

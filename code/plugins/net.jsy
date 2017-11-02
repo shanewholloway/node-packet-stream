@@ -4,7 +4,9 @@ import {createServer, createConnection} from 'net'
 module.exports = exports = net_plugin
 export default net_plugin
 export function net_plugin(hub) ::
-  return hub.net = @:
+  const api = {}
+  hub.net = api
+  return Object.assign @ api, @:
     connect(...args) ::
       if 1 === args.length && 'string' === typeof args[0] ::
         const {hostname:host, port} = new URL(args[0])
@@ -48,7 +50,12 @@ export function bindSendMsgRaw(sock, hub) ::
       sendRaw: @: value: sendMsgRaw
       conn_info: @: value: conn_info, enumerable: true
 
-  hub.on_connect_peer @ sock, sendMsgRaw
+  hub.on_connect_peer_stream @
+    sock, sendMsgRaw
+
+  sendMsgRaw.shutdown
+    .catch @ () => null
+    .then @ () => sock.end()
   return sendMsgRaw
 
   function sendMsgRaw(msg, asPromise) ::
