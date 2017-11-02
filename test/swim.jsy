@@ -12,54 +12,60 @@ const Hub = MessageHub.plugin @
 
 async function main_swim_core(swim_port, meta) ::
   const hub = new Hub()
-  const svr = hub.net.createServer()
+  hub.router.registerTarget @ 0, (msg, router) => ::
+    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
+    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    console.log @ 'CORE got message!', {header, body}, meta
 
+  const svr = hub.net.createServer()
   return new Promise @ (resolve, reject) => ::
     svr.once @ 'error', reject
     svr.listen @ 8080, '127.0.0.1', function () ::
-      const my_swim_host = `127.0.0.1:${swim_port}`
-
-      const swimDisco = logSWIMEvents @ hub.createSWIM @:
-        meta, host: my_swim_host, channel: svr
+      const swimDisco = logSWIMEvents @
+        hub.createSWIM @:
+          meta, swim_port, channel: svr
 
       swimDisco.bootstrap() // this core is the bootstrap!
 
-      resolve @:
-        swim_hosts: @# my_swim_host
-        core_addr: 'tcp://127.0.0.1:8080'
-
-      setTimeout @ dumpTable, 1000
-      setInterval @ dumpTable, 15000
-
-      function dumpTable() ::
-        console.log @ '\nbyId table:'
-        console.dir @
-          Array.from @ swimDisco.byId.values()
-          @: colors: true
-        console.log @ '\n'
-
-
+      resolve @: swim_hosts: @# swimDisco.localhost()
 
 
 async function main_swim_service(swim_port, ctx, meta) ::
   const hub = new Hub()
-  const svr = hub.net.createServer()
+  hub.router.registerTarget @ 0, (msg, router) => ::
+    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
+    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    console.log @ 'SVC got message!', {header, body}, meta
 
+  const svr = hub.net.createServer()
   return new Promise @ (resolve, reject) => ::
     svr.once @ 'error', reject
     svr.listen @ 0, '127.0.0.1', function () ::
-      const swimDisco = logSWIMEvents @ hub.createSWIM @:
-        meta, host: `127.0.0.1:${swim_port}`, channel: svr
+      const swimDisco = logSWIMEvents @
+        hub.createSWIM @:
+          meta, swim_port, channel: svr
 
       swimDisco.bootstrap @ ctx.swim_hosts
 
-      resolve()
+      resolve @: hub, swimDisco
 
+async function main_demo(server) ::
+  const {hub, swimDisco} = await server
+  dumpTableEverySoOften(swimDisco)
 
+  setInterval @ pingOneAtRandom, 1000
+
+  async function pingOneAtRandom() ::
+    const lst = Array.from @ swimDisco.byId.values()
+    const one = lst @[] 0 | @ Math.random() * lst.length
+
+    const channel = await hub.connect(one.channel)
+    channel.sendJSON @:
+      id_router: one.id_router
+      body: @{} hello: 'yup'
 
 
 if module === require.main ::
-
   let _last_port = 2770
   const pickAPort = () => ++ _last_port
 
@@ -69,7 +75,7 @@ if module === require.main ::
   .then @ ctx => Promise.all @#
     main_swim_service @ pickAPort(), ctx, @{}
       topics: @# 'service_one', 'test'
-    main_swim_service @ pickAPort(), ctx, @{}
+    main_demo @ main_swim_service @ pickAPort(), ctx, @{}
       topics: @# 'service_two', 'test'
 
   .catch @ console.error
@@ -81,3 +87,15 @@ function logSWIMEvents(swimDisco) ::
   swimDisco.swim.on @ 'error', err => :: console.log @ 'swim error', err
   swimDisco.swim.on @ 'ready', () => :: console.log @ 'swim ready'
   return swimDisco
+
+function dumpTableEverySoOften(swimDisco) ::
+  setTimeout @ dumpTable, 1000
+  setInterval @ dumpTable, 15000
+
+  function dumpTable() ::
+    console.log @ '\nbyId table:'
+    console.dir @
+      Array.from @ swimDisco.byId.values()
+      @: colors: true
+    console.log @ '\n'
+
