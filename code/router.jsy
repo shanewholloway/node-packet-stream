@@ -1,5 +1,5 @@
 import {createECDH, createHmac} from 'crypto'
-import {pack_hello, dispControlByType as channelSetupByType} from './channel_setup'
+import {pack_hello, pack_ping, dispControlByType as channelSetupByType} from './channel_setup'
 
 export class MessageRouter ::
   constructor() ::
@@ -14,7 +14,7 @@ export class MessageRouter ::
           .update @ reverse ? ec_pub_other : ec_pub_id
           .digest()
 
-    const dispatch = this.bindDispatchClosure(id_self)
+    const dispatch = this._initDispatch(id_self, this.routes)
 
     return Object.defineProperties @ this, @:
       id_self: @: value: id_self
@@ -22,35 +22,13 @@ export class MessageRouter ::
       dispatch: @: value: dispatch
       ec_id_hmac: @: value: ec_id_hmac
 
-  bindDispatchClosure(id_self) ::
-    const dispatch_one = (msg, sendMsgRaw) => ::
-      try ::
-        const id_router = msg.id_router
 
-        if id_self === id_router ::
-          const id_target = msg.id_target
-          const target = this.targets.get(id_target)
-          if undefined === target ::
-            this.dnu_dispatch_self(msg)
-          else if false === target(msg, this) ::
-            this.unregisterTarget(id_target)
+  // --- Dispatch core ---
 
-        else if 0 !== id_router ::
-          const relayMsgRaw = this.routes.get(id_router)
-          if 0 >= msg.ttl :: return
-
-          if undefined === relayMsgRaw ::
-            this.dispatch_unknown_route(id_router, msg)
-          else if false === relayMsgRaw(msg) ::
-            this.unregisterRoute(id_router)
-
-        else :: // 0 === id_router // control message
-          const handler = this.dispControlByType[msg.type]
-          if undefined === handler ::
-            this.dnu_dispatch_control(msg, sendMsgRaw)
-          else handler(this, msg, sendMsgRaw)
-      catch err ::
-        this.on_error_in_dispatch(err, msg, sendMsgRaw)
+  _initDispatch(id_self, routes) ::
+    routes.set @ 0, this.bindDispatchControl()
+    routes.set @ id_self, this.bindDispatchSelf()
+    const dispatch_one = this.bindDispatchRoute()
 
     const pqueue = this.promiseQueue()
     return (msgList, sendMsgRaw) => ::
@@ -58,50 +36,94 @@ export class MessageRouter ::
       for const msg of msgList ::
         pq.then @ () => dispatch_one(msg, sendMsgRaw)
 
-
   on_error_in_dispatch(err, msg) ::
     console.error @ 'Error during msg dispatch\n  msg:', msg, '\n', err, '\n'
 
+
+  // --- Dispatch to route ---
+
+  dispatch_unknown_route(id_router, msg) ::
+    console.log @ 'TODO: implement dispatch_unknown_route', msg
+  bindDispatchRoute() ::
+    return (msg, sendMsgRaw) => ::
+      try ::
+        const id_router = msg.id_router
+        const dispatch_route = this.routes.get(id_router)
+        if undefined !== dispatch_route ::
+          if false === dispatch_route(msg, sendMsgRaw) ::
+            this.unregisterRoute(id_router)
+        else ::
+          this.dispatch_unknown_route(id_router, msg)
+      catch err ::
+        this.on_error_in_dispatch(err, msg, sendMsgRaw)
+
+
+  routes = new Map()
+  registerRoute(id_router, dispatch_route) ::
+    if 'function' !== typeof dispatch_route ::
+      throw new TypeError @ `Expected 'dispatch_route' to be a function`
+    if this.routes.has @ id_router ::
+      return false
+    this.routes.set @ id_router, dispatch_route
+    return true
+  unregisterRoute(id_router) ::
+    return this.routes.delete @ id_router
+
+  imposterPeerRoute(id_router, sendMsgRaw) ::
+  registerPeerRoute(id_router, sendMsgRaw) ::
+    if 0 === id_router ::
+      return false
+    else if this.id_self === id_router ::
+      return false
+    return this.registerRoute @ id_router, msg => ::
+      if 0 !== msg.ttl :: sendMsgRaw(msg)
+
+
+  // --- Dispatch to local target
+
   dnu_dispatch_self(msg) ::
-    console.warn @ 'dnu_dispatch_self', msg.id_target.toString(16), msg
+  bindDispatchSelf(msg) ::
+    return (msg, sendMsgRaw) => ::
+      const id_target = msg.id_target
+      const target = this.targets.get(id_target)
+      if undefined === target ::
+        this.dnu_dispatch_self(msg)
+      else if false === target(msg, this) ::
+        this.unregisterTarget(id_target)
+
   targets = new Map()
   registerTarget(id_target, target) ::
     if 'function' !== typeof target ::
       throw new TypeError @ `Expected 'target' to be a function`
     if this.targets.has @ id_target ::
       return false
-    console.log @ `add target: ${this.id_self}/${id_target}`
     return this.targets.set @ id_target, target
   unregisterTarget(id_target) ::
-    console.log @ `remove target: ${this.id_self}/${id_target}`
     return this.targets.delete @ id_target
 
-  dispatch_unknown_route(id_router, msg) ::
-    console.log @ 'TODO: implement dispatch_unknown_route', msg
 
-  routes = new Map()
-  registerRoute(id_router, sendMsgRaw) ::
-    if 'function' !== typeof sendMsgRaw ::
-      throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
-    if this.routes.has @ id_router ::
-      return false
-    console.log @ `add peer: ${id_router} <==> ${this.id_self}`
-    this.routes.set @ id_router, sendMsgRaw
-  unregisterRoute(id_router) ::
-    console.log @ `remove peer: ${id_router} <==> ${this.id_self}`
-    return this.routes.delete @ id_router
-  imposterRoute(id_router) ::
 
-  sendRoutingHandshake(sendMsgRaw) ::
-    if 'function' !== typeof sendMsgRaw ::
-      throw new TypeError @ `Expected 'sendMsgRaw' to be a function`
-    sendMsgRaw @ pack_hello @ this.ec_pub_id
+  // --- Dispatch control messages
 
+  bindDispatchControl() ::
+    return (msg, sendMsgRaw) => ::
+      const handler = this.dispControlByType[msg.type]
+      if undefined !== handler ::
+        handler(this, msg, sendMsgRaw)
+      else
+        this.dnu_dispatch_control(msg, sendMsgRaw)
 
   dispControlByType = Object.create @ this.dispControlByType
   dnu_dispatch_control(msg, sendMsgRaw) ::
     console.warn @ 'dnu_dispatch_control', msg.type, msg
 
+
+  // --- Control message utilities
+
+  sendRoutingHandshake(sendMsgRaw, ...args) ::
+    return sendMsgRaw @ pack_hello(this.ec_pub_id), ...args
+  sendPing(sendMsgRaw, ...args) ::
+    return sendMsgRaw @ pack_ping(), ...args
 
 
 MessageRouter.prototype.dispControlByType = Object.assign @ {}

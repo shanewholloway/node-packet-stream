@@ -34,9 +34,9 @@ function recv_olleh(dispatch, msg, sendMsgRaw) ::
     const body = msg.sliceBody()
     if 0 === hmac_secret.compare @ body ::
       const id_router = header.readUInt32LE(8)
-      dispatch.registerRoute @ id_router, sendMsgRaw
+      dispatch.registerPeerRoute @ id_router, sendMsgRaw
     else ::
-      dispatch.imposterRoute @ id_router
+      dispatch.imposterPeerRoute @ id_router, sendMsgRaw
     return true
 
 
