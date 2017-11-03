@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "docker": {
+    "registry_name": "swim_local_registry",
+    "registry_port": "5003",
+    "regirsty_prefix": "127.0.0.1:5003",
+    "network": "swim_playground"
+  },
+  "scripts": {
+    "start": "npm -s run dkr_init_network && npm -s run dkr_init_registry",
+    "stop": "npm -s run dkr_rm_network && npm -s run dkr_rm_registry",
+
+    "dkr_init_registry": "docker service create --name $npm_package_docker_registry_name --publish $npm_package_docker_registry_port:5000 --detach=false registry:latest || true",
+    "dkr_rm_registry": "docker service rm $npm_package_docker_registry_name || true",
+
+    "dkr_init_network": "docker network create $npm_package_docker_network --driver overlay --opt encrypted --attachable || true",
+    "dkr_rm_network": "docker network rm $npm_package_docker_network || true"
+  }
+}
+

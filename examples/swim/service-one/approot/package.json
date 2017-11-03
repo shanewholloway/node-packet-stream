@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "dependencies": {
+    "source-map-support": "^0.5.0",
+    "ec-pem": "^0.17.0",
+    "hashbelt": "^0.2.0",
+    "hashring": "^3.2.0",
+    "swim": "^0.3.2"
+  },
+  "scripts": {
+    "start": "node ./dist/main.js",
+    ":move_packages": "mv ./copied_packages/* ./node_modules/ && rm -rf ./copied_packages",
+    "build": "mkdir -p ./dist/ && cp -R ./code/* ./dist/"
+  }
+}

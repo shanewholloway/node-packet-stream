@@ -1,11 +1,11 @@
 require('source-map-support').install()
 import {MessageHub} from '../dist/hub'
-import tcp_plugin from '../dist/plugins/net'
+import net_plugin from '../dist/plugins/net'
 import swim_plugin from '../dist/plugins/swim_discovery'
 
 
 const Hub = MessageHub.plugin @
-  tcp_plugin()
+  net_plugin()
   swim_plugin()
 
 
@@ -49,15 +49,14 @@ async function main_swim_service(swim_port, ctx, meta) ::
 
       resolve @: hub, swimDisco
 
-async function main_demo(server) ::
-  const {hub, swimDisco} = await server
+function main_demo({hub, swimDisco}) ::
   dumpTableEverySoOften(swimDisco)
   swimDisco.registerRouterDiscovery()
 
   const channel = hub.connect_self()
   setInterval @ pingOneAtRandom, 1000
 
-  async function pingOneAtRandom() ::
+  function pingOneAtRandom() ::
     const lst = Array.from @ swimDisco.byId.values()
     const one = lst @[] 0 | @ Math.random() * lst.length
 
@@ -76,8 +75,9 @@ if module === require.main ::
   .then @ ctx => Promise.all @#
     main_swim_service @ pickAPort(), ctx, @{}
       topics: @# 'service_one', 'test'
-    main_demo @ main_swim_service @ pickAPort(), ctx, @{}
+    main_swim_service @ pickAPort(), ctx, @{}
       topics: @# 'service_two', 'test'
+    .then @ main_demo
 
   .catch @ console.error
 
