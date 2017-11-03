@@ -1,5 +1,6 @@
 import {URL} from 'url'
 import tcp_plugin from './tcp'
+import {bindSocketSendMsgRaw} from '../streams'
 
 module.exports = exports = net_plugin
 export default net_plugin
@@ -26,7 +27,11 @@ export function net_common(hub, asURL) ::
       return () => null
 
     bindChannel(sock) ::
-      return bindSendMsgRaw(sock, hub, asURL).api
+      const sendMsgRaw = bindSocketSendMsgRaw @
+        sock.unref(), hub._api_channel, asURL
+      console.log @: sendMsgRaw
+      hub.on_connect_peer @ sendMsgRaw
+      return sendMsgRaw.api
 
     unpackConnectArgs(args) ::
       if 1 === args.length ::
@@ -36,36 +41,5 @@ export function net_common(hub, asURL) ::
           args = @# @{} host, port
       return args
 
-
-
-export function bindSendMsgRaw(sock, hub, asURL) ::
-  sock.unref()
-  sock.setNoDelay()
-  sock.setKeepAlive(true)
-
-  const conn_info = () => @:
-    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
-    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
-
-  sendMsgRaw.api = Object.create @
-    hub._api_channel, @:
-      sendRaw: @: value: sendMsgRaw
-      conn_info: @: value: conn_info
-
-  hub.on_connect_peer_stream @
-    sock, sendMsgRaw
-
-  sendMsgRaw.shutdown
-    .catch @ () => null
-    .then @ () => sock.end()
-  return sendMsgRaw
-
-  function sendMsgRaw(msg, asPromise) ::
-    if null === msg ::
-      return void sock.end()
-    if ! asPromise ::
-      return void sock.write(msg)
-    return new Promise @ function (resolve, reject) ::
-      sock.write @ msg, err => err ? reject(err) : resolve()
 
 

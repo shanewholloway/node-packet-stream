@@ -1,12 +1,9 @@
+import {bindDispatchMsgRaw} from './streams'
+
 
 export class MessageChannel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
   pack() :: throw new Error @ `Instance responsiblity`
-
-  get sendMsgObj() ::
-    const sendRaw = this.sendRaw
-    return (msg_obj, asPromise) =>
-      sendRaw @ msg_obj._raw_, asPromise
 
   sendJSON(msg_obj, ...args) ::
     const msg = this.packJSON(msg_obj)
@@ -19,4 +16,25 @@ export class MessageChannel ::
       msg_obj.body = JSON.stringify @ msg_obj.body
 
     return this.pack(msg_obj)
+
+
+
+  static asChannelAPI(hub, router, packetStream) ::
+    const self = new this()
+    Object.defineProperties @ self, @:
+      pack: @: value: packetStream.packMessage
+      router: @: value: router
+      hub: @: value: hub
+
+    return self
+
+  static asInternalAPI(hub, router, packetStream) ::
+    const self = new this()
+    Object.defineProperties @ self, @:
+      pack: @: value: packetStream.packMessageObj
+      router: @: value: router
+      hub: @: value: hub
+
+    bindDispatchMsgRaw(self)
+    return self
 
