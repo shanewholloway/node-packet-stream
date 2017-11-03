@@ -80,26 +80,9 @@ export class SwimDiscovery ::
 
     throw new TypeError @ `Unexpected 'swim_hosts' parameter format.`
 
-  registerRouterDiscovery(hub) ::
-    if null == hub :: hub = this.hub
-
-    const resolveRouterId = async id_router => ::
-      const entry = this.byId.get(id_router)
-      if undefined === entry :: return
-
-      const chan = await hub.connect @ entry.channel
-      return chan.sendRaw
-
-    hub.router._routeDiscovery.push @ resolveRouterId
-    return this
-      
-  _subscriberList = []
-  subscribe(callback) ::
-    this._subscriberList.push @ callback
-    return this
 
   _bindSwimUpdates(swim, byId) ::
-    const updateProps = @{} byId: @: values: byId
+    const updateProps = @{} byId: @: value: byId
     const pqueue = this.promiseQueue @ () => ::
       const updates = Object.defineProperties @ [], updateProps
       const ans = sleep(0, updates)
@@ -126,6 +109,26 @@ export class SwimDiscovery ::
       const entry = Object.assign @ {}, meta, @{} swim_state, swim_host, swim_ts: new Date()
       byId.set @ id_router, entry
       pqueue().updates.push @ entry
+
+
+  registerRouterDiscovery(hub) ::
+    if null == hub :: hub = this.hub
+
+    const resolveRouterId = async id_router => ::
+      const entry = this.byId.get(id_router)
+      if undefined === entry :: return
+
+      const chan = await hub.connect @ entry.channel
+      return chan.sendRaw
+
+    hub.router._routeDiscovery.push @ resolveRouterId
+    return this
+
+
+  _subscriberList = []
+  subscribe(callback) ::
+    this._subscriberList.push @ callback
+    return this
 
 Object.assign @ SwimDiscovery.prototype, @:
   swim_state_lut: @[] 'alive', 'suspect', 'dead'
