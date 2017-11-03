@@ -90,15 +90,17 @@ export class MessageRouter ::
   _routeDiscovery = []
   dispatch_discover_route(id_router, msg) ::
     const tip = Promise.resolve(id_router)
+    // TODO: Promise.race might return the first null… dang.
     return Promise.race @
       this._routeDiscovery.map @
         discover => tip.then @ discover
 
   bindDispatchRoute() ::
+    const routes = this.routes
     return async (msg, sendMsgRaw) => ::
       try ::
         const id_router = msg.id_router
-        let dispatch_route = this.routes.get(id_router)
+        let dispatch_route = routes.get(id_router)
         if undefined === dispatch_route ::
           dispatch_route = await this.dispatch_discover_route(id_router, msg)
           if null == dispatch_route :: return
@@ -176,10 +178,10 @@ export class MessageRouter ::
 
   // --- Control message utilities
 
-  sendRoutingHandshake(sendMsgRaw, ...args) ::
-    return sendMsgRaw @ pack_hello(this.ec_pub_id), ...args
-  sendPing(sendMsgRaw, ...args) ::
-    return sendMsgRaw @ pack_ping(), ...args
+  sendRoutingHandshake(sendMsgRaw) ::
+    return sendMsgRaw @ pack_hello(this.ec_pub_id)
+  sendPing(sendMsgRaw) ::
+    return sendMsgRaw @ pack_ping()
 
 
 MessageRouter.prototype.dispControlByType = Object.assign @ {}

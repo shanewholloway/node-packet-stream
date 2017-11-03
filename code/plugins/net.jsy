@@ -28,7 +28,7 @@ export function net_common(hub, asURL) ::
 
     bindChannel(sock) ::
       const sendMsgRaw = bindSocketSendMsgRaw @
-        sock.unref(), hub._api_channel, asURL
+        sock, hub._api_channel, asURL
 
       hub.on_connect_peer @ sendMsgRaw
       return sendMsgRaw.api

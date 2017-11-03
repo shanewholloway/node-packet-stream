@@ -16,18 +16,20 @@ export function tls_plugin(plugin_options={}) ::
 
     const net_api = @: connect, createServer
     hub._connectByProtocol.set @ 'tls:', connect
-    return hub.net = net_api
+    return hub.tls = net_api
 
 
     function connect(...args) ::
       args = _common_.unpackConnectArgs(args)
       return new Promise @ (resolve, reject) => ::
         _tls_connect @ ...args, function () ::
-          resolve @ _common_.bindChannel @ this
+          const sock = this.unref().setKeepAlive(true)
+          resolve @ _common_.bindChannel @ sock
         .on @ 'error', reject
 
     function createServer(options, onPeer) ::
       const svr = _tls_createServer @ options, sock => ::
-        on_peer @ _common_.bindChannel(sock)
+        sock = sock.unref().setKeepAlive(false)
+        on_peer @ _common_.bindChannel @ sock
       const on_peer = _common_.bindOnPeer(svr, onPeer)
       return svr

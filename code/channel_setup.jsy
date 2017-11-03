@@ -14,8 +14,8 @@ export function pack_hello(ec_pub_id) ::
     header: ec_pub_id // buffer
 
 function recv_hello(dispatch, msg, sendMsgRaw) ::
-    const header = msg.sliceHeader()
-    const hmac_secret = dispatch.ec_id_hmac @ header
+    const ec_other_id = msg.sliceHeader()
+    const hmac_secret = dispatch.ec_id_hmac @ ec_other_id
     sendMsgRaw @ pack_olleh @
       dispatch.ec_pub_id, hmac_secret
     return true
@@ -29,11 +29,11 @@ function pack_olleh(ec_pub_id, hmac_secret) ::
     body: hmac_secret // buffer
 
 function recv_olleh(dispatch, msg, sendMsgRaw) ::
-    const header = msg.sliceHeader()
-    const hmac_secret = dispatch.ec_id_hmac @ header, true
-    const body = msg.sliceBody()
-    if 0 === hmac_secret.compare @ body ::
-      const id_router = header.readUInt32LE(8)
+    const ec_pub_id = msg.sliceHeader()
+    const hmac_secret = dispatch.ec_id_hmac @ ec_pub_id, true
+    const peer_hmac_claim = msg.sliceBody()
+    if 0 === hmac_secret.compare @ peer_hmac_claim ::
+      const id_router = ec_pub_id.readUInt32LE(8)
       dispatch.registerPeerRoute @ id_router, sendMsgRaw
     else ::
       dispatch.imposterPeerRoute @ id_router, sendMsgRaw

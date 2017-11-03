@@ -7,7 +7,7 @@ const Hub = MessageHub
 
 async function main_server() ::
   const hub = new Hub()
-  const svr = hub.net.createServer()
+  const svr = hub.tcp.createServer()
     .listen(8080, '127.0.0.1')
 
   setTimeout @
@@ -25,7 +25,7 @@ async function main_server() ::
 
 async function main_client_one(id_hub) ::
   const hub = new Hub()
-  const channel = await hub.net.connect @: host:'127.0.0.1', port: 8080
+  const channel = await hub.tcp.connect @: host:'127.0.0.1', port: 8080
   channel.sendJSON @:
     id_router: id_hub
     id_target: 123

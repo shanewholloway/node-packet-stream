@@ -41,12 +41,12 @@ export class MessageHub ::
       pluginFunctions
 
     const BaseHub = this._BaseHub_ || MessageHub
-    class PacketMessageHub_PI extends BaseHub ::
-    Object.defineProperties @ PacketMessageHub_PI.prototype, @:
+    class MessageHub_PI extends BaseHub ::
+    Object.defineProperties @ MessageHub_PI.prototype, @:
       pluginList: @{} value: Object.freeze @ pluginList
-    Object.defineProperties @ PacketMessageHub_PI, @:
+    Object.defineProperties @ MessageHub_PI, @:
       _BaseHub_: @{} value: BaseHub
-    return PacketMessageHub_PI
+    return MessageHub_PI
 
 
   connect_self() ::

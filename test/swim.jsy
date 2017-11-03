@@ -17,7 +17,7 @@ async function main_swim_core(swim_port, meta) ::
     const body = JSON.parse @ msg.sliceBody().toString() || 'null'
     console.log @ 'CORE got message!', {header, body}, meta
 
-  const svr = hub.net.createServer()
+  const svr = hub.tcp.createServer()
   return new Promise @ (resolve, reject) => ::
     svr.once @ 'error', reject
     svr.listen @ 8080, '127.0.0.1', function () ::
@@ -37,7 +37,7 @@ async function main_swim_service(swim_port, ctx, meta) ::
     const body = JSON.parse @ msg.sliceBody().toString() || 'null'
     console.log @ 'SVC got message!', {header, body}, meta
 
-  const svr = hub.net.createServer()
+  const svr = hub.tcp.createServer()
   return new Promise @ (resolve, reject) => ::
     svr.once @ 'error', reject
     svr.listen @ 0, '127.0.0.1', function () ::

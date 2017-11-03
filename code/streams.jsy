@@ -5,9 +5,8 @@ export function bindDispatchMsgRaw(api_internal) ::
     sendRaw: @: value: dispatchMsgRaw
   return dispatchMsgRaw
 
-  function dispatchMsgRaw(msg, asPromise) ::
+  function dispatchMsgRaw(msg) ::
     dispatch @ [msg], dispatchMsgRaw
-    if asPromise :: return Promise.resolve()
 
 
 export function bindStreamSendMsgRaw(stream, api_channel, props) ::
@@ -18,7 +17,7 @@ export function bindStreamSendMsgRaw(stream, api_channel, props) ::
   connectPacketStream @ stream, sendMsgRaw, true
   return sendMsgRaw
 
-  function sendMsgRaw(msg, asPromise) ::
+  function sendMsgRaw(msg) ::
     if ! Buffer.isBuffer @ msg ::
       if ! Buffer.isBuffer @ msg._raw_ ::
         throw new TypeError @ `sendMsgRaw expected 'msg' as a Buffer or an object with a '_raw_' Buffer`
@@ -26,14 +25,11 @@ export function bindStreamSendMsgRaw(stream, api_channel, props) ::
 
     if null === msg ::
       return void stream.end()
-    if ! asPromise ::
-      return void stream.write(msg)
-    return new Promise @ function (resolve, reject) ::
-      stream.write @ msg, err => err ? reject(err) : resolve()
+    return void stream.write(msg)
 
 
 export function bindSocketSendMsgRaw(sock, api_channel, asURL) ::
-  sock.setNoDelay(true).setKeepAlive(true)
+  sock.setNoDelay(true)
 
   const conn_info = () => @:
     ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
@@ -45,7 +41,8 @@ export function bindSocketSendMsgRaw(sock, api_channel, asURL) ::
 
 export function connectPacketStream(stream, sendMsgRaw, endStreamOnShutdown) ::
   return sendMsgRaw.shutdown = new Promise @ (resolve, reject) => ::
-    const hub = sendMsgRaw.api.hub, dispatch = hub.router.dispatch
+    const hub = sendMsgRaw.api.hub
+    const dispatch = hub.router.dispatch
 
     let pktParser = hub._packetStream.clone()
     const on_recv_messages = msgList =>
