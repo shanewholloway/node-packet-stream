@@ -1,4 +1,6 @@
 import {resolve as dns_resolve} from 'dns'
+import {promiseQueue} from '../utils'
+
 const SWIM = require('swim')
 
 const default_plugin_options = @{}
@@ -48,7 +50,7 @@ export function swim_plugin(plugin_options) ::
       const swim = new SWIM @ swim_opts
       return new SwimDiscovery @ hub, swim
 
-const swim_state_lut = @[] 'alive', 'suspect', 'dead'
+
 
 export class SwimDiscovery ::
   constructor(hub, swim) ::
@@ -58,13 +60,7 @@ export class SwimDiscovery ::
       swim: @: value: swim
       byId: @: value: byId
 
-    ::
-      const {host, meta} = swim.opts.local
-      this._on_updateEntry @ meta, 'self', host
-
-    swim.on @ 'update', evt => ::
-      this._on_updateEntry @
-        evt.meta, swim_state_lut[evt.state], evt.host
+    this._bindSwimUpdates(swim, byId)
 
   localhost() :: return this.swim.localhost()
 
@@ -97,13 +93,39 @@ export class SwimDiscovery ::
     hub.router._routeDiscovery.push @ resolveRouterId
     return this
       
+  _subscriberList = []
+  subscribe(callback) ::
+    this._subscriberList.push @ callback
+    return this
 
-  _on_updateEntry(meta, swim_state, swim_host) ::
-    const {byId} = this, {id_router, ec_pub_id} = meta
-    const cur = byId.get(id_router)
-    if undefined !== cur && ec_pub_id != cur.ec_pub_id ::
-      return // refuse to override existing entries with mismatched ec_pub_id
+  _bindSwimUpdates(swim, byId) ::
+    const pqueue = this.promiseQueue @ () => ::
+      const updates = []
+      const ans = Promise.resolve({updates, byId})
+      ans.updates = updates
+      for const sub of this._subscriberList ::
+        ans.then(sub)
+      return ans
 
-    const entry = Object.assign @ {}, meta, @{} swim_state, swim_host, swim_ts: new Date()
-    this.byId.set @ id_router, entry
+    ::
+      const {host, meta} = swim.opts.local
+      _on_updateEntry @ meta, 'self', host
 
+    ::
+      const swim_state_lut = this.swim_state_lut.slice()
+      swim.on @ 'update', evt => ::
+        _on_updateEntry @ evt.meta, swim_state_lut[evt.state], evt.host
+
+    function _on_updateEntry(meta, swim_state, swim_host) ::
+      const {id_router, ec_pub_id} = meta
+      const cur = byId.get(id_router)
+      if undefined !== cur && ec_pub_id != cur.ec_pub_id ::
+        return // refuse to override existing entries with mismatched ec_pub_id
+
+      const entry = Object.assign @ {}, meta, @{} swim_state, swim_host, swim_ts: new Date()
+      byId.set @ id_router, entry
+      pqueue().updates.push @ entry
+
+Object.assign @ SwimDiscovery.prototype, @:
+  swim_state_lut: @[] 'alive', 'suspect', 'dead'
+  promiseQueue

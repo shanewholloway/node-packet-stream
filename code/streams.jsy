@@ -70,5 +70,3 @@ export function connectPacketStream(stream, sendMsgRaw, endStreamOnShutdown) ::
 
       err ? reject(err) : resolve()
 
-
-function noop() ::

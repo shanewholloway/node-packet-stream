@@ -1,0 +1,12 @@
+
+export function promiseQueue(nextPromise=() => Promise.resolve()) ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = nextPromise()
+      tip.then @ clear_tip
+    return tip
+
+  function clear_tip() ::
+    tip = null
+

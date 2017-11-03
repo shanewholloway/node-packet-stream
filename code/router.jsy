@@ -1,4 +1,5 @@
 import {createECDH, createHmac} from 'crypto'
+import {promiseQueue} from './utils'
 import {pack_hello, pack_ping, dispControlByType as channelSetupByType} from './channel_setup'
 
 try :: var ec_pem = require('ec-pem')
@@ -189,16 +190,4 @@ Object.assign @ MessageRouter.prototype, @{}
   promiseQueue
 export default MessageRouter
 
-
-
-function promiseQueue(nextPromise=() => Promise.resolve()) ::
-  let tip = null
-  return function () ::
-    if null === tip ::
-      tip = nextPromise()
-      tip.then @ clear_tip
-    return tip
-
-  function clear_tip() ::
-    tip = null
 
