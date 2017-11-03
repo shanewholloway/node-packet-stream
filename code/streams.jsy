@@ -10,9 +10,10 @@ export function bindDispatchMsgRaw(api_internal) ::
     if asPromise :: return Promise.resolve()
 
 
-export function bindStreamSendMsgRaw(stream, api_channel) ::
+export function bindStreamSendMsgRaw(stream, api_channel, props) ::
   sendMsgRaw.api = Object.create @ api_channel
-    @: sendRaw: @: value: sendMsgRaw
+    Object.assign @ {}, props
+      @: sendRaw: @: value: sendMsgRaw
 
   connectPacketStream @ stream, sendMsgRaw, true
   return sendMsgRaw
