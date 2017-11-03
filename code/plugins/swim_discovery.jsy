@@ -1,5 +1,5 @@
 import {resolve as dns_resolve} from 'dns'
-import {promiseQueue} from '../utils'
+import {promiseQueue, sleep} from '../utils'
 
 const SWIM = require('swim')
 
@@ -99,9 +99,10 @@ export class SwimDiscovery ::
     return this
 
   _bindSwimUpdates(swim, byId) ::
+    const updateProps = @{} byId: @: values: byId
     const pqueue = this.promiseQueue @ () => ::
-      const updates = []
-      const ans = Promise.resolve({updates, byId})
+      const updates = Object.defineProperties @ [], updateProps
+      const ans = sleep(0, updates)
       ans.updates = updates
       for const sub of this._subscriberList ::
         ans.then(sub)

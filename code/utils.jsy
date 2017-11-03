@@ -1,4 +1,7 @@
 
+export function sleep(ms, ctx) ::
+  return new Promise @ resolve => setTimeout(resolve, ms, ctx)
+
 export function promiseQueue(nextPromise=() => Promise.resolve()) ::
   let tip = null
   return function () ::
