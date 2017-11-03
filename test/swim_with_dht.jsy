@@ -80,15 +80,16 @@ function main_demo({hub, swimDisco}) ::
   function lookup(addr) ::
     return 
   function pingOneAtRandom() ::
-    const key = manyKeys @[] 0 | @ Math.random() * manyKeys.length
+    const idx = 0 | @ Math.random() * manyKeys.length
+    const key = manyKeys[idx]
 
     const addr = myTopicDHT.get @ key
     const entry = myTopicById.get(addr)
-    console.log @ `sending message to "${addr}":`, entry.topics
+    //console.log @ `sending message[${idx}] to "${addr}":`, entry.topics
 
     channel.sendJSON @:
       id_router: entry.id_router
-      body: @: addr
+      body: @: addr, idx
 
 if module === require.main ::
   let _last_port = 2770
@@ -103,7 +104,7 @@ if module === require.main ::
         topics: @# 'service_demo', 'test'
       .then @ main_demo
     
-    Promise.all @ Array(20).fill(0).map @ (_,i) => @
+    Promise.all @ Array(30).fill(0).map @ (_,i) => @
       main_swim_service @ pickAPort(), ctx, @{}
         topics: @# `service_id_${i}`, 'test'
 
