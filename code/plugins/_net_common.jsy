@@ -22,7 +22,7 @@ export function net_common(hub, asURL) ::
       const channel = bindSocketChannel @
         sock, hub._api_channel, asURL
 
-      hub.on_connect_peer @ channel
+      channel.sendRoutingHandshake()
       return channel
 
     unpackConnectArgs(args) ::

@@ -147,6 +147,8 @@ const msg_obj_proto = @:
     return this._raw_.slice @ this.body_offset
   sliceHeader() ::
     return this._raw_.slice @ this.header_offset, this.body_offset
+  readId(buf, offset) ::
+    return buf.readUInt32LE(8)
 
 
 

@@ -15,7 +15,10 @@ export function bindStreamChannel(stream, api_channel, props) ::
 
 
 export function connectPacketStream(stream, channel, endStreamOnShutdown) ::
-  return channel.shutdown = new Promise @ (resolve, reject) => ::
+  const shutdown = new Promise @ lifecycle
+  return Object.defineProperty @ channel, 'shutdown', @: value: shutdown
+  
+  function lifecycle(resolve, reject) ::
     let pktDispatch = channel.bindDispatchPackets()
 
     stream.on @ 'error', shutdown

@@ -1,10 +1,13 @@
+import {send_hello, send_ping} from './control_protocol'
+
 
 export class MessageChannel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
-  pack() :: throw new Error @ `Instance responsiblity`
+  packRaw() :: throw new Error @ `Instance responsiblity`
+  pack(...args) :: return this.packRaw @ this.context, ...args
 
-  packAndSend(...args) ::
-    return this.sendRaw @ this.pack @ ...args
+  packAndSendRaw(...args) ::
+    return this.sendRaw @ this.packRaw @ ...args
 
   sendJSON(msg_obj) ::
     return this.sendRaw @ this.packJSON @ msg_obj
@@ -17,15 +20,24 @@ export class MessageChannel ::
     return this.pack(msg_obj)
 
 
+  // --- Control message utilities
+
+  sendRoutingHandshake(channel) ::
+    return send_hello(this, this.ec_pub_id)
+  sendPing(channel) ::
+    return send_ping(this)
+
+
+
   clone(props) :: return Object.create(this, props)
   bindChannel(sendRaw, props) :: return bindChannel(this, sendRaw, props)
   bindDispatchPackets() :: return bindDispatchPackets(this)
 
 
-  static asAPI(hub, router, pack) ::
+  static asAPI(hub, router, packRaw) ::
     const self = new this()
     Object.defineProperties @ self, @:
-      pack: @: value: pack
+      packRaw: @: value: packRaw
       router: @: value: router
       hub: @: value: hub
       _root_: @: value: self
@@ -68,7 +80,7 @@ export function bindDispatchMsgRaw(router) ::
 
 
 export function bindDispatchPackets(channel) ::
-  const dispatch = channel.hub.router.dispatch
+  const dispatch = channel.router.dispatch
   const pktParser = channel.hub._packetStream.clone()
 
   return function on_recv_data(data) ::

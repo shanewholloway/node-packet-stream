@@ -9,9 +9,8 @@ export function tcp_plugin(plugin_options={}) ::
   return function(hub) ::
     const _common_ = net_common(hub, as_tcp_url)
 
-    const tcp_api = @: connect, createServer
-    hub._connectByProtocol.set @ 'tcp:', connect
-    return hub.tcp = tcp_api
+    hub.registerConnectionProtocol @ 'tcp:', connect
+    return hub.tcp = @: connect, createServer
 
 
     function connect(...args) ::

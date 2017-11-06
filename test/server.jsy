@@ -41,6 +41,11 @@ async function main_client_two(id_hub) ::
 
 
 if module === require.main ::
-  main_server().then @ id_hub => ::
+  main_server()
+  .then @ id_hub => ::
     main_client_one @ id_hub
     main_client_two @ id_hub
+  .catch @ console.error
+
+  process.on @ 'unhandledRejection', (reason, p) => ::
+    console.log @ 'Unhandled Rejection at:', p, 'reason:', reason

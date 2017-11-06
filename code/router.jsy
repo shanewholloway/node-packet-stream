@@ -1,81 +1,26 @@
-import {createECDH, createHmac} from 'crypto'
-import * as protocol from './control_protocol'
-
-try :: var ec_pem = require('ec-pem')
-catch err ::
-
-function initRouterIdentity(router, curve) ::
-  // Create closures over the Router's EC private identity credentials
-  var __ec_priv_id__, ec_pub_id, id_self
-  while ! id_self :: // ensure id_self !== 0 by happenstance
-    __ec_priv_id__ = Object.assign @ createECDH(curve), @{} curve
-    ec_pub_id = __ec_priv_id__.generateKeys(null, 'compressed')
-    id_self = ec_pub_id.readUInt32LE(8) // read id from offset 8 to 12
-
-  Object.defineProperties @ router, @:
-    id_self: @: value: id_self
-    ec_pub_id: @: value: ec_pub_id
-    ec_id_hmac: @: value: ec_id_hmac
-
-
-  if undefined === ec_pem ::
-    const ec_pem_missing = @: value() ::
-      throw new Error @ `Requires optional [ec-pem][1] dependency.\n    [1]: https://www.npmjs.com/package/ec-pem`
-
-    Object.defineProperties @ router, @: ec_id_sign: ec_pem_missing, ec_id_verify: ec_pem_missing
-
-  else ::
-    const ec_signed_id = ec_id_sign('sha256', ec_pub_id).sign()
-    if ! ec_signed_id_verify(ec_pub_id, ec_signed_id) ::
-      throw new Error @ `Asserted self-verify of ec_pub_id failed`
-
-    Object.defineProperties @ router, @:
-      ec_signed_id: @: value: ec_signed_id
-      ec_id_sign: @: value: ec_id_sign
-      ec_id_verify: @: value: ec_id_verify
-
-
-  return id_self
-
-  function ec_id_hmac(ec_pub_other, reverse) ::
-    const secret = __ec_priv_id__.computeSecret(ec_pub_other)
-    return createHmac('sha256', secret)
-      .update @ reverse ? ec_pub_other : ec_pub_id
-      .digest()
-
-  function ec_id_sign(algorithm, ...args) ::
-    return ec_pem.sign(__ec_priv_id__, algorithm, ...args)
-
-  function ec_signed_id_verify(ec_pub_other, ec_signed_other) ::
-    const verify = ec_id_verify(ec_pub_other, 'sha256', ec_pub_other)
-    return ec_signed_other ? verify.verify(ec_signed_other) : verify
-
-  function ec_id_verify(ec_pub_other, algorithm, ...args) ::
-    // see ec-pem.verfiy and crypto.createVerfiy
-    let ec = ec_pub_other
-    if null == ec_pub_other.curve ::
-      ec = Object.assign @ createECDH(curve), @{} curve
-      if ec_pub_other.getPublicKey ::
-        ec.setPublicKey @ ec_pub_other.getPublicKey()
-      else ec.setPublicKey @ ec_pub_other
-
-    return ec_pem.verify(ec, algorithm, ...args)
-
+import {dispControlByType} from './control_protocol'
 
 export class MessageRouter ::
-  constructor() ::
-    const id_self = initRouterIdentity(this, this.ec_curve)
-    this.dispatch = this._initDispatch(id_self, this.routes)
+  constructor(id_self) ::
+    if id_self ::
+      Object.defineProperties @ this, @: id_self: @: value: id_self
+      this._initDispatch()
 
   // --- Dispatch core ---
 
-  _initDispatch(id_self, routes) ::
+  _initDispatch() ::
+    const routes = this._createRoutesMap()
     routes.set @ 0, this.bindDispatchControl()
-    routes.set @ id_self, this.bindDispatchSelf()
-    const dispatch_one = this.bindDispatchRoute()
+    if null != this.id_self ::
+      routes.set @ this.id_self, this.bindDispatchSelf()
 
     const pqueue = promiseQueue()
-    return (msgList, channel) => ::
+    const dispatch_one = this.bindDispatchRoute(routes)
+    return Object.defineProperties @ this, @:
+      routes: @: value: routes
+      dispatch: @: value: dispatch
+
+    function dispatch(msgList, channel) ::
       const pq = pqueue() // pq will dispatch during Promise resolutions
       return msgList.map @ msg =>
         pq.then @ () => dispatch_one(msg, channel)
@@ -83,6 +28,7 @@ export class MessageRouter ::
   on_error_in_dispatch(err, msg) ::
     console.error @ 'Error during msg dispatch\n  msg:', msg, '\n', err, '\n'
 
+  _createRoutesMap() :: return new Map()
 
   // --- Dispatch to route ---
 
@@ -94,8 +40,7 @@ export class MessageRouter ::
       this._routeDiscovery.map @
         discover => tip.then @ discover
 
-  bindDispatchRoute() ::
-    const routes = this.routes
+  bindDispatchRoute(routes) ::
     return async (msg, channel) => ::
       try ::
         const id_router = msg.id_router
@@ -111,27 +56,28 @@ export class MessageRouter ::
         this.on_error_in_dispatch(err, msg, channel)
 
 
-  routes = new Map()
   registerRoute(id_router, dispatch_route) ::
     if 'function' !== typeof dispatch_route ::
       if null != dispatch_route ::
         throw new TypeError @ `Expected 'dispatch_route' to be a function`
       else return false
-    if this.routes.has @ id_router ::
-      return false
+    if this.routes.has @ id_router :: return false
+    if 0 === id_router :: return false
+    if this.id_self === id_router :: return false
+
     this.routes.set @ id_router, dispatch_route
     return true
   unregisterRoute(id_router) ::
     return this.routes.delete @ id_router
-
-  imposterPeerRoute(id_router, channel) ::
   registerPeerRoute(id_router, channel) ::
-    if 0 === id_router ::
-      return false
-    else if this.id_self === id_router ::
-      return false
     return this.registerRoute @ id_router, msg => ::
       if 0 !== msg.ttl :: channel.sendRaw(msg)
+  verifiedPeerRoute(id_router, channel) ::
+    return this.registerPeerRoute(id_router, channel)
+  unverifiedPeerRoute(id_router, channel) ::
+    if this.allowUnverifiedRoutes ::
+      return this.registerPeerRoute(id_router, channel)
+    else console.warn @ 'Unverified peer route (ignored):', @: id_router, channel
 
 
   // --- Dispatch to local target
@@ -175,19 +121,9 @@ export class MessageRouter ::
     console.warn @ 'dnu_dispatch_control', msg.type, msg
 
 
-  // --- Control message utilities
-
-  sendRoutingHandshake(channel) ::
-    return protocol.send_hello(channel, this.ec_pub_id)
-  sendPing(channel) ::
-    return protocol.send_ping(channel)
-
-
 MessageRouter.prototype.dispControlByType = Object.assign @ {}
-  protocol.dispControlByType
+  dispControlByType
 
-Object.assign @ MessageRouter.prototype, @{}
-  ec_curve: 'prime256v1'
 export default MessageRouter
 
 

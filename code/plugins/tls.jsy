@@ -9,9 +9,8 @@ export function tls_plugin(plugin_options={}) ::
   return function(hub) ::
     const _common_ = net_common(hub, as_tls_url)
 
-    const net_api = @: connect, createServer
-    hub._connectByProtocol.set @ 'tls:', connect
-    return hub.tls = net_api
+    hub.registerConnectionProtocol @ 'tcp:', connect
+    return hub.tls = @: connect, createServer
 
 
     function connect(...args) ::

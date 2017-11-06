@@ -1,6 +1,6 @@
 import {URL} from 'url'
 import {packetStreamParser} from './parser'
-import {MessageRouter} from './router'
+import {ECMessageRouter} from './ec_router'
 import {MessageChannel} from './channel'
 
 export class MessageHub ::
@@ -19,7 +19,7 @@ export class MessageHub ::
       this.plugin @ ... this.pluginList
 
   _init_router() ::
-    return new MessageRouter()
+    return new ECMessageRouter()
 
   _init_packetStreamParser() ::
     return packetStreamParser()
@@ -50,11 +50,9 @@ export class MessageHub ::
     return MessageHub_PI
 
 
-
   connect_self() ::
     return this._api_internal.clone()
 
-  _connectByProtocol = new Map() // provided by plugins…
   connect(conn_url) ::
     if null == conn_url ::
       return this.connect_self()
@@ -62,14 +60,17 @@ export class MessageHub ::
     if 'string' === typeof conn_url ::
       conn_url = new URL(conn_url)
 
-    const connect = this._connectByProtocol.get(conn_url.protocol)
+    const connect = this._connectByProtocol[conn_url.protocol]
     if ! connect ::
       throw new Error @ `Connection protocol "${conn_url.protocol}" not registered for "${conn_url.toString()}"`
 
     return connect(conn_url)
 
-
-  on_connect_peer(channel) ::
-    this.router.sendRoutingHandshake(channel)
-    return this
+  registerConnectionProtocol(protocol, cb_connect) ::
+    if 'function' !== typeof cb_connect ::
+      throw new TypeError @ `Expected 'cb_connect' function`
+    const byProtocol = Object.assign @ {}, this._connectByProtocol
+    byProtocol[protocol] = cb_connect
+    return Object.defineProperty @ this, '_connectByProtocol',
+      @: value: byProtocol, configurable: true
 
