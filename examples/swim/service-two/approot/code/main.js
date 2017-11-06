@@ -1,5 +1,5 @@
 require('source-map-support').install()
-const {MessageHub} = require('packet-stream/dist/hub')
+const MessageHub = require('packet-stream/dist')
 const tcp_plugin = require('packet-stream/dist/plugins/tcp')
 const swim_plugin = require('packet-stream/dist/plugins/swim_discovery')
 

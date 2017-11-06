@@ -75,7 +75,7 @@ export class MessageRouter ::
   verifiedPeerRoute(id_router, channel) ::
     return this.registerPeerRoute(id_router, channel)
   unverifiedPeerRoute(id_router, channel) ::
-    if this.allowUnverifiedRoutes ::
+    if this.allowUnverifiedRoutes || channel.allowUnverifiedRoutes ::
       return this.registerPeerRoute(id_router, channel)
     else console.warn @ 'Unverified peer route (ignored):', @: id_router, channel
 

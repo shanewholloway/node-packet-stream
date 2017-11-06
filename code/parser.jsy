@@ -34,7 +34,9 @@ export function packetStreamParser(options={}) ::
   let tip=null, qByteLen = 0, q = []
 
   return Object.assign @ feed, @{}
-    feed, clone, parseHeader, packMessage, packMessageObj
+    feed, clone, parseHeader
+    packMessage, packMessageObj
+    packId, unpackId
     pkt_details
 
   function clone(opt) ::
@@ -147,10 +149,16 @@ const msg_obj_proto = @:
     return this._raw_.slice @ this.body_offset
   sliceHeader() ::
     return this._raw_.slice @ this.header_offset, this.body_offset
-  readId(buf, offset=8) ::
-    return (buf || this._raw_).readUInt32LE(offset)
+  unpackId(buf, offset=8) ::
+    return unpackId(buf || this._raw_, offset)
 
 
+export function packId(id, offset) ::
+  const buf = Buffer.alloc(4)
+  buf.writeUInt32LE(id, offset)
+  return buf
+export function unpackId(buf, offset) ::
+  return buf.readUInt32LE(offset)
 
 export function packMessage(...args) ::
   let {type, ttl, id_router, id_target, header, body} = Object.assign @ {}, ...args

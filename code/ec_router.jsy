@@ -1,9 +1,12 @@
 import {createECDH, createHmac} from 'crypto'
+import MessageHub from './hub'
 import MessageRouter from './router'
 
 try :: var ec_pem = require('ec-pem')
 catch err ::
 
+export class ECMessageHub extends MessageHub ::
+  _init_router() :: return new ECMessageRouter()
 
 export class ECMessageRouter extends MessageRouter ::
   constructor() ::
@@ -11,7 +14,6 @@ export class ECMessageRouter extends MessageRouter ::
     initRouterIdentity(this, this.ec_curve || 'prime256v1')
     this._initDispatch()
 
-export default ECMessageRouter
 
 
 function initRouterIdentity(router, curve) ::

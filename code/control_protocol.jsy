@@ -8,31 +8,39 @@ export const dispControlByType = @{}
 
 export function send_hello(channel) ::
   const {ec_pub_id} = channel.router
+  if ec_pub_id ::
+    var header = ec_pub_id
+  else ::
+    var body = channel.hub.id_router_self()
+
   return channel.packAndSendRaw @:
-    id_router: 0, type: 0xf0
-    header: ec_pub_id // buffer
+    id_router: 0, type: 0xf0, header, body
 
 function recv_hello(dispatch, msg, channel) ::
   const ec_other_id = msg.sliceHeader()
-  const hmac_secret = dispatch.ec_id_hmac
-    ? dispatch.ec_id_hmac(ec_other_id) : null
-  send_olleh @ channel, hmac_secret
+  if 0 !== ec_other_id.length ::
+    const hmac_secret = dispatch.ec_id_hmac
+      ? dispatch.ec_id_hmac(ec_other_id) : null
+    send_olleh @ channel, hmac_secret
 
+  else ::
+    const id_router = msg.unpackId(msg.sliceBody(), 0)
+    dispatch.unverifiedPeerRoute @ id_router, channel
 
 
 function send_olleh(channel, hmac_secret) ::
   const {ec_pub_id} = channel.router
   return channel.packAndSendRaw @:
     id_router: 0, type: 0xf1
-    header: ec_pub_id // buffer
-    body: hmac_secret // buffer
+    header: ec_pub_id
+    body: hmac_secret
 
 function recv_olleh(dispatch, msg, channel) ::
-  const ec_pub_id = msg.sliceHeader()
-  const id_router = msg.readId(ec_pub_id)
+  const ec_other_id = msg.sliceHeader()
+  const id_router = msg.unpackId(ec_other_id)
 
   const hmac_secret = dispatch.ec_id_hmac
-    ? dispatch.ec_id_hmac(ec_pub_id, true) : null
+    ? dispatch.ec_id_hmac(ec_other_id, true) : null
   const peer_hmac_claim = msg.sliceBody()
   if hmac_secret && 0 === hmac_secret.compare @ peer_hmac_claim ::
     dispatch.verifiedPeerRoute @ id_router, channel

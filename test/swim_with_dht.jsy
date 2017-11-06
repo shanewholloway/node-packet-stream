@@ -1,7 +1,7 @@
 require('source-map-support').install()
 import HashRing from 'hashring'
 
-import {MessageHub} from '../dist/hub'
+import MessageHub from '../dist'
 import tcp_plugin from '../dist/plugins/tcp'
 import swim_plugin from '../dist/plugins/swim_discovery'
 

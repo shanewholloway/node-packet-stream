@@ -1,10 +1,12 @@
 import {URL} from 'url'
 import {packetStreamParser} from './parser'
-import {ECMessageRouter} from './ec_router'
+import {MessageRouter} from './router'
 import {MessageChannel} from './channel'
 
 export class MessageHub ::
   constructor() ::
+    applyPlugins @ this, 'pre', this.pluginList
+
     const router = this._init_router()
     const _packetStream = this._init_packetStreamParser()
     const _api_channel = this._init_channelAPI(router, _packetStream)
@@ -15,11 +17,13 @@ export class MessageHub ::
       _api_channel: @{} value: _api_channel
       _api_internal: @{} value: _api_internal
 
-    if this.pluginList ::
-      this.plugin @ ... this.pluginList
+    applyPlugins @ this, null, this.pluginList
+    return this
 
   _init_router() ::
-    return new ECMessageRouter()
+    const id_self = 0 | Math.random() * 0x7fffffff
+    console.log @ "DOH", id_self
+    return new MessageRouter(id_self)
 
   _init_packetStreamParser() ::
     return packetStreamParser()
@@ -31,24 +35,23 @@ export class MessageHub ::
       this, router, packetStream
 
 
-  plugin(...pluginFunctions) ::
-    for const plugin of pluginFunctions ::
-      plugin(this)
-    return this
-
   static plugin(...pluginFunctions) ::
     const pluginList = [].concat @
       this.prototype.pluginList || []
       pluginFunctions
 
-    const BaseHub = this._BaseHub_ || MessageHub
+    const BaseHub = this._BaseHub_ || this
     class MessageHub_PI extends BaseHub ::
     Object.defineProperties @ MessageHub_PI.prototype, @:
       pluginList: @{} value: Object.freeze @ pluginList
     Object.defineProperties @ MessageHub_PI, @:
       _BaseHub_: @{} value: BaseHub
-    return MessageHub_PI
 
+    return applyPlugins @ MessageHub_PI, 'subclass', pluginList
+
+  id_router_self() ::
+    return this._packetStream.packId @
+      this.router.id_self
 
   connect_self() ::
     return this._api_internal.clone()
@@ -74,3 +77,12 @@ export class MessageHub ::
     return Object.defineProperty @ this, '_connectByProtocol',
       @: value: byProtocol, configurable: true
 
+export default MessageHub
+
+export function applyPlugins(target, key, pluginList) ::
+  if ! key :: key = null
+  for let plugin of pluginList ::
+    if null !== key :: plugin = plugin[key]
+    if 'function' === typeof plugin ::
+      plugin(target)
+  return target
