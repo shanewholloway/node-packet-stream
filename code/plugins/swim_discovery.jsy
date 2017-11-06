@@ -1,5 +1,4 @@
 import {resolve as dns_resolve} from 'dns'
-import {promiseQueue, sleep} from '../utils'
 
 const SWIM = require('swim')
 
@@ -133,3 +132,19 @@ export class SwimDiscovery ::
 Object.assign @ SwimDiscovery.prototype, @:
   swim_state_lut: @[] 'alive', 'suspect', 'dead'
   promiseQueue
+
+
+function sleep(ms, ctx) ::
+  return new Promise @ resolve => setTimeout(resolve, ms, ctx)
+
+export function promiseQueue(nextPromise) ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = nextPromise()
+      tip.then @ clear_tip
+    return tip
+
+  function clear_tip() ::
+    tip = null
+

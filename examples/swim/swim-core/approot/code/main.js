@@ -1,9 +1,9 @@
 require('source-map-support').install()
 const {MessageHub} = require('packet-stream/dist/hub')
-const net_plugin = require('packet-stream/dist/plugins/net')
+const tcp_plugin = require('packet-stream/dist/plugins/tcp')
 const swim_plugin = require('packet-stream/dist/plugins/swim_discovery')
 
-const Hub = MessageHub.plugin( net_plugin(), swim_plugin() )
+const Hub = MessageHub.plugin( tcp_plugin(), swim_plugin() )
 
 const demo_utils = require('./demo_utils')
 
@@ -17,14 +17,14 @@ async function main_swim_core() {
   })
 
 
-  const svr = hub.net.createServer()
+  const svr = hub.tcp.createServer()
   svr.on('error', console.error)
 
   const service_address =
     await new Promise((resolve, reject) =>
       svr.listen(3020, '0.0.0.0', async function () {
         await demo_utils.sleep(100)
-        hub.net.connect({port: 3020, host: process.env.SWIM_PEERS})
+        hub.tcp.connect({port: 3020, host: process.env.SWIM_PEERS})
           .then(chan => chan.conn_info().ip_local.address)
           .then(resolve, reject)
       }))

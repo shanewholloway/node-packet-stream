@@ -30,6 +30,7 @@ export class MessageHub ::
     return MessageChannel.asInternalAPI @
       this, router, packetStream
 
+
   plugin(...pluginFunctions) ::
     for const plugin of pluginFunctions ::
       plugin(this)
@@ -49,8 +50,9 @@ export class MessageHub ::
     return MessageHub_PI
 
 
+
   connect_self() ::
-    return Object.create @ this._api_internal
+    return this._api_internal.clone()
 
   _connectByProtocol = new Map() // provided by plugins…
   connect(conn_url) ::
@@ -61,12 +63,13 @@ export class MessageHub ::
       conn_url = new URL(conn_url)
 
     const connect = this._connectByProtocol.get(conn_url.protocol)
-    if connect ::
-      return connect(conn_url)
-    else throw new Error @ `Connection protocol "${conn_url.protocol}" not registered for "${conn_url.toString()}"`
+    if ! connect ::
+      throw new Error @ `Connection protocol "${conn_url.protocol}" not registered for "${conn_url.toString()}"`
+
+    return connect(conn_url)
 
 
-  on_connect_peer(sendMsgRaw) ::
-    this.router.sendRoutingHandshake(sendMsgRaw)
+  on_connect_peer(channel) ::
+    this.router.sendRoutingHandshake(channel)
     return this
 

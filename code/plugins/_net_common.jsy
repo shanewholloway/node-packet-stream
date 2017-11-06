@@ -1,15 +1,7 @@
 import {URL} from 'url'
-import tcp_plugin from './tcp'
-import {bindSocketSendMsgRaw} from '../streams'
+import {bindStreamChannel} from './_stream_common'
 
-module.exports = exports = net_plugin
-export default net_plugin
-export function net_plugin(plugin_options={}) ::
-  const tcp = tcp_plugin(plugin_options)
-  return function(hub) ::
-    return hub.net = tcp(hub)
-
-
+export default net_common
 export function net_common(hub, asURL) ::
   // shared implementation between net/tcp and tls implementations
   return @:
@@ -27,11 +19,11 @@ export function net_common(hub, asURL) ::
       return () => null
 
     bindChannel(sock) ::
-      const sendMsgRaw = bindSocketSendMsgRaw @
+      const channel = bindSocketChannel @
         sock, hub._api_channel, asURL
 
-      hub.on_connect_peer @ sendMsgRaw
-      return sendMsgRaw.api
+      hub.on_connect_peer @ channel
+      return channel
 
     unpackConnectArgs(args) ::
       if 1 === args.length ::
@@ -42,4 +34,13 @@ export function net_common(hub, asURL) ::
       return args
 
 
+export function bindSocketChannel(sock, api_channel, asURL) ::
+  sock.setNoDelay(true)
+
+  const conn_info = () => @:
+    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
+    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
+
+  return bindStreamChannel @ sock, api_channel
+    @: conn_info: @: value: conn_info
 

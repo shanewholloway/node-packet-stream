@@ -1,14 +1,13 @@
-import {bindDispatchMsgRaw} from './streams'
-
 
 export class MessageChannel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
   pack() :: throw new Error @ `Instance responsiblity`
 
-  sendJSON(msg_obj, ...args) ::
-    const msg = this.packJSON(msg_obj)
-    return this.sendRaw @ msg, ...args
+  packAndSend(...args) ::
+    return this.sendRaw @ this.pack @ ...args
 
+  sendJSON(msg_obj) ::
+    return this.sendRaw @ this.packJSON @ msg_obj
   packJSON(msg_obj) ::
     if undefined !== msg_obj.header ::
       msg_obj.header = JSON.stringify @ msg_obj.header
@@ -18,23 +17,61 @@ export class MessageChannel ::
     return this.pack(msg_obj)
 
 
+  clone(props) :: return Object.create(this, props)
+  bindChannel(sendRaw, props) :: return bindChannel(this, sendRaw, props)
+  bindDispatchPackets() :: return bindDispatchPackets(this)
 
-  static asChannelAPI(hub, router, packetStream) ::
+
+  static asAPI(hub, router, pack) ::
     const self = new this()
     Object.defineProperties @ self, @:
-      pack: @: value: packetStream.packMessage
+      pack: @: value: pack
       router: @: value: router
       hub: @: value: hub
+      _root_: @: value: self
+    return self
 
+  static asChannelAPI(hub, router, packetStream) ::
+    const self = this.asAPI @ hub, router, packetStream.packMessage
     return self
 
   static asInternalAPI(hub, router, packetStream) ::
-    const self = new this()
-    Object.defineProperties @ self, @:
-      pack: @: value: packetStream.packMessageObj
-      router: @: value: router
-      hub: @: value: hub
+    const self = this.asAPI @ hub, router, packetStream.packMessageObj
+    return self.bindChannel(null)
 
-    bindDispatchMsgRaw(self)
-    return self
+export default MessageChannel
 
+
+
+export function bindChannel(channel, sendRaw, props) ::
+  if null == sendRaw ::
+    sendRaw = bindDispatchMsgRaw(channel.router)
+  else if 'function' !== typeof sendRaw ::
+    throw new TypeError @ `Channel expects 'sendRaw' function parameter`
+
+  const core_props = @: sendRaw: @{} value: sendRaw
+  props = null == props ? core_props : Object.assign @ core_props, props
+
+  const self = Object.create @ channel, props
+  return sendRaw.channel = self
+
+
+export function bindDispatchMsgRaw(router) ::
+  const dispatch = router.dispatch
+  return dispatchMsgObj
+
+  function dispatchMsgObj(msg) ::
+    if undefined === msg._raw_ ::
+      throw new TypeError @ `Expected a parsed msg_obj with valid '_raw_' buffer property`
+    dispatch @ [msg], dispatchMsgObj.channel
+    return true
+
+
+export function bindDispatchPackets(channel) ::
+  const dispatch = channel.hub.router.dispatch
+  const pktParser = channel.hub._packetStream.clone()
+
+  return function on_recv_data(data) ::
+    const msgList = pktParser.feed(data)
+    if 0 < msgList.length ::
+      dispatch @ msgList, channel

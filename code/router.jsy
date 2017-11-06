@@ -1,6 +1,5 @@
 import {createECDH, createHmac} from 'crypto'
-import {promiseQueue} from './utils'
-import {pack_hello, pack_ping, dispControlByType as channelSetupByType} from './channel_setup'
+import * as protocol from './control_protocol'
 
 try :: var ec_pem = require('ec-pem')
 catch err ::
@@ -75,11 +74,11 @@ export class MessageRouter ::
     routes.set @ id_self, this.bindDispatchSelf()
     const dispatch_one = this.bindDispatchRoute()
 
-    const pqueue = this.promiseQueue()
-    return (msgList, sendMsgRaw) => ::
+    const pqueue = promiseQueue()
+    return (msgList, channel) => ::
       const pq = pqueue() // pq will dispatch during Promise resolutions
       return msgList.map @ msg =>
-        pq.then @ () => dispatch_one(msg, sendMsgRaw)
+        pq.then @ () => dispatch_one(msg, channel)
 
   on_error_in_dispatch(err, msg) ::
     console.error @ 'Error during msg dispatch\n  msg:', msg, '\n', err, '\n'
@@ -97,7 +96,7 @@ export class MessageRouter ::
 
   bindDispatchRoute() ::
     const routes = this.routes
-    return async (msg, sendMsgRaw) => ::
+    return async (msg, channel) => ::
       try ::
         const id_router = msg.id_router
         let dispatch_route = routes.get(id_router)
@@ -106,10 +105,10 @@ export class MessageRouter ::
           if null == dispatch_route :: return
           this.registerRoute(id_router, dispatch_route)
 
-        if false === dispatch_route(msg, sendMsgRaw) ::
+        if false === dispatch_route(msg, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
-        this.on_error_in_dispatch(err, msg, sendMsgRaw)
+        this.on_error_in_dispatch(err, msg, channel)
 
 
   routes = new Map()
@@ -125,21 +124,21 @@ export class MessageRouter ::
   unregisterRoute(id_router) ::
     return this.routes.delete @ id_router
 
-  imposterPeerRoute(id_router, sendMsgRaw) ::
-  registerPeerRoute(id_router, sendMsgRaw) ::
+  imposterPeerRoute(id_router, channel) ::
+  registerPeerRoute(id_router, channel) ::
     if 0 === id_router ::
       return false
     else if this.id_self === id_router ::
       return false
     return this.registerRoute @ id_router, msg => ::
-      if 0 !== msg.ttl :: sendMsgRaw(msg)
+      if 0 !== msg.ttl :: channel.sendRaw(msg)
 
 
   // --- Dispatch to local target
 
   dnu_dispatch_self(msg) ::
   bindDispatchSelf(msg) ::
-    return async (msg, sendMsgRaw) => ::
+    return async (msg, channel) => ::
       const id_target = msg.id_target
       let target = this.targets.get(id_target)
       if undefined === target ::
@@ -164,32 +163,42 @@ export class MessageRouter ::
   // --- Dispatch control messages
 
   bindDispatchControl() ::
-    return (msg, sendMsgRaw) => ::
+    return (msg, channel) => ::
       const handler = this.dispControlByType[msg.type]
       if undefined !== handler ::
-        handler(this, msg, sendMsgRaw)
+        handler(this, msg, channel)
       else
-        this.dnu_dispatch_control(msg, sendMsgRaw)
+        this.dnu_dispatch_control(msg, channel)
 
   dispControlByType = Object.create @ this.dispControlByType
-  dnu_dispatch_control(msg, sendMsgRaw) ::
+  dnu_dispatch_control(msg, channel) ::
     console.warn @ 'dnu_dispatch_control', msg.type, msg
 
 
   // --- Control message utilities
 
-  sendRoutingHandshake(sendMsgRaw) ::
-    return sendMsgRaw @ pack_hello(this.ec_pub_id)
-  sendPing(sendMsgRaw) ::
-    return sendMsgRaw @ pack_ping()
+  sendRoutingHandshake(channel) ::
+    return protocol.send_hello(channel, this.ec_pub_id)
+  sendPing(channel) ::
+    return protocol.send_ping(channel)
 
 
 MessageRouter.prototype.dispControlByType = Object.assign @ {}
-  channelSetupByType
+  protocol.dispControlByType
 
 Object.assign @ MessageRouter.prototype, @{}
   ec_curve: 'prime256v1'
-  promiseQueue
 export default MessageRouter
 
+
+function promiseQueue() ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = Promise.resolve()
+      tip.then @ clear_tip
+    return tip
+
+  function clear_tip() ::
+    tip = null
 

@@ -1,9 +1,9 @@
 require('source-map-support').install()
 import {MessageHub} from '../dist/hub'
-import net_plugin from '../dist/plugins/net'
+import tcp_plugin from '../dist/plugins/tcp'
 
 const Hub = MessageHub
-  .plugin @ net_plugin()
+  .plugin @ tcp_plugin()
 
 async function main_server() ::
   const hub = new Hub()

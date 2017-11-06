@@ -1,9 +1,5 @@
-import @{}
-  createServer as _tcp_createServer
-  createConnection as _tcp_createConnection
-from 'net'
-
-import {net_common} from './net'
+import { createServer as _tcp_createServer, createConnection as _tcp_createConnection } from 'net'
+import net_common from './_net_common'
 
 module.exports = exports = tcp_plugin
 export default tcp_plugin

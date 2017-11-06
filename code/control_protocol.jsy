@@ -1,70 +1,68 @@
-import {packMessage} from './parser'
-
 export const dispControlByType = @{}
-  0xf0: recv_hello
-  0xf1: recv_olleh
-  0xfe: recv_pong
-  0xff: recv_ping
+  [0xf0]: recv_hello
+  [0xf1]: recv_olleh
+  [0xfe]: recv_pong
+  [0xff]: recv_ping
 
 
 
-export function pack_hello(ec_pub_id) ::
-  return packMessage @:
+export function send_hello(channel, ec_pub_id) ::
+  return channel.packAndSend @:
     id_router: 0, type: 0xf0
     header: ec_pub_id // buffer
 
-function recv_hello(dispatch, msg, sendMsgRaw) ::
+function recv_hello(dispatch, msg, channel) ::
     const ec_other_id = msg.sliceHeader()
     const hmac_secret = dispatch.ec_id_hmac @ ec_other_id
-    sendMsgRaw @ pack_olleh @
+    send_olleh @ channel,
       dispatch.ec_pub_id, hmac_secret
     return true
 
 
 
-function pack_olleh(ec_pub_id, hmac_secret) ::
-  return packMessage @:
+function send_olleh(channel, ec_pub_id, hmac_secret) ::
+  return channel.packAndSend @:
     id_router: 0, type: 0xf1
     header: ec_pub_id // buffer
     body: hmac_secret // buffer
 
-function recv_olleh(dispatch, msg, sendMsgRaw) ::
+function recv_olleh(dispatch, msg, channel) ::
     const ec_pub_id = msg.sliceHeader()
     const hmac_secret = dispatch.ec_id_hmac @ ec_pub_id, true
     const peer_hmac_claim = msg.sliceBody()
     if 0 === hmac_secret.compare @ peer_hmac_claim ::
       const id_router = ec_pub_id.readUInt32LE(8)
-      dispatch.registerPeerRoute @ id_router, sendMsgRaw
+      dispatch.registerPeerRoute @ id_router, channel
     else ::
-      dispatch.imposterPeerRoute @ id_router, sendMsgRaw
+      dispatch.imposterPeerRoute @ id_router, channel
     return true
 
 
 
-export function pack_pingpong(pong) ::
-  return packMessage @:
+export function send_pingpong(channel, pong) ::
+  return channel.packAndSend @:
     id_router: 0, type: pong ? 0xfe : 0xff
     body: new Date().toISOString()
 
-function recv_pong(dispatch, msg, sendMsgRaw) ::
+function recv_pong(dispatch, msg, channel) ::
   const local = new Date()
 
   try ::
     const remote = new Date @ msg.sliceBody().toString()
     const delta = remote - local
-    sendMsgRaw.ts_pong = @{} delta, remote, local
+    channel.ts_pong = @{} delta, remote, local
   catch err ::
-    sendMsgRaw.ts_pong = @{} local
+    channel.ts_pong = @{} local
 
-function recv_ping(dispatch, msg, sendMsgRaw) ::
+function recv_ping(dispatch, msg, channel) ::
   const local = new Date()
 
-  sendMsgRaw @ pack_pingpong @ true
+  send_pingpong @ channel, true
 
   try ::
     const remote = new Date @ msg.sliceBody().toString()
     const delta = remote - local
-    sendMsgRaw.ts_ping = @{} delta, remote, local
+    channel.ts_ping = @{} delta, remote, local
   catch err ::
-    sendMsgRaw.ts_ping = @{} local
+    channel.ts_ping = @{} local
 

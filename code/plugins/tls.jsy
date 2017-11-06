@@ -1,10 +1,5 @@
-import @{}
-  createServer as _tls_createServer
-  connect as _tls_connect
-from 'tls'
-
-import {net_common} from './net'
-
+import { createServer as _tls_createServer, connect as _tls_connect } from 'tls'
+import net_common from './_net_common'
 
 module.exports = exports = tls_plugin
 export default tls_plugin
