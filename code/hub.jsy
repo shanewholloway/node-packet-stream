@@ -1,14 +1,13 @@
 import {URL} from 'url'
-import {packetStreamParser} from './parser'
 import {MessageRouter} from './router'
 import {MessageChannel} from './channel'
 
 export class MessageHub ::
   constructor() ::
-    applyPlugins @ this, 'pre', this.pluginList
+    applyPlugins @ 'pre', this.pluginList, this
 
     const router = this._init_router()
-    const _packetStream = this._init_packetStreamParser()
+    const _packetStream = this._init_packetStream()
     const _api_channel = this._init_channelAPI(router, _packetStream)
     const _api_internal = this._init_internalAPI(router, _packetStream)
     Object.defineProperties @ this, @{}
@@ -17,15 +16,13 @@ export class MessageHub ::
       _api_channel: @{} value: _api_channel
       _api_internal: @{} value: _api_internal
 
-    applyPlugins @ this, null, this.pluginList
+    applyPlugins @ null, this.pluginList, this
+    applyPlugins @ 'post', this.pluginList, this
     return this
 
-  _init_router() ::
-    const id_self = 0 | Math.random() * 0x7fffffff
-    return new MessageRouter(id_self)
+  _init_router() :: throw new Error @ `Plugin responsiblity`
+  _init_packetStream() :: throw new Error @ `Plugin responsiblity`
 
-  _init_packetStreamParser() ::
-    return packetStreamParser()
   _init_channelAPI(router, packetStream) ::
     return MessageChannel.asChannelAPI @
       this, router, packetStream
@@ -46,7 +43,8 @@ export class MessageHub ::
     Object.defineProperties @ MessageHub_PI, @:
       _BaseHub_: @{} value: BaseHub
 
-    return applyPlugins @ MessageHub_PI, 'subclass', pluginList
+    applyPlugins @ 'subclass', pluginList, MessageHub_PI, @: MessageRouter, MessageChannel
+    return MessageHub_PI
 
   id_router_self() ::
     return this._packetStream.packId @
@@ -78,10 +76,9 @@ export class MessageHub ::
 
 export default MessageHub
 
-export function applyPlugins(target, key, pluginList) ::
+export function applyPlugins(key, pluginList, ...args) ::
   if ! key :: key = null
   for let plugin of pluginList ::
     if null !== key :: plugin = plugin[key]
     if 'function' === typeof plugin ::
-      plugin(target)
-  return target
+      plugin(...args)

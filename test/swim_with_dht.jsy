@@ -2,11 +2,13 @@ require('source-map-support').install()
 import HashRing from 'hashring'
 
 import MessageHub from '../dist'
+import ec_router from '../dist/plugins/ec_router'
 import tcp_plugin from '../dist/plugins/tcp'
 import swim_plugin from '../dist/plugins/swim_discovery'
 
 
 const Hub = MessageHub.plugin @
+  ec_router()
   tcp_plugin()
   swim_plugin()
 

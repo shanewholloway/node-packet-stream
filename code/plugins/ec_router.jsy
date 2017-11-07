@@ -1,24 +1,29 @@
 import {createECDH, createHmac} from 'crypto'
-import MessageHub from './hub'
-import MessageRouter from './router'
+import packetStreamParser from '../parser'
 
-try :: var ec_pem = require('ec-pem')
-catch err ::
+export default ec_router_plugin
+export function ec_router_plugin(plugin_options={}) ::
+  return @: subclass
 
-export class ECMessageHub extends MessageHub ::
-  _init_router() :: return new ECMessageRouter()
+  function subclass(MessageHub_PI, {MessageRouter}) ::
+    Object.assign @ MessageHub_PI.prototype, @: _init_router, _init_packetStream
 
-export class ECMessageRouter extends MessageRouter ::
-  constructor() ::
-    super()
-    initRouterIdentity(this, this.ec_curve || 'prime256v1')
-    this._initDispatch()
+    function _init_router() ::
+      return new ECMessageRouter()
+    function _init_packetStream() ::
+      return packetStreamParser()
+
+    class ECMessageRouter extends MessageRouter ::
+      constructor() ::
+        super()
+        initRouterIdentity(this, plugin_options.ec_curve, plugin_options.ec_pem)
+        this._initDispatch()
 
 
-
-function initRouterIdentity(router, curve) ::
+export function initRouterIdentity(router, curve, ec_pem) ::
   // Create closures over the Router's EC private identity credentials
   var __ec_priv_id__, ec_pub_id, id_self
+  if ! curve :: curve = 'prime256v1'
   while ! id_self :: // ensure id_self !== 0 by happenstance
     __ec_priv_id__ = Object.assign @ createECDH(curve), @{} curve
     ec_pub_id = __ec_priv_id__.generateKeys(null, 'compressed')
@@ -46,7 +51,7 @@ function initRouterIdentity(router, curve) ::
       ec_id_sign: @: value: ec_id_sign
       ec_id_verify: @: value: ec_id_verify
 
-  return id_self
+
 
   function ec_id_hmac(ec_pub_other, reverse) ::
     const secret = __ec_priv_id__.computeSecret(ec_pub_other)

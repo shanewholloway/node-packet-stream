@@ -1,9 +1,10 @@
 require('source-map-support').install()
 const MessageHub = require('packet-stream/dist')
+const basic_router_plugin = require('packet-stream/dist/plugins/basic_router')
 const tcp_plugin = require('packet-stream/dist/plugins/tcp')
 const swim_plugin = require('packet-stream/dist/plugins/swim_discovery')
 
-const Hub = MessageHub.plugin( tcp_plugin(), swim_plugin() )
+const Hub = MessageHub.plugin( basic_router_plugin(), tcp_plugin(), swim_plugin() )
 
 const demo_utils = require('./demo_utils')
 

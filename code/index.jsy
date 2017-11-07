@@ -1,5 +1,4 @@
 export * from './hub'
-export * from './parser'
 export * from './router'
 
 import * as channel from './channel'
@@ -9,6 +8,5 @@ export @{}
   channel
   control_protocol
 
-export * from './ec_router'
-import {ECMessageHub} from './ec_router'
-export default ECMessageHub
+import {MessageHub} from './hub'
+export default MessageHub
