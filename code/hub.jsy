@@ -22,7 +22,6 @@ export class MessageHub ::
 
   _init_router() ::
     const id_self = 0 | Math.random() * 0x7fffffff
-    console.log @ "DOH", id_self
     return new MessageRouter(id_self)
 
   _init_packetStreamParser() ::

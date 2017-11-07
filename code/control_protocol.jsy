@@ -8,17 +8,14 @@ export const dispControlByType = @{}
 
 export function send_hello(channel) ::
   const {ec_pub_id} = channel.router
-  if ec_pub_id ::
-    var header = ec_pub_id
-  else ::
-    var body = channel.hub.id_router_self()
-
   return channel.packAndSendRaw @:
-    id_router: 0, type: 0xf0, header, body
+    id_router: 0, type: 0xf0
+    header: ec_pub_id
+    body: channel.hub.id_router_self()
 
 function recv_hello(dispatch, msg, channel) ::
   const ec_other_id = msg.sliceHeader()
-  if 0 !== ec_other_id.length ::
+  if 0 !== ec_other_id.length && dispatch.ec_id_hmac ::
     const hmac_secret = dispatch.ec_id_hmac
       ? dispatch.ec_id_hmac(ec_other_id) : null
     send_olleh @ channel, hmac_secret
