@@ -1,4 +1,3 @@
 export {default as basic} from './basic.jsy'
 export {default as browser} from './browser.jsy'
 export {default as node, default as default} from './node.jsy'
-export {default as ec} from './ec.jsy'

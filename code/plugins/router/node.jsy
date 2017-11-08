@@ -1,3 +1,4 @@
+import {URL} from 'url'
 import {randomBytes} from 'crypto'
 import {createBufferPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
 
@@ -6,6 +7,9 @@ export default function nodejs_router_plugin(plugin_options={}) ::
     Object.assign @ MessageHub_PI.prototype, @:
       _init_packetParser() ::
         return createPacketParser @ plugin_options
+
+      _parseConnectURL(conn_url) ::
+        return new URL(conn_url)
 
       _init_router() ::
         const id_self = random_id_self()

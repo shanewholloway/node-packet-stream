@@ -1,4 +1,3 @@
-import URL from '_URL_'
 import {MessageRouter} from './router.jsy'
 import {MessageChannel} from './channel.jsy'
 
@@ -58,7 +57,7 @@ export class MessageHub ::
       return this.connect_self()
 
     if 'string' === typeof conn_url ::
-      conn_url = new URL(conn_url)
+      conn_url = this._parseConnectURL(conn_url)
 
     const connect = this._connectByProtocol[conn_url.protocol]
     if ! connect ::
@@ -73,6 +72,9 @@ export class MessageHub ::
     byProtocol[protocol] = cb_connect
     return Object.defineProperty @ this, '_connectByProtocol',
       @: value: byProtocol, configurable: true
+
+  _parseConnectURL(conn_url) ::
+    return new URL(conn_url)
 
 export default MessageHub
 

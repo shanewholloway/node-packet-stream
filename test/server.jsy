@@ -1,6 +1,10 @@
 require('source-map-support').install()
+import {URL} from 'url'
 import {TextEncoder, TextDecoder} from 'util'
 import MessageHub from '../dist'
+
+Object.assign @ global, @:
+  URL, TextDecoder, TextEncoder
 
 import tcp_plugin from '../dist/plugin-tcp'
 
@@ -8,9 +12,8 @@ import generic_router from '../dist/plugin-router'
 import node_router from '../dist/plugin-router-node'
 import basic_router from '../dist/plugin-router-basic'
 import browser_router from '../dist/plugin-router-browser'
-import ec_router from '../dist/plugin-router-ec'
 
-const all_routers = @{} generic_router, node_router, basic_router, browser_router, ec_router
+const all_routers = @{} generic_router, node_router, basic_router, browser_router
 
 function pick_a_router(key) ::
   if null == key ::
@@ -21,7 +24,7 @@ function pick_a_router(key) ::
   else ::
     console.log @ `\n\nUsing Router Plugin "${key}"\n`
     
-  return all_routers[key] @: TextEncoder, TextDecoder
+  return all_routers[key]()
 
 
 var next_hub_port = 18000
