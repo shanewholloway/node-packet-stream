@@ -1,19 +1,15 @@
 import {createECDH, createHmac} from 'crypto'
 import createPacketParser from 'msg-fabric-packet-stream'
 
-export default ec_router_plugin
-export function ec_router_plugin(plugin_options={}) ::
+export default function ec_router_plugin(plugin_options={}) ::
   return @: subclass
 
-  function subclass(MessageHub_PI, {MessageRouter}) ::
-    Object.assign @ MessageHub_PI.prototype, @: _init_router, _init_packetParser
+  function subclass(MessageHub_PI, bases) ::
+    Object.assign @ MessageHub_PI.prototype, @:
+      _init_packetParser() :: return createPacketParser()
+      _init_router() :: return new ECMessageRouter()
 
-    function _init_router() ::
-      return new ECMessageRouter()
-    function _init_packetParser() ::
-      return createPacketParser()
-
-    class ECMessageRouter extends MessageRouter ::
+    class ECMessageRouter extends bases.MessageRouter ::
       constructor() ::
         super()
         initRouterIdentity(this, plugin_options.ec_curve, plugin_options.ec_pem)

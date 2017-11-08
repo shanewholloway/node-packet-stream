@@ -1,11 +1,22 @@
 require('source-map-support').install()
+import {TextEncoder, TextDecoder} from 'util'
 import MessageHub from '../dist'
-import basic_router from '../dist/plugins/basic_router'
-import ec_router from '../dist/plugins/ec_router'
+
 import tcp_plugin from '../dist/plugins/tcp'
 
+import basic_router from '../dist/plugins/basic_router'
+import ec_router from '../dist/plugins/ec_router'
+import node_router from '../dist/plugins/node_router'
+import browser_router from '../dist/plugins/browser_router'
+
+function pick_a_router() ::
+  const routers = @[] basic_router, ec_router, node_router, browser_router
+  const idx = 0 | routers.length * Math.random()
+  console.log @ `\n\nUsing Router Plugin "${routers[idx].name}"\n`
+  return routers[idx] @: TextEncoder, TextDecoder
+
 const Hub = MessageHub.plugin @
-  Math.random()<0.5 ? basic_router() : ec_router()
+  pick_a_router()
   tcp_plugin()
 
 async function main_server() ::
@@ -20,8 +31,8 @@ async function main_server() ::
     1000
 
   hub.router.registerTarget @ 123, (msg, router) => ::
-    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
-    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    const header = msg.header_json()
+    const body = msg.body_json()
     console.log @ 'target got message!', @: header, body
 
   return hub.router.id_self

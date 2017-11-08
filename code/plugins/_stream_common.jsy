@@ -5,9 +5,12 @@ export function bindStreamChannel(stream, api_channel, props) ::
 
   function sendMsgRaw(msg) ::
     if ! Buffer.isBuffer @ msg ::
-      if ! Buffer.isBuffer @ msg._raw_ ::
+      if msg._raw_ ::
+        msg = Buffer.from @ msg._raw_
+      else if msg.byteLength ::
+        msg = Buffer.from @ msg
+      else ::
         throw new TypeError @ `sendMsgRaw expected 'msg' as a Buffer or an object with a '_raw_' Buffer`
-      msg = msg._raw_
 
     if null === msg ::
       return void stream.end()

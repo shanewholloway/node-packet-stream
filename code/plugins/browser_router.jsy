@@ -1,0 +1,21 @@
+import {createDataViewPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
+
+export default function browser_router_plugin(plugin_options={}) ::
+  return @: subclass(MessageHub_PI, bases) ::
+    Object.assign @ MessageHub_PI.prototype, @:
+      _init_packetParser() ::
+        return createPacketParser @ plugin_options
+
+      _init_router() ::
+        const id_self = random_id_self()
+        const router = new bases.MessageRouter(id_self)
+        router.allowUnverifiedRoutes = true
+        return router
+
+function random_id_self() ::
+  const ua = new Int32Array(1), dv = new DataView(ua.buffer)
+  if 'undefined' !== typeof window ::
+    window.crypto.getRandomValues(ua)
+  else ::
+    ua[0] = 0xffffffff * Math.random()
+  return dv.getUint32(0, true)

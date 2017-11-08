@@ -94,7 +94,8 @@ export class MessageRouter ::
       if false === target(msg, this) ::
         this.unregisterTarget(id_target)
 
-  targets = new Map()
+  _createTargetsMap() :: return new Map()
+  targets = this._createTargetsMap()
   registerTarget(id_target, target) ::
     if 'function' !== typeof target ::
       throw new TypeError @ `Expected 'target' to be a function`
