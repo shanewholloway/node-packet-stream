@@ -1,10 +1,10 @@
 require('source-map-support').install()
 import {URL} from 'url'
 import {TextEncoder, TextDecoder} from 'util'
-import MessageHub from '../dist'
-
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
+
+import MessageHub from '../dist'
 
 import tcp_plugin from '../dist/plugin-tcp'
 
@@ -64,6 +64,12 @@ async function main_demo(router_plugin) ::
       const header = msg.header_json()
       const body = msg.body_json()
       console.log @ 'target got message!', @: header, body
+
+    const channel = await hub.connect_self()
+    channel.sendJSON @:
+      id_router: hub.router.id_self
+      id_target: 123
+      body: 'self-echo message works'
 
     return hub.router.id_self
 

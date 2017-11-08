@@ -31,6 +31,8 @@ export class MessageHub ::
 
 
   static plugin(...pluginFunctions) ::
+    return this.plugins(...pluginFunctions)
+  static plugins(...pluginFunctions) ::
     const pluginList = [].concat @
       this.prototype.pluginList || []
       pluginFunctions
@@ -45,10 +47,12 @@ export class MessageHub ::
     applyPlugins @ 'subclass', pluginList, MessageHub_PI, @: MessageRouter, MessageChannel
     return MessageHub_PI
 
+
+  get id_self() ::
+    return this.router.id_self
   id_router_self() ::
     return this._packetParser.packId @
       this.router.id_self
-
   connect_self() ::
     return this._api_internal.clone()
 
