@@ -1,18 +1,27 @@
 {
-  "name": "packet-stream",
-  "version": "0.0.0",
+  "name": "msg-fabric",
+  "version": "0.1.0",
   "description": "",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
-  "homepage": "https://github.com/shanewholloway/node-packet-stream#readme",
+  "homepage": "https://github.com/shanewholloway/msg-fabric#readme",
   "bugs": {
-    "url": "https://github.com/shanewholloway/node-packet-stream/issues"
+    "url": "https://github.com/shanewholloway/msg-fabric/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/shanewholloway/node-packet-stream.git"
+    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric.git"
   },
-  "keywords": [],
+  "ecosystem": "msg-fabric",
+  "keywords": [
+    "distributed live object",
+    "message-passing",
+    "distributed object",
+    "distributed",
+    "actors",
+    "message",
+    "passing"
+  ],
   "files": [
     "dist/",
     "code/",
