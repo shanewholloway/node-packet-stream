@@ -1,4 +1,4 @@
-import {send_hello, send_ping} from './control_protocol'
+import {send_hello, send_pingpong} from './control_protocol.jsy'
 
 
 export class MessageChannel ::
@@ -25,7 +25,7 @@ export class MessageChannel ::
   sendRoutingHandshake(channel) ::
     return send_hello(this, this.ec_pub_id)
   sendPing(channel) ::
-    return send_ping(this)
+    return send_pingpong(this)
 
 
 

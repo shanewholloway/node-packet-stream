@@ -1,12 +1,12 @@
-export * from './hub'
-export * from './router'
+export * from './hub.jsy'
+export * from './router.jsy'
 
-import * as channel from './channel'
-import * as control_protocol from './control_protocol'
+import * as channel from './channel.jsy'
+import * as control_protocol from './control_protocol.jsy'
 
 export @{}
   channel
   control_protocol
 
-import {MessageHub} from './hub'
+import {MessageHub} from './hub.jsy'
 export default MessageHub

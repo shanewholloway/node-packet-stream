@@ -1,8 +1,7 @@
-import {URL} from 'url'
-import {bindStreamChannel} from './_stream_common'
+import {bindStreamChannel} from './_stream_common.jsy'
 
-export default net_common
-export function net_common(hub, asURL) ::
+net_common.net_common = net_common
+export default function net_common(hub, asURL) ::
   // shared implementation between net/tcp and tls implementations
   return @:
     init_server(svr) ::
@@ -27,14 +26,14 @@ export function net_common(hub, asURL) ::
 
     unpackConnectArgs(args) ::
       if 1 === args.length ::
-        const conn_url = args[0]
-        if 'string' === typeof conn_url || conn_url instanceof URL ::
-          const {hostname:host, port} = new URL(conn_url)
-          args = @# @{} host, port
+        if 'string' === typeof args[0].href ::
+          const {hostname:host, port} = args[0]
+          args[0] = @{} host, port
       return args
 
 
-export function bindSocketChannel(sock, api_channel, asURL) ::
+net_common.bindSocketChannel = bindSocketChannel
+function bindSocketChannel(sock, api_channel, asURL) ::
   sock.setNoDelay(true)
 
   const conn_info = () => @:

@@ -1,4 +1,4 @@
-import {dispControlByType} from './control_protocol'
+import {dispControlByType} from './control_protocol.jsy'
 
 export class MessageRouter ::
   constructor(id_self) ::

@@ -1,6 +1,6 @@
-import {URL} from 'url'
-import {MessageRouter} from './router'
-import {MessageChannel} from './channel'
+import URL from '_URL_'
+import {MessageRouter} from './router.jsy'
+import {MessageChannel} from './channel.jsy'
 
 export class MessageHub ::
   constructor() ::

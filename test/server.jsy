@@ -2,64 +2,90 @@ require('source-map-support').install()
 import {TextEncoder, TextDecoder} from 'util'
 import MessageHub from '../dist'
 
-import tcp_plugin from '../dist/plugins/tcp'
+import tcp_plugin from '../dist/plugin-tcp'
 
-import basic_router from '../dist/plugins/basic_router'
-import ec_router from '../dist/plugins/ec_router'
-import node_router from '../dist/plugins/node_router'
-import browser_router from '../dist/plugins/browser_router'
+import generic_router from '../dist/plugin-router'
+import node_router from '../dist/plugin-router-node'
+import basic_router from '../dist/plugin-router-basic'
+import browser_router from '../dist/plugin-router-browser'
+import ec_router from '../dist/plugin-router-ec'
 
-function pick_a_router() ::
-  const routers = @[] basic_router, ec_router, node_router, browser_router
-  const idx = 0 | routers.length * Math.random()
-  console.log @ `\n\nUsing Router Plugin "${routers[idx].name}"\n`
-  return routers[idx] @: TextEncoder, TextDecoder
+const all_routers = @{} generic_router, node_router, basic_router, browser_router, ec_router
 
-const Hub = MessageHub.plugin @
-  pick_a_router()
-  tcp_plugin()
+function pick_a_router(key) ::
+  if null == key ::
+    const lst = Array.from @ Object.keys @ all_routers
+    const idx = 0 | lst.length * Math.random()
+    key = lst[idx]
+    console.log @ `\n\nUsing Router Plugin "${key}" [${idx}]\n`
+  else ::
+    console.log @ `\n\nUsing Router Plugin "${key}"\n`
+    
+  return all_routers[key] @: TextEncoder, TextDecoder
 
-async function main_server() ::
-  const hub = new Hub()
-  const svr = hub.tcp.createServer()
-    .listen(8080, '127.0.0.1')
 
-  setTimeout @
-    () => ::
-      console.log @ 'Allowing server to expire…'
-      svr.unref()
-    1000
+var next_hub_port = 18000
+async function main_demo(router_plugin) ::
+  if ! router_plugin || 'string' === typeof router_plugin ::
+    router_plugin = pick_a_router(router_plugin)
 
-  hub.router.registerTarget @ 123, (msg, router) => ::
-    const header = msg.header_json()
-    const body = msg.body_json()
-    console.log @ 'target got message!', @: header, body
+  const Hub = MessageHub.plugin @
+    router_plugin
+    tcp_plugin()
 
-  return hub.router.id_self
+  try ::
+    var hub_port = next_hub_port++
+    var id_hub = await main_server()
 
-async function main_client_one(id_hub) ::
-  const hub = new Hub()
-  const channel = await hub.tcp.connect @: host:'127.0.0.1', port: 8080
-  channel.sendJSON @:
-    id_router: id_hub
-    id_target: 123
-    header: @: bonkers: true
+    await main_client_one @ id_hub
+    await main_client_two @ id_hub
+    return true
+  catch err ::
+    console.error(err)
+    return false
 
-async function main_client_two(id_hub) ::
-  const hub = new Hub()
-  const channel = await hub.connect('tcp://127.0.0.1:8080')
-  channel.sendJSON @:
-    id_router: id_hub
-    id_target: 123
-    body: @: hello: 'there'
+
+
+  async function main_server() ::
+    const hub = new Hub()
+    const svr = hub.tcp.createServer()
+      .listen(hub_port, '127.0.0.1')
+
+    setTimeout @
+      () => ::
+        console.log @ 'Allowing server to expire…'
+        svr.unref()
+      200
+
+    hub.router.registerTarget @ 123, (msg, router) => ::
+      const header = msg.header_json()
+      const body = msg.body_json()
+      console.log @ 'target got message!', @: header, body
+
+    return hub.router.id_self
+
+  async function main_client_one(id_hub) ::
+    const hub = new Hub()
+    const channel = await hub.tcp.connect @: host:'127.0.0.1', port: hub_port
+    channel.sendJSON @:
+      id_router: id_hub
+      id_target: 123
+      header: @: bonkers: true
+
+  async function main_client_two(id_hub) ::
+    const hub = new Hub()
+    const channel = await hub.connect(`tcp://127.0.0.1:${hub_port}`)
+    channel.sendJSON @:
+      id_router: id_hub
+      id_target: 123
+      body: @: hello: 'there'
 
 
 if module === require.main ::
-  main_server()
-  .then @ id_hub => ::
-    main_client_one @ id_hub
-    main_client_two @ id_hub
-  .catch @ console.error
+  ::
+    let tip = Promise.resolve()
+    for const key of Object.keys(all_routers) ::
+      tip = tip.then @ () => main_demo(key)
 
   process.on @ 'unhandledRejection', (reason, p) => ::
     console.log @ 'Unhandled Rejection at:', p, 'reason:', reason

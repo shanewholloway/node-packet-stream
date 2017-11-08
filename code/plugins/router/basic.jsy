@@ -1,14 +1,11 @@
 import createPacketParser from 'msg-fabric-packet-stream'
 
 export default function basic_router_plugin(plugin_options={}) ::
-  const random_id_self = plugin_options.random_id_self
-    || () => return 0 | Math.random() * 0x7fffffff
-  return @: subclass
-
-  function subclass(MessageHub_PI, bases) ::
+  const random_id_self = plugin_options.random_id_self || _random_id_self
+  return @: subclass(MessageHub_PI, bases) ::
     Object.assign @ MessageHub_PI.prototype, @:
       _init_packetParser() ::
-        return createBufferPacketParser()
+        return createPacketParser @ plugin_options
 
       _init_router() ::
         const id_self = random_id_self()
@@ -16,3 +13,5 @@ export default function basic_router_plugin(plugin_options={}) ::
         router.allowUnverifiedRoutes = true
         return router
 
+function _random_id_self() ::
+  return 0 | Math.random() * 0x7fffffff

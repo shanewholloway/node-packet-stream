@@ -34,15 +34,20 @@
     "babel-preset-jsy": "^0.9.2",
     "ec-pem": "^0.17.0",
     "msg-fabric-packet-stream": "shanewholloway/msg-fabric-packet-stream",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-virtual": "^1.0.1",
     "tap-lite-tester": "^0.5.2"
   },
   "babel": {
     "presets": "jsy/lean"
   },
   "scripts": {
-    "build": "babel -s inline -x .js,.jsy code -d dist",
+    "build": "rollup --config",
     "watch": "npm -s run build -- --watch",
     "pretest": "npm -s run build",
-    "testone": "babel-node test/server.jsy"
+    "testone": "babel-node test/server.jsy",
+    "test": "true"
   }
 }
