@@ -27,7 +27,9 @@
     "code/",
     "test/"
   ],
-  "main": "dist/index.js",
+  "main": "dist/index",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.umd.js",
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
