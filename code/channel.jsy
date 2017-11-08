@@ -43,12 +43,12 @@ export class MessageChannel ::
       _root_: @: value: self
     return self
 
-  static asChannelAPI(hub, router, packetStream) ::
-    const self = this.asAPI @ hub, router, packetStream.packMessage
+  static asChannelAPI(hub, router, packetParser) ::
+    const self = this.asAPI @ hub, router, packetParser.packMessage
     return self
 
-  static asInternalAPI(hub, router, packetStream) ::
-    const self = this.asAPI @ hub, router, packetStream.packMessageObj
+  static asInternalAPI(hub, router, packetParser) ::
+    const self = this.asAPI @ hub, router, packetParser.packMessageObj
     return self.bindChannel(null)
 
 export default MessageChannel
@@ -81,9 +81,9 @@ export function bindDispatchMsgRaw(router) ::
 
 export function bindDispatchPackets(channel) ::
   const dispatch = channel.router.dispatch
-  const pktParser = channel.hub._packetStream.clone()
+  const feed = channel.hub._packetParser.packetStream()
 
   return function on_recv_data(data) ::
-    const msgList = pktParser.feed(data)
+    const msgList = feed(data)
     if 0 < msgList.length ::
       dispatch @ msgList, channel

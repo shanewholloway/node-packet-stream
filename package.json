@@ -1,19 +1,19 @@
 {
-  "name": "msg-fabric",
+  "name": "msg-fabric-core",
   "version": "0.1.0",
   "description": "",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
-  "homepage": "https://github.com/shanewholloway/msg-fabric#readme",
+  "homepage": "https://github.com/shanewholloway/msg-fabric-core#readme",
   "bugs": {
-    "url": "https://github.com/shanewholloway/msg-fabric/issues"
+    "url": "https://github.com/shanewholloway/msg-fabric-core/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric.git"
+    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric-core.git"
   },
-  "ecosystem": "msg-fabric",
   "keywords": [
+    "ecosystem:msg-fabric",
     "distributed live object",
     "message-passing",
     "distributed object",
@@ -33,21 +33,16 @@
     "babel-cli": "^6.26.0",
     "babel-preset-jsy": "^0.9.2",
     "ec-pem": "^0.17.0",
-    "hashbelt": "^0.2.0",
-    "hashring": "^3.2.0",
-    "nodemon": "*",
-    "swim": "^0.3.2",
+    "msg-fabric-packet-stream": "shanewholloway/msg-fabric-packet-stream",
     "tap-lite-tester": "^0.5.2"
   },
   "babel": {
     "presets": "jsy/lean"
   },
   "scripts": {
-    "start": "node dist",
-    "start:dev": "nodemon -d 2 dist",
     "build": "babel -s inline -x .js,.jsy code -d dist",
     "watch": "npm -s run build -- --watch",
     "pretest": "npm -s run build",
-    "testone": "babel-node test/demo.jsy"
+    "testone": "babel-node test/server.jsy"
   }
 }
