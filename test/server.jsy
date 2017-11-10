@@ -4,7 +4,7 @@ import {TextEncoder, TextDecoder} from 'util'
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
-import MessageHub from '../dist'
+import FiberHub from '../dist'
 
 import tcp_plugin from '../dist/plugin-tcp'
 
@@ -32,7 +32,7 @@ async function main_demo(router_plugin) ::
   if ! router_plugin || 'string' === typeof router_plugin ::
     router_plugin = pick_a_router(router_plugin)
 
-  const Hub = MessageHub.plugin @
+  const Hub = FiberHub.plugin @
     router_plugin
     tcp_plugin()
 
@@ -60,16 +60,16 @@ async function main_demo(router_plugin) ::
         svr.unref()
       200
 
-    hub.router.registerTarget @ 123, (msg, router) => ::
-      const header = msg.header_json()
-      const body = msg.body_json()
-      console.log @ 'target got message!', @: header, body
+    hub.router.registerTarget @ 123, (pkt, router) => ::
+      const header = pkt.header_json()
+      const body = pkt.body_json()
+      console.log @ 'target got packet!', @: header, body
 
     const channel = await hub.connect_self()
     channel.sendJSON @:
       id_router: hub.router.id_self
       id_target: 123
-      body: 'self-echo message works'
+      body: 'self-echo packet works'
 
     return hub.router.id_self
 

@@ -1,13 +1,13 @@
 import {createDataViewPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
 
 export default function browser_router_plugin(plugin_options={}) ::
-  return @: subclass(MessageHub_PI, bases) ::
-    Object.assign @ MessageHub_PI.prototype, @:
+  return @: subclass(FiberHub_PI, bases) ::
+    Object.assign @ FiberHub_PI.prototype, @:
       packetParser: createPacketParser @ plugin_options
 
       _init_router() ::
         const id_self = random_id_self()
-        const router = new bases.MessageRouter(id_self)
+        const router = new bases.Router(id_self)
         router.allowUnverifiedRoutes = true
         return router
 

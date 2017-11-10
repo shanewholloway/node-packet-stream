@@ -1,21 +1,21 @@
 import {send_hello, send_pingpong} from './control_protocol.jsy'
 
 
-export class MessageChannel ::
+export class Channel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
   packRaw() :: throw new Error @ `Instance responsiblity`
 
   packAndSendRaw(...args) ::
     return this.sendRaw @ this.packRaw @ ...args
 
-  sendJSON(msg_obj) ::
-    return this.sendRaw @ this.packJSON @ msg_obj
-  packJSON(msg_obj) ::
-    if undefined !== msg_obj.header ::
-      msg_obj.header = JSON.stringify @ msg_obj.header
-    if undefined !== msg_obj.body ::
-      msg_obj.body = JSON.stringify @ msg_obj.body
-    return this.packRaw(msg_obj)
+  sendJSON(pkt_obj) ::
+    return this.sendRaw @ this.packJSON @ pkt_obj
+  packJSON(pkt_obj) ::
+    if undefined !== pkt_obj.header ::
+      pkt_obj.header = JSON.stringify @ pkt_obj.header
+    if undefined !== pkt_obj.body ::
+      pkt_obj.body = JSON.stringify @ pkt_obj.body
+    return this.packRaw(pkt_obj)
 
 
   // --- Control message utilities
@@ -32,8 +32,8 @@ export class MessageChannel ::
   bindChannel(sendRaw, props) :: return bindChannel(this, sendRaw, props)
   bindDispatchPackets() :: return bindDispatchPackets(this)
 
-  undeliverable(msg, mode) ::
-    console.warn @ 'undeliverable:', msg, mode
+  undeliverable(pkt, mode) ::
+    console.warn @ 'undeliverable:', pkt, mode
 
   static asAPI(hub, router, packRaw) ::
     const self = new this()
@@ -45,21 +45,19 @@ export class MessageChannel ::
     return self
 
   static asChannelAPI(hub, router, packetParser) ::
-    const self = this.asAPI @ hub, router, packetParser.packMessage
+    const self = this.asAPI @ hub, router, packetParser.packPacket
     return self
 
   static asInternalAPI(hub, router, packetParser) ::
-    const self = this.asAPI @ hub, router, packetParser.packMessageObj
-    return self.bindChannel(null)
+    const self = this.asAPI @ hub, router, packetParser.packPacketObj
+    return self.bindChannel @ bindDispatchInternalPacket(router)
 
-export default MessageChannel
+export default Channel
 
 
 
 export function bindChannel(channel, sendRaw, props) ::
-  if null == sendRaw ::
-    sendRaw = bindDispatchMsgRaw(channel.router)
-  else if 'function' !== typeof sendRaw ::
+  if 'function' !== typeof sendRaw ::
     throw new TypeError @ `Channel expects 'sendRaw' function parameter`
 
   const core_props = @: sendRaw: @{} value: sendRaw
@@ -69,14 +67,14 @@ export function bindChannel(channel, sendRaw, props) ::
   return sendRaw.channel = self
 
 
-export function bindDispatchMsgRaw(router) ::
+export function bindDispatchInternalPacket(router) ::
   const dispatch = router.dispatch
-  return dispatchMsgObj
+  return dispatch_pkt_obj
 
-  function dispatchMsgObj(msg) ::
-    if undefined === msg._raw_ ::
-      throw new TypeError @ `Expected a parsed msg_obj with valid '_raw_' buffer property`
-    dispatch @ [msg], dispatchMsgObj.channel
+  function dispatch_pkt_obj(pkt) ::
+    if undefined === pkt._raw_ ::
+      throw new TypeError @ `Expected a parsed pkt_obj with valid '_raw_' buffer property`
+    dispatch @ [pkt], dispatch_pkt_obj.channel
     return true
 
 
@@ -85,6 +83,6 @@ export function bindDispatchPackets(channel) ::
   const feed = channel.hub.packetParser.packetStream()
 
   return function on_recv_data(data) ::
-    const msgList = feed(data)
-    if 0 < msgList.length ::
-      dispatch @ msgList, channel
+    const pktList = feed(data)
+    if 0 < pktList.length ::
+      dispatch @ pktList, channel

@@ -2,7 +2,7 @@ import {dispControlByType} from './control_protocol.jsy'
 
 const firstAnswer = bindPromiseFirstResult()
 
-export class MessageRouter ::
+export class Router ::
   constructor(id_self) ::
     if id_self ::
       Object.defineProperties @ this, @: id_self: @: value: id_self
@@ -22,37 +22,37 @@ export class MessageRouter ::
       routes: @: value: routes
       dispatch: @: value: dispatch
 
-    function dispatch(msgList, channel) ::
+    function dispatch(pktList, channel) ::
       const pq = pqueue() // pq will dispatch during Promise resolutions
-      return msgList.map @ msg =>
-        pq.then @ () => dispatch_one(msg, channel)
+      return pktList.map @ pkt =>
+        pq.then @ () => dispatch_one(pkt, channel)
 
-  on_error_in_dispatch(err, msg) ::
-    console.error @ 'Error during msg dispatch\n  msg:', msg, '\n', err, '\n'
+  on_error_in_dispatch(err, pkt) ::
+    console.error @ 'Error during packet dispatch\n  pkt:', pkt, '\n', err, '\n'
 
   _createRoutesMap() :: return new Map()
 
   // --- Dispatch to route ---
 
   routeDiscovery = []
-  dispatch_discover_route(id_router, msg) ::
+  dispatch_discover_route(id_router, pkt) ::
     return firstAnswer @ id_router, this.routeDiscovery
 
   bindDispatchRoute(routes) ::
-    return async (msg, channel) => ::
+    return async (pkt, channel) => ::
       try ::
-        const id_router = msg.id_router
+        const id_router = pkt.id_router
         let dispatch_route = routes.get(id_router)
         if undefined === dispatch_route ::
-          dispatch_route = await this.dispatch_discover_route(id_router, msg)
+          dispatch_route = await this.dispatch_discover_route(id_router, pkt)
           if null == dispatch_route ::
-            return channel.undeliverable(msg, 'route')
+            return channel.undeliverable(pkt, 'route')
           this.registerRoute(id_router, dispatch_route)
 
-        if false === await dispatch_route(msg, channel) ::
+        if false === await dispatch_route(pkt, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
-        this.on_error_in_dispatch(err, msg, channel)
+        this.on_error_in_dispatch(err, pkt, channel)
 
 
   registerRoute(id_router, dispatch_route) ::
@@ -69,8 +69,8 @@ export class MessageRouter ::
   unregisterRoute(id_router) ::
     return this.routes.delete @ id_router
   registerPeerRoute(id_router, channel) ::
-    return this.registerRoute @ id_router, msg => ::
-      if 0 !== msg.ttl :: channel.sendRaw(msg)
+    return this.registerRoute @ id_router, pkt => ::
+      if 0 !== pkt.ttl :: channel.sendRaw(pkt)
   verifiedPeerRoute(id_router, channel) ::
     return this.registerPeerRoute(id_router, channel)
   unverifiedPeerRoute(id_router, channel) ::
@@ -82,20 +82,20 @@ export class MessageRouter ::
   // --- Dispatch to local target
 
   targetDiscovery = []
-  dispatch_discover_target(id_target, msg) ::
+  dispatch_discover_target(id_target, pkt) ::
     return firstAnswer @ id_target, this.targetDiscovery
 
-  bindDispatchSelf(msg) ::
-    const dispatchSelf = async (msg, channel) => ::
-      const id_target = msg.id_target
+  bindDispatchSelf(pkt) ::
+    const dispatchSelf = async (pkt, channel) => ::
+      const id_target = pkt.id_target
       let target = this.targets.get(id_target)
       if undefined === target ::
-        target = await this.dispatch_discover_target(msg)
+        target = await this.dispatch_discover_target(pkt)
         if null == target ::
-          return channel.undeliverable(msg, 'target')
+          return channel.undeliverable(pkt, 'target')
         //this.registerTarget(id_target, target)
 
-      if false === await target(msg, this) ::
+      if false === await target(pkt, this) ::
         this.unregisterTarget(id_target)
 
     this.dispatchSelf = dispatchSelf
@@ -120,28 +120,28 @@ export class MessageRouter ::
 
 
 
-  // --- Dispatch control messages
+  // --- Dispatch control packets
 
   bindDispatchControl() ::
-    return (msg, channel) => ::
-      if 0 !== msg.id_target :: // connection-dispatched
-        return this.dispatchSelf(msg, channel)
+    return (pkt, channel) => ::
+      if 0 !== pkt.id_target :: // connection-dispatched
+        return this.dispatchSelf(pkt, channel)
 
-      const handler = this.dispControlByType[msg.type]
+      const handler = this.dispControlByType[pkt.type]
       if undefined !== handler ::
-        return handler(this, msg, channel)
+        return handler(this, pkt, channel)
       else ::
-        return this.dnu_dispatch_control(msg, channel)
+        return this.dnu_dispatch_control(pkt, channel)
 
   dispControlByType = Object.create @ this.dispControlByType
-  dnu_dispatch_control(msg, channel) ::
-    console.warn @ 'dnu_dispatch_control', msg.type, msg
+  dnu_dispatch_control(pkt, channel) ::
+    console.warn @ 'dnu_dispatch_control', pkt.type, pkt
 
 
-MessageRouter.prototype.dispControlByType = Object.assign @ {}
+Router.prototype.dispControlByType = Object.assign @ {}
   dispControlByType
 
-export default MessageRouter
+export default Router
 
 
 function promiseQueue() ::

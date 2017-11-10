@@ -8,5 +8,5 @@ export @{}
   channel
   control_protocol
 
-import {MessageHub} from './hub.jsy'
-export default MessageHub
+import {FiberHub} from './hub.jsy'
+export default FiberHub

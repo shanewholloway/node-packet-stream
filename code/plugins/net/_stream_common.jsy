@@ -1,20 +1,20 @@
 export function bindStreamChannel(stream, api_channel, props) ::
-  const channel = api_channel.bindChannel @ sendMsgRaw, props
+  const channel = api_channel.bindChannel @ sendPktRaw, props
   connectPacketStream @ stream, channel, true
   return channel
 
-  function sendMsgRaw(msg) ::
-    if ! Buffer.isBuffer @ msg ::
-      if msg._raw_ ::
-        msg = Buffer.from @ msg._raw_
-      else if msg.byteLength ::
-        msg = Buffer.from @ msg
+  function sendPktRaw(pkt) ::
+    if ! Buffer.isBuffer @ pkt ::
+      if pkt._raw_ ::
+        pkt = Buffer.from @ pkt._raw_
+      else if pkt.byteLength ::
+        pkt = Buffer.from @ pkt
       else ::
-        throw new TypeError @ `sendMsgRaw expected 'msg' as a Buffer or an object with a '_raw_' Buffer`
+        throw new TypeError @ `sendPktRaw expected 'pkt' as a Buffer or an object with a '_raw_' Buffer`
 
-    if null === msg ::
+    if null === pkt ::
       return void stream.end()
-    return void stream.write(msg)
+    return void stream.write(pkt)
 
 
 export function connectPacketStream(stream, channel, endStreamOnShutdown) ::

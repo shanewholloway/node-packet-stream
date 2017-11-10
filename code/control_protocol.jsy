@@ -13,15 +13,15 @@ export function send_hello(channel) ::
     header: ec_pub_id
     body: channel.hub.id_router_self()
 
-function recv_hello(router, msg, channel) ::
-  const ec_other_id = msg.header_buffer()
+function recv_hello(router, pkt, channel) ::
+  const ec_other_id = pkt.header_buffer()
   if 0 !== ec_other_id.length && router.ec_id_hmac ::
     const hmac_secret = router.ec_id_hmac
       ? router.ec_id_hmac(ec_other_id) : null
     send_olleh @ channel, hmac_secret
 
   else ::
-    const id_router = msg.unpackId(msg.body_buffer(), 0)
+    const id_router = pkt.unpackId(pkt.body_buffer(), 0)
     router.unverifiedPeerRoute @ id_router, channel
 
 
@@ -32,13 +32,13 @@ function send_olleh(channel, hmac_secret) ::
     header: ec_pub_id
     body: hmac_secret
 
-function recv_olleh(router, msg, channel) ::
-  const ec_other_id = msg.header_buffer()
-  const id_router = msg.unpackId(ec_other_id)
+function recv_olleh(router, pkt, channel) ::
+  const ec_other_id = pkt.header_buffer()
+  const id_router = pkt.unpackId(ec_other_id)
 
   const hmac_secret = router.ec_id_hmac
     ? router.ec_id_hmac(ec_other_id, true) : null
-  const peer_hmac_claim = msg.body_buffer()
+  const peer_hmac_claim = pkt.body_buffer()
   if hmac_secret && 0 === hmac_secret.compare @ peer_hmac_claim ::
     router.verifiedPeerRoute @ id_router, channel
   else ::
@@ -51,23 +51,23 @@ export function send_pingpong(channel, pong) ::
     id_router: 0, type: pong ? 0xfe : 0xff
     body: new Date().toISOString()
 
-function recv_pong(router, msg, channel) ::
+function recv_pong(router, pkt, channel) ::
   const local = new Date()
 
   try ::
-    const remote = new Date @ msg.body_buffer().toString()
+    const remote = new Date @ pkt.body_buffer().toString()
     const delta = remote - local
     channel.ts_pong = @{} delta, remote, local
   catch err ::
     channel.ts_pong = @{} local
 
-function recv_ping(router, msg, channel) ::
+function recv_ping(router, pkt, channel) ::
   const local = new Date()
 
   send_pingpong @ channel, true
 
   try ::
-    const remote = new Date @ msg.body_buffer().toString()
+    const remote = new Date @ pkt.body_buffer().toString()
     const delta = remote - local
     channel.ts_ping = @{} delta, remote, local
   catch err ::
