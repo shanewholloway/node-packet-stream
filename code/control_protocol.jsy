@@ -13,16 +13,16 @@ export function send_hello(channel) ::
     header: ec_pub_id
     body: channel.hub.id_router_self()
 
-function recv_hello(dispatch, msg, channel) ::
+function recv_hello(router, msg, channel) ::
   const ec_other_id = msg.header_buffer()
-  if 0 !== ec_other_id.length && dispatch.ec_id_hmac ::
-    const hmac_secret = dispatch.ec_id_hmac
-      ? dispatch.ec_id_hmac(ec_other_id) : null
+  if 0 !== ec_other_id.length && router.ec_id_hmac ::
+    const hmac_secret = router.ec_id_hmac
+      ? router.ec_id_hmac(ec_other_id) : null
     send_olleh @ channel, hmac_secret
 
   else ::
     const id_router = msg.unpackId(msg.body_buffer(), 0)
-    dispatch.unverifiedPeerRoute @ id_router, channel
+    router.unverifiedPeerRoute @ id_router, channel
 
 
 function send_olleh(channel, hmac_secret) ::
@@ -32,17 +32,17 @@ function send_olleh(channel, hmac_secret) ::
     header: ec_pub_id
     body: hmac_secret
 
-function recv_olleh(dispatch, msg, channel) ::
+function recv_olleh(router, msg, channel) ::
   const ec_other_id = msg.header_buffer()
   const id_router = msg.unpackId(ec_other_id)
 
-  const hmac_secret = dispatch.ec_id_hmac
-    ? dispatch.ec_id_hmac(ec_other_id, true) : null
+  const hmac_secret = router.ec_id_hmac
+    ? router.ec_id_hmac(ec_other_id, true) : null
   const peer_hmac_claim = msg.body_buffer()
   if hmac_secret && 0 === hmac_secret.compare @ peer_hmac_claim ::
-    dispatch.verifiedPeerRoute @ id_router, channel
+    router.verifiedPeerRoute @ id_router, channel
   else ::
-    dispatch.unverifiedPeerRoute @ id_router, channel
+    router.unverifiedPeerRoute @ id_router, channel
 
 
 
@@ -51,7 +51,7 @@ export function send_pingpong(channel, pong) ::
     id_router: 0, type: pong ? 0xfe : 0xff
     body: new Date().toISOString()
 
-function recv_pong(dispatch, msg, channel) ::
+function recv_pong(router, msg, channel) ::
   const local = new Date()
 
   try ::
@@ -61,7 +61,7 @@ function recv_pong(dispatch, msg, channel) ::
   catch err ::
     channel.ts_pong = @{} local
 
-function recv_ping(dispatch, msg, channel) ::
+function recv_ping(router, msg, channel) ::
   const local = new Date()
 
   send_pingpong @ channel, true
