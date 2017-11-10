@@ -3,8 +3,8 @@ import {randomBytes} from 'crypto'
 import {createBufferPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
 
 export default function nodejs_router_plugin(plugin_options={}) ::
-  return @: subclass(FiberHub_PI, bases) ::
-    Object.assign @ FiberHub_PI.prototype, @:
+  return @: subclass(FabricHub_PI, bases) ::
+    Object.assign @ FabricHub_PI.prototype, @:
       packetParser: createPacketParser @ plugin_options
 
       _parseConnectURL(conn_url) ::

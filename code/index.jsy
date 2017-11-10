@@ -8,5 +8,5 @@ export @{}
   channel
   control_protocol
 
-import {FiberHub} from './hub.jsy'
-export default FiberHub
+import {FabricHub} from './hub.jsy'
+export default FabricHub

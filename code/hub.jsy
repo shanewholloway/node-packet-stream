@@ -1,7 +1,7 @@
 import {Router} from './router.jsy'
 import {Channel} from './channel.jsy'
 
-export class FiberHub ::
+export class FabricHub ::
   constructor() ::
     applyPlugins @ 'pre', this.pluginList, this
 
@@ -42,14 +42,14 @@ export class FiberHub ::
     pluginList.sort @ (a, b) => (0 | a.order) - (0 | b.order)
 
     const BaseHub = this._BaseHub_ || this
-    class FiberHub_PI extends BaseHub ::
-    Object.defineProperties @ FiberHub_PI.prototype, @:
+    class FabricHub_PI extends BaseHub ::
+    Object.defineProperties @ FabricHub_PI.prototype, @:
       pluginList: @{} value: Object.freeze @ pluginList
-    Object.defineProperties @ FiberHub_PI, @:
+    Object.defineProperties @ FabricHub_PI, @:
       _BaseHub_: @{} value: BaseHub
 
-    applyPlugins @ 'subclass', pluginList, FiberHub_PI, @: Router, Channel
-    return FiberHub_PI
+    applyPlugins @ 'subclass', pluginList, FabricHub_PI, @: Router, Channel
+    return FabricHub_PI
 
 
   get id_self() ::
@@ -84,7 +84,7 @@ export class FiberHub ::
   _parseConnectURL(conn_url) ::
     return new URL(conn_url)
 
-export default FiberHub
+export default FabricHub
 
 export function applyPlugins(key, pluginList, ...args) ::
   if ! key :: key = null

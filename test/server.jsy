@@ -4,7 +4,7 @@ import {TextEncoder, TextDecoder} from 'util'
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
-import FiberHub from '../dist'
+import FabricHub from '../dist'
 
 import tcp_plugin from '../dist/plugin-tcp'
 
@@ -32,7 +32,7 @@ async function main_demo(router_plugin) ::
   if ! router_plugin || 'string' === typeof router_plugin ::
     router_plugin = pick_a_router(router_plugin)
 
-  const Hub = FiberHub.plugin @
+  const Hub = FabricHub.plugin @
     router_plugin
     tcp_plugin()
 
