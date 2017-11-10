@@ -3,8 +3,7 @@ import {createDataViewPacketParser as createPacketParser} from 'msg-fabric-packe
 export default function browser_router_plugin(plugin_options={}) ::
   return @: subclass(MessageHub_PI, bases) ::
     Object.assign @ MessageHub_PI.prototype, @:
-      _init_packetParser() ::
-        return createPacketParser @ plugin_options
+      packetParser: createPacketParser @ plugin_options
 
       _init_router() ::
         const id_self = random_id_self()
@@ -18,4 +17,4 @@ function random_id_self() ::
     window.crypto.getRandomValues(ua)
   else ::
     ua[0] = 0xffffffff * Math.random()
-  return dv.getUint32(0, true)
+  return dv.getInt32(0, true)

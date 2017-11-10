@@ -4,8 +4,7 @@ export default function basic_router_plugin(plugin_options={}) ::
   const random_id_self = plugin_options.random_id_self || _random_id_self
   return @: subclass(MessageHub_PI, bases) ::
     Object.assign @ MessageHub_PI.prototype, @:
-      _init_packetParser() ::
-        return createPacketParser @ plugin_options
+      packetParser: createPacketParser @ plugin_options
 
       _init_router() ::
         const id_self = random_id_self()
@@ -14,4 +13,4 @@ export default function basic_router_plugin(plugin_options={}) ::
         return router
 
 function _random_id_self() ::
-  return 0 | Math.random() * 0x7fffffff
+  return 0 | Math.random() * 0xffffffff

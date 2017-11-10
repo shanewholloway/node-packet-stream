@@ -4,7 +4,6 @@ import {send_hello, send_pingpong} from './control_protocol.jsy'
 export class MessageChannel ::
   sendRaw() :: throw new Error @ `Instance responsiblity`
   packRaw() :: throw new Error @ `Instance responsiblity`
-  pack(...args) :: return this.packRaw @ this.context, ...args
 
   packAndSendRaw(...args) ::
     return this.sendRaw @ this.packRaw @ ...args
@@ -16,23 +15,25 @@ export class MessageChannel ::
       msg_obj.header = JSON.stringify @ msg_obj.header
     if undefined !== msg_obj.body ::
       msg_obj.body = JSON.stringify @ msg_obj.body
-
-    return this.pack(msg_obj)
+    return this.packRaw(msg_obj)
 
 
   // --- Control message utilities
 
-  sendRoutingHandshake(channel) ::
-    return send_hello(this, this.ec_pub_id)
-  sendPing(channel) ::
+  sendRoutingHandshake() ::
+    return send_hello(this, this.router.ec_pub_id)
+  sendPing() ::
     return send_pingpong(this)
 
 
-
-  clone(props) :: return Object.create(this, props)
+  clone(props, ...extra) ::
+    const self = Object.create(this, props)
+    return 0 === extra.length ? self : Object.assign(self, ...extra)
   bindChannel(sendRaw, props) :: return bindChannel(this, sendRaw, props)
   bindDispatchPackets() :: return bindDispatchPackets(this)
 
+  undeliverable(msg, mode) ::
+    console.warn @ 'undeliverable:', msg, mode
 
   static asAPI(hub, router, packRaw) ::
     const self = new this()
@@ -81,7 +82,7 @@ export function bindDispatchMsgRaw(router) ::
 
 export function bindDispatchPackets(channel) ::
   const dispatch = channel.router.dispatch
-  const feed = channel.hub._packetParser.packetStream()
+  const feed = channel.hub.packetParser.packetStream()
 
   return function on_recv_data(data) ::
     const msgList = feed(data)

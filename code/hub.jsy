@@ -5,13 +5,16 @@ export class MessageHub ::
   constructor() ::
     applyPlugins @ 'pre', this.pluginList, this
 
+    const packetParser = this.packetParser
+    if null==packetParser || ! packetParser.isPacketParser() ::
+      throw new TypeError @ `Invalid hub.packetParser`
+
     const router = this._init_router()
-    const _packetParser = this._init_packetParser()
-    const _api_channel = this._init_channelAPI(router, _packetParser)
-    const _api_internal = this._init_internalAPI(router, _packetParser)
+    const _api_channel = this._init_channelAPI(router, packetParser)
+    const _api_internal = this._init_internalAPI(router, packetParser)
     Object.defineProperties @ this, @{}
       router: @{} value: router
-      _packetParser: @{} value: _packetParser
+      packetParser: @{} value: packetParser
       _api_channel: @{} value: _api_channel
       _api_internal: @{} value: _api_internal
 
@@ -20,7 +23,6 @@ export class MessageHub ::
     return this
 
   _init_router() :: throw new Error @ `Plugin responsiblity`
-  _init_packetParser() :: throw new Error @ `Plugin responsiblity`
 
   _init_channelAPI(router, packetParser) ::
     return MessageChannel.asChannelAPI @
@@ -37,6 +39,8 @@ export class MessageHub ::
       this.prototype.pluginList || []
       pluginFunctions
 
+    pluginList.sort @ (a, b) => (0 | a.order) - (0 | b.order)
+
     const BaseHub = this._BaseHub_ || this
     class MessageHub_PI extends BaseHub ::
     Object.defineProperties @ MessageHub_PI.prototype, @:
@@ -51,7 +55,7 @@ export class MessageHub ::
   get id_self() ::
     return this.router.id_self
   id_router_self() ::
-    return this._packetParser.packId @
+    return this.packetParser.packId @
       this.router.id_self
   connect_self() ::
     return this._api_internal.clone()

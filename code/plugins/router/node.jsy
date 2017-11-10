@@ -5,8 +5,7 @@ import {createBufferPacketParser as createPacketParser} from 'msg-fabric-packet-
 export default function nodejs_router_plugin(plugin_options={}) ::
   return @: subclass(MessageHub_PI, bases) ::
     Object.assign @ MessageHub_PI.prototype, @:
-      _init_packetParser() ::
-        return createPacketParser @ plugin_options
+      packetParser: createPacketParser @ plugin_options
 
       _parseConnectURL(conn_url) ::
         return new URL(conn_url)
@@ -18,4 +17,4 @@ export default function nodejs_router_plugin(plugin_options={}) ::
         return router
 
 function random_id_self() ::
-  return randomBytes(4).readUInt32LE()
+  return randomBytes(4).readInt32LE()

@@ -1,5 +1,7 @@
 import {dispControlByType} from './control_protocol.jsy'
 
+const firstAnswer = bindPromiseFirstResult()
+
 export class MessageRouter ::
   constructor(id_self) ::
     if id_self ::
@@ -32,13 +34,9 @@ export class MessageRouter ::
 
   // --- Dispatch to route ---
 
-  _routeDiscovery = []
+  routeDiscovery = []
   dispatch_discover_route(id_router, msg) ::
-    const tip = Promise.resolve(id_router)
-    // TODO: Promise.race might return the first null… dang.
-    return Promise.race @
-      this._routeDiscovery.map @
-        discover => tip.then @ discover
+    return firstAnswer @ id_router, this.routeDiscovery
 
   bindDispatchRoute(routes) ::
     return async (msg, channel) => ::
@@ -47,10 +45,11 @@ export class MessageRouter ::
         let dispatch_route = routes.get(id_router)
         if undefined === dispatch_route ::
           dispatch_route = await this.dispatch_discover_route(id_router, msg)
-          if null == dispatch_route :: return
+          if null == dispatch_route ::
+            return channel.undeliverable(msg, 'route')
           this.registerRoute(id_router, dispatch_route)
 
-        if false === dispatch_route(msg, channel) ::
+        if false === await dispatch_route(msg, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
         this.on_error_in_dispatch(err, msg, channel)
@@ -82,23 +81,37 @@ export class MessageRouter ::
 
   // --- Dispatch to local target
 
-  dnu_dispatch_self(msg) ::
+  targetDiscovery = []
+  dispatch_discover_target(id_target, msg) ::
+    return firstAnswer @ id_target, this.targetDiscovery
+
   bindDispatchSelf(msg) ::
-    return async (msg, channel) => ::
+    const dispatchSelf = async (msg, channel) => ::
       const id_target = msg.id_target
       let target = this.targets.get(id_target)
       if undefined === target ::
-        target = await this.dnu_dispatch_self(msg)
-        if null == target :: return
+        target = await this.dispatch_discover_target(msg)
+        if null == target ::
+          return channel.undeliverable(msg, 'target')
+        //this.registerTarget(id_target, target)
 
-      if false === target(msg, this) ::
+      if false === await target(msg, this) ::
         this.unregisterTarget(id_target)
+
+    this.dispatchSelf = dispatchSelf
+    return dispatchSelf
 
   _createTargetsMap() :: return new Map()
   targets = this._createTargetsMap()
   registerTarget(id_target, target) ::
+    if 'function' === typeof id_target && undefined === target ::
+      target = id_target
+      id_target = target.id_target || target.id
+
     if 'function' !== typeof target ::
       throw new TypeError @ `Expected 'target' to be a function`
+    if ! Number.isSafeInteger @ id_target ::
+      throw new TypeError @ `Expected 'id_target' to be an integer`
     if this.targets.has @ id_target ::
       return false
     return this.targets.set @ id_target, target
@@ -111,11 +124,14 @@ export class MessageRouter ::
 
   bindDispatchControl() ::
     return (msg, channel) => ::
+      if 0 !== msg.id_target :: // connection-dispatched
+        return this.dispatchSelf(msg, channel)
+
       const handler = this.dispControlByType[msg.type]
       if undefined !== handler ::
-        handler(this, msg, channel)
-      else
-        this.dnu_dispatch_control(msg, channel)
+        return handler(this, msg, channel)
+      else ::
+        return this.dnu_dispatch_control(msg, channel)
 
   dispControlByType = Object.create @ this.dispControlByType
   dnu_dispatch_control(msg, channel) ::
@@ -139,3 +155,19 @@ function promiseQueue() ::
   function clear_tip() ::
     tip = null
 
+function bindPromiseFirstResult(options={}) ::
+  const on_error = options.on_error || console.error
+  const ifAbsent = options.absent || null
+
+  return (tip, lstFns) =>
+    new Promise @ resolve =>::
+      tip = Promise.resolve(tip)
+      Promise.all @
+        Array.from @ lstFns, fn =>
+          tip.then(fn).then(resolve, on_error)
+      .then @ absent, absent
+
+      function absent() ::
+        if 'function' === typeof ifAbsent ::
+          resolve @ ifAbsent()
+        else resolve @ ifAbsent
