@@ -16,16 +16,7 @@ export class Router ::
     if null != this.id_self ::
       routes.set @ this.id_self, this.bindDispatchSelf()
 
-    const pqueue = promiseQueue()
-    const dispatch_one = this.bindDispatchRoute(routes)
-    return Object.defineProperties @ this, @:
-      routes: @: value: routes
-      dispatch: @: value: dispatch
-
-    function dispatch(pktList, channel) ::
-      const pq = pqueue() // pq will dispatch during Promise resolutions
-      return pktList.map @ pkt =>
-        pq.then @ () => dispatch_one(pkt, channel)
+    this.bindDispatchRoutes(routes)
 
   on_error_in_dispatch(err, pkt) ::
     console.error @ 'Error during packet dispatch\n  pkt:', pkt, '\n', err, '\n'
@@ -35,25 +26,42 @@ export class Router ::
   // --- Dispatch to route ---
 
   routeDiscovery = []
-  dispatch_discover_route(id_router, pkt) ::
-    return firstAnswer @ id_router, this.routeDiscovery
+  async dispatch_discover_route(id_router) ::
+    const dispatch_route = await firstAnswer @ id_router, this.routeDiscovery
+    if null == dispatch_route :: return
+    this.registerRoute(id_router, dispatch_route)
+    return dispatch_route
 
-  bindDispatchRoute(routes) ::
-    return async (pkt, channel) => ::
+  bindDispatchRoutes(routes) ::
+    const pqueue = promiseQueue()
+    function dispatch(pktList, channel) ::
+      const pq = pqueue() // pq will dispatch during Promise resolutions
+      return pktList.map @ pkt =>
+        pq.then @ () => dispatch_one(pkt, channel)
+
+    const dispatch_one = async (pkt, channel) => ::
       try ::
         const id_router = pkt.id_router
         let dispatch_route = routes.get(id_router)
         if undefined === dispatch_route ::
-          dispatch_route = await this.dispatch_discover_route(id_router, pkt)
-          if null == dispatch_route ::
+          dispatch_route = await this.dispatch_discover_route(id_router)
+          if undefined === dispatch_route ::
             return channel.undeliverable(pkt, 'route')
-          this.registerRoute(id_router, dispatch_route)
 
         if false === await dispatch_route(pkt, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
         this.on_error_in_dispatch(err, pkt, channel)
 
+    const resolveRoute = (id_router) =>
+      routes.get(id_router) ||
+        this.dispatch_discover_route(id_router)
+
+    Object.defineProperties @ this, @:
+      routes: @: value: routes
+      dispatch: @: value: dispatch
+      resolveRoute: @: value: resolveRoute
+    return dispatch
 
   registerRoute(id_router, dispatch_route) ::
     if 'function' !== typeof dispatch_route ::
