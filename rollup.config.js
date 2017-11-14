@@ -42,14 +42,14 @@ function package_plugin_net() {
 
     { input: 'code/plugins/net/tcp.jsy',
       output: [
-        { file: `dist/plugin-tcp.js`, format: 'cjs' },
+        { file: `dist/plugin-tcp.js`, format: 'cjs', exports: 'named'  },
         { file: `dist/plugin-tcp.mjs`, format: 'es' },
       ],
       sourcemap, external:['net'], plugins },
 
     { input: 'code/plugins/net/tls.jsy',
       output: [
-        { file: `dist/plugin-tls.js`, format: 'cjs' },
+        { file: `dist/plugin-tls.js`, format: 'cjs', exports: 'named'  },
         { file: `dist/plugin-tls.mjs`, format: 'es' },
       ],
       sourcemap, external:['tls'], plugins },

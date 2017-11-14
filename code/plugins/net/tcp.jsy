@@ -1,7 +1,6 @@
 import { createServer as _tcp_createServer, createConnection as _tcp_createConnection } from 'net'
 import net_common from './_net_common.jsy'
 
-tcp_plugin.tcp_plugin = tcp_plugin
 export default function tcp_plugin(plugin_options={}) ::
   function as_tcp_url() :: return `tcp://${this.address}:${this.port}`
 

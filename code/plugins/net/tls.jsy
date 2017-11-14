@@ -1,7 +1,6 @@
 import { createServer as _tls_createServer, connect as _tls_connect } from 'tls'
 import net_common from './_net_common.jsy'
 
-tls_plugin.tls_plugin = tls_plugin
 export default function tls_plugin(plugin_options={}) ::
   function as_tls_url() :: return `tls://${this.address}:${this.port}`
 
