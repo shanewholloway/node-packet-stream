@@ -23,6 +23,8 @@
     "passing"
   ],
   "files": [
+    "node.js",
+    "basic.js",
     "dist/",
     "code/",
     "test/"
