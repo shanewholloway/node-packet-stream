@@ -1,7 +1,5 @@
 import {dispControlByType} from './control_protocol.jsy'
 
-const firstAnswer = bindPromiseFirstResult()
-
 export class Router ::
   constructor(id_self) ::
     if id_self ::
@@ -27,7 +25,7 @@ export class Router ::
 
   routeDiscovery = []
   async dispatch_discover_route(id_router) ::
-    const dispatch_route = await firstAnswer @ id_router, this.routeDiscovery
+    const dispatch_route = await this._firstRoute @ id_router, this.routeDiscovery
     if null == dispatch_route :: return
     this.registerRoute(id_router, dispatch_route)
     return dispatch_route
@@ -90,18 +88,15 @@ export class Router ::
   // --- Dispatch to local target
 
   targetDiscovery = []
-  dispatch_discover_target(id_target, pkt) ::
-    return firstAnswer @ id_target, this.targetDiscovery
+  discoverTarget(query) ::
+    return this._firstTarget @ query, this.targetDiscovery
 
   bindDispatchSelf(pkt) ::
     const dispatchSelf = async (pkt, channel) => ::
       const id_target = pkt.id_target
       let target = this.targets.get(id_target)
       if undefined === target ::
-        target = await this.dispatch_discover_target(pkt)
-        if null == target ::
-          return channel.undeliverable(pkt, 'target')
-        //this.registerTarget(id_target, target)
+        return channel.undeliverable(pkt, 'target')
 
       if false === await target(pkt, this) ::
         this.unregisterTarget(id_target)
@@ -146,13 +141,18 @@ export class Router ::
     console.warn @ 'dnu_dispatch_control', pkt.type, pkt
 
 
-Router.prototype.dispControlByType = Object.assign @ {}
-  dispControlByType
+Object.assign @ Router.prototype, @{}
+  dispControlByType: Object.assign @ {}
+    dispControlByType
+
+  bindPromiseFirstResult
+  _firstRoute: bindPromiseFirstResult()
+  _firstTarget: bindPromiseFirstResult()
 
 export default Router
 
 
-function promiseQueue() ::
+export function promiseQueue() ::
   let tip = null
   return function () ::
     if null === tip ::
@@ -163,7 +163,7 @@ function promiseQueue() ::
   function clear_tip() ::
     tip = null
 
-function bindPromiseFirstResult(options={}) ::
+export function bindPromiseFirstResult(options={}) ::
   const on_error = options.on_error || console.error
   const ifAbsent = options.absent || null
 
