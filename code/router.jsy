@@ -4,11 +4,10 @@ export class Router ::
   constructor(id_self) ::
     if id_self ::
       Object.defineProperties @ this, @: id_self: @: value: id_self
-      this._initDispatch()
 
   // --- Dispatch core ---
 
-  _initDispatch() ::
+  initDispatch() ::
     const routes = this._createRoutesMap()
     routes.set @ 0, this.bindDispatchControl()
     if null != this.id_self ::
@@ -44,14 +43,14 @@ export class Router ::
         if undefined === dispatch_route ::
           dispatch_route = await this.dispatch_discover_route(id_router)
           if undefined === dispatch_route ::
-            return channel.undeliverable(pkt, 'route')
+            return channel && channel.undeliverable(pkt, 'route')
 
         if false === await dispatch_route(pkt, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
         this.on_error_in_dispatch(err, pkt, channel)
 
-    const resolveRoute = (id_router) =>
+    const resolveRoute = id_router =>
       routes.get(id_router) ||
         this.dispatch_discover_route(id_router)
 
@@ -91,12 +90,12 @@ export class Router ::
   discoverTarget(query) ::
     return this._firstTarget @ query, this.targetDiscovery
 
-  bindDispatchSelf(pkt) ::
+  bindDispatchSelf() ::
     const dispatchSelf = async (pkt, channel) => ::
       const id_target = pkt.id_target
       let target = this.targets.get(id_target)
       if undefined === target ::
-        return channel.undeliverable(pkt, 'target')
+        return channel && channel.undeliverable(pkt, 'target')
 
       if false === await target(pkt, this) ::
         this.unregisterTarget(id_target)

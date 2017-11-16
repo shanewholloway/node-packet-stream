@@ -21,7 +21,7 @@ export class Channel ::
   // --- Control message utilities
 
   sendRoutingHandshake() ::
-    return send_hello(this, this.router.ec_pub_id)
+    return send_hello(this, this.hub.router.ec_pub_id)
   sendPing() ::
     return send_pingpong(this)
 
@@ -33,24 +33,25 @@ export class Channel ::
   bindDispatchPackets() :: return bindDispatchPackets(this)
 
   undeliverable(pkt, mode) ::
-    console.warn @ 'undeliverable:', pkt, mode
+    const rtr = pkt.id_router !== this.hub.router.id_self ? pkt.id_router : 'self'
+    console.warn @ `Undeliverable[${mode}]: ${pkt.id_target} of ${rtr}`
 
-  static asAPI(hub, router, packRaw) ::
+  static asAPI(hub, packRaw) ::
     const self = new this()
     Object.defineProperties @ self, @:
       packRaw: @: value: packRaw
-      router: @: value: router
       hub: @: value: hub
       _root_: @: value: self
     return self
 
-  static asChannelAPI(hub, router, packetParser) ::
-    const self = this.asAPI @ hub, router, packetParser.packPacket
+  static asChannelAPI(hub, packetParser) ::
+    return this.asAPI @ hub, packetParser.packPacket
+
+  static asInternalAPI(hub, packetParser) ::
+    const self = this.asAPI @ hub, packetParser.packPacketObj
+    self.bindInternalChannel = dispatch => bindInternalChannel(self, dispatch)
     return self
 
-  static asInternalAPI(hub, router, packetParser) ::
-    const self = this.asAPI @ hub, router, packetParser.packPacketObj
-    return self.bindChannel @ bindDispatchInternalPacket(router)
 
 export default Channel
 
@@ -66,20 +67,20 @@ export function bindChannel(channel, sendRaw, props) ::
   const self = Object.create @ channel, props
   return sendRaw.channel = self
 
-
-export function bindDispatchInternalPacket(router) ::
-  const dispatch = router.dispatch
-  return dispatch_pkt_obj
+export function bindInternalChannel(channel, dispatch) ::
+  dispatch_pkt_obj.channel = channel
+  return Object.defineProperties @ channel, @{}
+    sendRaw: @{} value: dispatch_pkt_obj
+    bindChannel: @{} value: null
 
   function dispatch_pkt_obj(pkt) ::
     if undefined === pkt._raw_ ::
       throw new TypeError @ `Expected a parsed pkt_obj with valid '_raw_' buffer property`
-    dispatch @ [pkt], dispatch_pkt_obj.channel
+    dispatch @ [pkt], channel
     return true
 
-
 export function bindDispatchPackets(channel) ::
-  const dispatch = channel.router.dispatch
+  const dispatch = channel.hub.router.dispatch
   const feed = channel.hub.packetParser.packetStream()
 
   return function on_recv_data(data) ::

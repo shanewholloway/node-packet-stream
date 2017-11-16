@@ -7,7 +7,7 @@ export const dispControlByType = @{}
 
 
 export function send_hello(channel) ::
-  const {ec_pub_id} = channel.router
+  const {ec_pub_id} = channel.hub.router
   return channel.packAndSendRaw @:
     id_router: 0, type: 0xf0
     header: ec_pub_id
@@ -26,7 +26,7 @@ function recv_hello(router, pkt, channel) ::
 
 
 function send_olleh(channel, hmac_secret) ::
-  const {ec_pub_id} = channel.router
+  const {ec_pub_id} = channel.hub.router
   return channel.packAndSendRaw @:
     id_router: 0, type: 0xf1
     header: ec_pub_id
