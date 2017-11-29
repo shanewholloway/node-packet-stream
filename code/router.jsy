@@ -162,16 +162,19 @@ export function promiseQueue() ::
   function clear_tip() ::
     tip = null
 
+function is_defined(e) :: return undefined !== e
 export function bindPromiseFirstResult(options={}) ::
+  const test = options.test || is_defined
   const on_error = options.on_error || console.error
   const ifAbsent = options.absent || null
 
   return (tip, lstFns) =>
-    new Promise @ resolve =>::
+    new Promise @ resolve => ::
+      const resolveIf = e => test(e) ? resolve(e) : e
       tip = Promise.resolve(tip)
       Promise.all @
         Array.from @ lstFns, fn =>
-          tip.then(fn).then(resolve, on_error)
+          tip.then(fn).then(resolveIf, on_error)
       .then @ absent, absent
 
       function absent() ::
