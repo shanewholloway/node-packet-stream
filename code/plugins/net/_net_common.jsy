@@ -1,4 +1,4 @@
-import {bindStreamChannel} from './_stream_common.jsy'
+import bindStreamChannel from './_stream_common.jsy'
 
 net_common.net_common = net_common
 export default function net_common(hub, asURL) ::
@@ -40,6 +40,6 @@ function bindSocketChannel(sock, api_channel, asURL) ::
     ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
     ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
 
-  return bindStreamChannel @ sock, api_channel
+  return bindStreamChannel @ sock, sock, api_channel
     @: conn_info: @: value: conn_info
 

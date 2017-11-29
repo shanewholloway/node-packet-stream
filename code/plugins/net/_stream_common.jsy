@@ -1,6 +1,7 @@
-export function bindStreamChannel(stream, api_channel, props) ::
+export default bindStreamChannel
+export function bindStreamChannel(rstream, wstream, api_channel, props) ::
   const channel = api_channel.bindChannel @ sendPktRaw, props
-  connectPacketStream @ stream, channel, true
+  connectPacketStream @ rstream, channel, true
   return channel
 
   function sendPktRaw(pkt) ::
@@ -13,20 +14,20 @@ export function bindStreamChannel(stream, api_channel, props) ::
         throw new TypeError @ `sendPktRaw expected 'pkt' as a Buffer or an object with a '_raw_' Buffer`
 
     if null === pkt ::
-      return void stream.end()
-    return void stream.write(pkt)
+      return void wstream.end()
+    return void wstream.write(pkt)
 
 
-export function connectPacketStream(stream, channel, endStreamOnShutdown) ::
+export function connectPacketStream(rstream, channel, endStreamOnShutdown) ::
   const shutdown = new Promise @ lifecycle
   return Object.defineProperty @ channel, 'shutdown', @: value: shutdown
   
   function lifecycle(resolve, reject) ::
     let pktDispatch = channel.bindDispatchPackets()
 
-    stream.on @ 'error', shutdown
-    stream.on @ 'close', shutdown
-    stream.on @ 'data', function (data) ::
+    rstream.on @ 'error', shutdown
+    rstream.on @ 'close', shutdown
+    rstream.on @ 'data', function (data) ::
       try :: pktDispatch(data)
       catch err ::
         return shutdown(err)
@@ -35,7 +36,7 @@ export function connectPacketStream(stream, channel, endStreamOnShutdown) ::
       if undefined === pktDispatch :: return
       pktDispatch = undefined
       if endStreamOnShutdown ::
-        stream.end()
+        rstream.end()
 
       err ? reject(err) : resolve()
 
