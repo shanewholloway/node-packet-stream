@@ -1,0 +1,92 @@
+require('source-map-support').install()
+import {URL} from 'url'
+import {TextEncoder, TextDecoder} from 'util'
+Object.assign @ global, @:
+  URL, TextDecoder, TextEncoder
+
+import FabricHub from '../dist'
+
+import direct_plugin from '../dist/plugin-direct'
+
+import generic_router from '../dist/plugin-router'
+import node_router from '../dist/plugin-router-node'
+import basic_router from '../dist/plugin-router-basic'
+import browser_router from '../dist/plugin-router-browser'
+
+const all_routers = @{} generic_router, node_router, basic_router, browser_router
+
+function pick_a_router(key) ::
+  if null == key ::
+    const lst = Array.from @ Object.keys @ all_routers
+    const idx = 0 | lst.length * Math.random()
+    key = lst[idx]
+    console.log @ `\n\nUsing Router Plugin "${key}" [${idx}]\n`
+  else ::
+    console.log @ `\n\nUsing Router Plugin "${key}"\n`
+    
+  return all_routers[key]()
+
+
+var next_hub_port = 18000
+async function main_demo(router_plugin) ::
+  if ! router_plugin || 'string' === typeof router_plugin ::
+    router_plugin = pick_a_router(router_plugin)
+
+  const Hub = FabricHub.plugin @
+    router_plugin
+    direct_plugin()
+
+  try ::
+    var hub_port = next_hub_port++
+    var peer = await main_server()
+
+    await main_client_one @ peer
+    await main_client_two @ peer
+    return true
+  catch err ::
+    console.error(err)
+    return false
+
+
+
+  async function main_server() ::
+    const hub = new Hub()
+
+    hub.router.registerTarget @ 123, (pkt, router) => ::
+      const header = pkt.header_json()
+      const body = pkt.body_json()
+      console.log @ 'target got packet!', @: header, body
+
+    const channel = await hub.connect_self()
+    channel.sendJSON @:
+      id_router: hub.router.id_self
+      id_target: 123
+      body: 'self-echo packet works'
+
+    return hub
+
+  async function main_client_one(peer) ::
+    const hub = new Hub()
+    const channel = await hub.direct.connect @ peer
+    channel.sendJSON @:
+      id_router: peer
+      id_target: 123
+      header: @: bonkers: true
+
+  async function main_client_two(peer) ::
+    const hub = new Hub()
+    const channel = await hub.direct.connect @ peer
+    channel.sendJSON @:
+      id_router: peer
+      id_target: 123
+      body: @: hello: 'there'
+
+
+if module === require.main ::
+  ::
+    let tip = Promise.resolve()
+    for const key of Object.keys(all_routers) ::
+      tip = tip.then @ () => main_demo(key)
+
+  process.on @ 'unhandledRejection', (reason, p) => ::
+    console.log @ 'Unhandled Rejection at:', p, 'reason:', reason

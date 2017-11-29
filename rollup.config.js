@@ -38,7 +38,7 @@ function package_plugin_net() {
         { file: `dist/plugin-net.js`, format: 'cjs', exports: 'named' },
         { file: `dist/plugin-net.mjs`, format: 'es' },
       ],
-      sourcemap, external:['net', 'tls'], plugins },
+      sourcemap, external:['net', 'tls', 'stream'], plugins },
 
     { input: 'code/plugins/net/tcp.jsy',
       output: [
@@ -53,6 +53,13 @@ function package_plugin_net() {
         { file: `dist/plugin-tls.mjs`, format: 'es' },
       ],
       sourcemap, external:['tls'], plugins },
+
+    { input: 'code/plugins/net/direct.jsy',
+      output: [
+        { file: `dist/plugin-direct.js`, format: 'cjs', exports: 'named'  },
+        { file: `dist/plugin-direct.mjs`, format: 'es' },
+      ],
+      sourcemap, external:['stream'], plugins },
   ]}
 
 
