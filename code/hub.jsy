@@ -59,22 +59,29 @@ export class FabricHub ::
     return this.packetParser.packId @
       this.router.id_self
 
-  bindRouteDispatch(channel, cache) ::
+  bindRouteChannel(channel, cache) ::
     if null == channel :: channel = this.connect_self()
+    const {resolveRoute, routes} = this.router
 
-    const resolveRoute = id_router => ::
-      let route, disco = this.router.resolveRoute(id_router)
+    const resolveRouteChannel = id_router => ::
+      let route, disco = resolveRoute(id_router)
       return async pkt => ::
-        if undefined === route ::
-          route = disco = await disco
-        return route @ pkt, channel
+        if null !== disco ::
+          route = await disco
+          disco = null
 
-    return cache ? cacheResolveRoute : resolveRoute
+        if null != route && routes.has(id_router) ::
+          return route @ pkt, channel
+        else ::
+          if cache :: cache.delete(id_router)
+          throw new Error @ "Unresolvable route"
 
-    function cacheResolveRoute(id_router) ::
+    return cache ? cacheRouteChannel : resolveRouteChannel
+
+    function cacheRouteChannel(id_router) ::
       let chan = cache.get(id_router)
       if undefined === chan ::
-        chan = resolveRoute(id_router)
+        chan = resolveRouteChannel(id_router)
         cache.set(id_router, chan)
       return chan
 
