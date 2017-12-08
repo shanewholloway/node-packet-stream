@@ -58,8 +58,7 @@ export class FabricHub ::
   id_router_self() ::
     return this.packetParser.packId @
       this.router.id_self
-  connect_self() ::
-    return this._api_internal.clone()
+
   bindRouteDispatch(channel, cache) ::
     if null == channel :: channel = this.connect_self()
 
@@ -78,6 +77,9 @@ export class FabricHub ::
         chan = resolveRoute(id_router)
         cache.set(id_router, chan)
       return chan
+
+  connect_self() ::
+    return this._api_internal.clone()
 
 
   connect(conn_url) ::
