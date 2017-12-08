@@ -60,14 +60,25 @@ export class FabricHub ::
       this.router.id_self
   connect_self() ::
     return this._api_internal.clone()
-  bindRouteDispatch(channel) ::
+  bindRouteDispatch(channel, cache) ::
     if null == channel :: channel = this.connect_self()
-    return id_router => ::
+
+    const resolveRoute = id_router => ::
       let route, disco = this.router.resolveRoute(id_router)
       return async pkt => ::
         if undefined === route ::
           route = disco = await disco
         return route @ pkt, channel
+
+    return cache ? cacheResolveRoute : resolveRoute
+
+    function cacheResolveRoute(id_router) ::
+      let chan = cache.get(id_router)
+      if undefined === chan ::
+        chan = resolveRoute(id_router)
+        cache.set(id_router, chan)
+      return chan
+
 
   connect(conn_url) ::
     if null == conn_url ::
