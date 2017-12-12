@@ -1,5 +1,6 @@
 import {dispControlByType} from './control_protocol.jsy'
 
+const sym_unregister = Symbol('msg-fabirc unregister')
 export class Router ::
   constructor(id_self) ::
     if id_self ::
@@ -45,7 +46,7 @@ export class Router ::
           if undefined === dispatch_route ::
             return channel && channel.undeliverable(pkt, 'route')
 
-        if false === await dispatch_route(pkt, channel) ::
+        if sym_unregister === await dispatch_route(pkt, channel) ::
           this.unregisterRoute(id_router)
       catch err ::
         this.on_error_in_dispatch(err, pkt, channel)
@@ -97,7 +98,7 @@ export class Router ::
       if undefined === target ::
         return channel && channel.undeliverable(pkt, 'target')
 
-      if false === await target(pkt, this) ::
+      if sym_unregister === await target(pkt, this) ::
         this.unregisterTarget(id_target)
 
     this.dispatchSelf = dispatchSelf
@@ -144,6 +145,7 @@ Object.assign @ Router.prototype, @{}
   dispControlByType: Object.assign @ {}
     dispControlByType
 
+  unregister: sym_unregister
   bindPromiseFirstResult
   _firstRoute: bindPromiseFirstResult()
   _firstTarget: bindPromiseFirstResult()

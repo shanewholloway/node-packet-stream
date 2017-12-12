@@ -3,7 +3,8 @@ import bindStreamChannel from './_stream_common.jsy'
 
 export default function stream_plugin(plugin_options={}) ::
   return function(hub) ::
-    return hub.direct = @: connect, connectDirect, createDirectChannel
+    return hub.direct = Object.assign @ connect, @{}
+      connect, connectDirect, createDirectChannel
 
     function connect(peer) ::
       return connectDirect(peer)[0]
