@@ -1,7 +1,7 @@
 import {createDataViewPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
 
 export default function browser_router_plugin(plugin_options={}) ::
-  return @: subclass(FabricHub_PI, bases) ::
+  return @: order: -2, subclass(FabricHub_PI, bases) ::
     Object.assign @ FabricHub_PI.prototype, @:
       packetParser: createPacketParser @ plugin_options
 

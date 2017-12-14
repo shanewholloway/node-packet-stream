@@ -2,7 +2,7 @@ import createPacketParser from 'msg-fabric-packet-stream'
 
 export default function basic_router_plugin(plugin_options={}) ::
   const random_id_self = plugin_options.random_id_self || _random_id_self
-  return @: subclass(FabricHub_PI, bases) ::
+  return @: order: -2, subclass(FabricHub_PI, bases) ::
     Object.assign @ FabricHub_PI.prototype, @:
       packetParser: createPacketParser @ plugin_options
 
