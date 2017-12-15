@@ -26,4 +26,5 @@ export default function tls_plugin(plugin_options={}) ::
         const channel = _common_.bindChannel(sock)
         on_peer(channel)
       const on_peer = _common_.bindOnPeer(svr, onPeer)
-      return svr
+      return _common_.init_server(svr)
+

@@ -53,7 +53,6 @@ export class FabricHub ::
     return FabricHub_PI
 
 
-  valueOf() :: return this.router.id_self
   get id_self() :: return this.router.id_self
   id_router_self() ::
     return this.packetParser.packId @
