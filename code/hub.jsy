@@ -2,6 +2,8 @@ import {Router} from './router.jsy'
 import {Channel} from './channel.jsy'
 
 export class FabricHub ::
+  static create() :: return new this()
+
   constructor() ::
     applyPlugins @ 'pre', this.pluginList, this
 

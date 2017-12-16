@@ -13,4 +13,5 @@ const Hub = FabricHub.plugin @
   tcp(), tls(), direct()
 
 
-const h = new Hub()
+const h1 = new Hub()
+const h2 = Hub.create()
