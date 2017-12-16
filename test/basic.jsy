@@ -1,0 +1,16 @@
+require('source-map-support').install()
+
+import FabricHub from '../dist'
+
+import tcp from '../dist/plugin-tcp'
+import tls from '../dist/plugin-tls'
+import direct from '../dist/plugin-direct'
+
+import router from '../dist/plugin-router-node'
+
+const Hub = FabricHub.plugin @
+  router()
+  tcp(), tls(), direct()
+
+
+const h = new Hub()

@@ -7,8 +7,12 @@ export default function tls_plugin(plugin_options={}) ::
   return function(hub) ::
     const _common_ = net_common(hub, as_tls_url)
 
-    hub.registerConnectionProtocol @ 'tls:', connect
-    return hub.tls = @: connect, createServer
+    const tls_plugin = @: connect, createServer
+      url_options: plugin_options.url_options || {}
+      on_url_connect: plugin_options.on_url_connect || @ options => options
+
+    hub.registerConnectionProtocol @ 'tls:', connect_url
+    return hub.tls = tls_plugin
 
 
     function connect(...args) ::
@@ -20,11 +24,17 @@ export default function tls_plugin(plugin_options={}) ::
           resolve(channel)
         .on @ 'error', reject
 
-    function createServer(options, onPeer) ::
-      const svr = _tls_createServer @ options, sock => ::
+    function createServer(tls_options, onPeer) ::
+      const svr = _tls_createServer @ tls_options, sock => ::
         sock = sock.unref().setKeepAlive(false)
         const channel = _common_.bindChannel(sock)
         on_peer(channel)
       const on_peer = _common_.bindOnPeer(svr, onPeer)
       return _common_.init_server(svr)
+
+    function connect_url(url) ::
+      const {hostname:host, port} = url
+      let options = Object.assign @ {host, port}, tls_plugin.url_options
+      options = tls_plugin.on_url_connect(options, url) || options
+      return connect(options)
 
