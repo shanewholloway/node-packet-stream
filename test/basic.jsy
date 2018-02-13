@@ -1,15 +1,7 @@
-import {FabricHub} from './_setup.jsy'
+import {TestHub} from './_setup.jsy'
 
-import tcp from '../dist/plugin-tcp'
-import tls from '../dist/plugin-tls'
-import direct from '../dist/plugin-direct'
+const h1 = new TestHub()
+console.dir @ h1, @{} colors: true
 
-import router from '../dist/plugin-router-node'
-
-const Hub = FabricHub.plugin @
-  router()
-  tcp(), tls(), direct()
-
-
-const h1 = new Hub()
-const h2 = Hub.create()
+const h2 = TestHub.create()
+console.dir @ h2, @{} colors: true

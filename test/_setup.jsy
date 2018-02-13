@@ -5,5 +5,20 @@ Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
 import FabricHub from '../dist'
-export @{} FabricHub
+import pkt from '../dist/plugin-pkt-nodejs'
+import router from '../dist/plugin-router-node'
 
+import tcp from '../dist/plugin-tcp'
+import tls from '../dist/plugin-tls'
+import direct from '../dist/plugin-direct'
+
+
+const TestHub = FabricHub.plugin @
+  pkt(), router()
+  tcp(), tls(), direct()
+
+
+export @{}
+  FabricHub
+  TestHub
+  TestHub as default

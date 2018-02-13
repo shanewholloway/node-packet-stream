@@ -11,7 +11,10 @@ export default function tls_plugin(plugin_options={}) ::
 
     hub.registerConnectionProtocol @ `${protocol}:`,
       url => connect @ _common_.unpackConnectURL(url, on_url_connect)
-    return hub[protocol] = @{} connect, createServer
+
+    const plugin = Object.assign @ connect, @{}
+      connect, createServer
+    return hub[protocol] = plugin
 
     function connect(...args) ::
       args = _common_.unpackConnectArgs(args)

@@ -86,7 +86,7 @@ const _hub_channel_ = @{}
   undeliverable(pkt, mode) ::
     console.warn @ `Undeliverable[${mode}]: ${pkt.id_target} of ${pkt.id_router}`
 
-Object.defineProperties @ FabricHub_PI.prototype, @{}
+Object.defineProperties @ FabricHub.prototype, @{}
   pluginList: @{} value: Object.freeze([])
   _hub_channel_
 

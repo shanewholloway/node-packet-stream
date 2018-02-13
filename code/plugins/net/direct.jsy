@@ -4,8 +4,9 @@ import stream_common from './_stream_common.jsy'
 export default function stream_plugin(plugin_options={}) ::
   return function(hub) ::
     const _common_ = stream_common(hub)
-    return hub.direct = Object.assign @ connect, @{}
+    const plugin = Object.assign @ connect, @{}
       connect, connectDirect, createDirectChannel
+    return hub.direct = plugin
 
     function connect(peer) ::
       return connectDirect(peer)[0]
