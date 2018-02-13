@@ -1,40 +1,23 @@
-import { createServer as _tls_createServer, connect as _tls_connect } from 'tls'
+import { createServer as _tls_server, connect as _tls_connect } from 'tls'
 import net_common from './_net_common.jsy'
 
 export default function tls_plugin(plugin_options={}) ::
-  function as_tls_url() :: return `tls://${this.address}:${this.port}`
+  const on_url_connect = plugin_options.on_url_connect
+  const protocol = plugin_options.protocol || 'tls'
+  function asURL() :: return `${protocol}://${this.address}:${this.port}`
 
   return function(hub) ::
-    const _common_ = net_common(hub, as_tls_url)
+    const _common_ = net_common(hub, asURL)
 
-    const tls_plugin = @: connect, createServer
-      url_options: plugin_options.url_options || {}
-      on_url_connect: plugin_options.on_url_connect || @ options => options
-
-    hub.registerConnectionProtocol @ 'tls:', connect_url
-    return hub.tls = tls_plugin
-
+    hub.registerConnectionProtocol @ `${protocol}:`,
+      url => connect @ _common_.unpackConnectURL(url, on_url_connect)
+    return hub[protocol] = @{} connect, createServer
 
     function connect(...args) ::
       args = _common_.unpackConnectArgs(args)
-      return new Promise @ (resolve, reject) => ::
-        _tls_connect @ ...args, function () ::
-          const sock = this.unref().setKeepAlive(true)
-          const channel = _common_.bindChannel(sock)
-          resolve(channel)
-        .on @ 'error', reject
+      return _common_.createClient @
+        handler => _tls_connect @ ...args, handler
 
     function createServer(tls_options, onPeer) ::
-      const svr = _tls_createServer @ tls_options, sock => ::
-        sock = sock.unref().setKeepAlive(false)
-        const channel = _common_.bindChannel(sock)
-        on_peer(channel)
-      const on_peer = _common_.bindOnPeer(svr, onPeer)
-      return _common_.init_server(svr)
-
-    function connect_url(url) ::
-      const {hostname:host, port} = url
-      let options = Object.assign @ {host, port}, tls_plugin.url_options
-      options = tls_plugin.on_url_connect(options, url) || options
-      return connect(options)
-
+      return _common_.createServer @ onPeer,
+        handler => _tls_server @ tls_options, handler

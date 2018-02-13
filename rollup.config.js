@@ -1,13 +1,11 @@
-import rpi_babel from 'rollup-plugin-babel'
-import rpi_resolve from 'rollup-plugin-node-resolve'
+import rpi_jsy from 'rollup-plugin-jsy-babel'
 
 const sourcemap = 'inline'
-
-const pi_resolve_es6 = rpi_resolve({module: true, jsnext: true})
-const plugins = [jsy_plugin()]
+const plugins = [rpi_jsy()]
 
 export default [].concat(
   package_core(),
+  package_plugin_pkt(),
   package_plugin_net(),
   package_plugin_router(),
 )
@@ -19,15 +17,49 @@ function package_core() {
   return [
     { input: 'code/index.jsy',
       output: [
-        { file: `dist/index.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/index.mjs`, format: 'es' },
+        { file: `dist/index.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/index.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external, plugins },
+      external, plugins },
+  ]}
 
-    { input: 'code/index.jsy',
-      name: 'msg-fabric-core',
-      output: [{ file: `dist/index.umd.js`, format: 'umd', exports: 'named' }],
-      sourcemap, external, plugins },
+
+function package_plugin_pkt() {
+  return [
+    { input: 'code/plugins/pkt/index.jsy',
+      output: [
+        { file: `dist/plugin-pkt-all.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-pkt-all.mjs`, format: 'es', sourcemap },
+      ],
+      external:[], plugins },
+
+    { input: 'code/plugins/pkt/node.jsy',
+      output: [
+        { file: `dist/plugin-pkt-nodejs.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-pkt-nodejs.mjs`, format: 'es', sourcemap },
+      ],
+      external:[], plugins },
+
+    { input: 'code/plugins/pkt/browser.jsy',
+      output: [
+        { file: `dist/plugin-pkt-browser.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-pkt-browser.mjs`, format: 'es', sourcemap },
+      ],
+      external:[], plugins },
+
+    { input: 'code/plugins/pkt/browser_binary.jsy',
+      output: [
+        { file: `dist/plugin-pkt-browser-binary.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-pkt-browser-binary.mjs`, format: 'es', sourcemap },
+      ],
+      external:[], plugins },
+
+    { input: 'code/plugins/pkt/browser_line.jsy',
+      output: [
+        { file: `dist/plugin-pkt-browser-line.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-pkt-browser-line.mjs`, format: 'es', sourcemap },
+      ],
+      external:[], plugins },
   ]}
 
 
@@ -35,31 +67,31 @@ function package_plugin_net() {
   return [
     { input: 'code/plugins/net/index.jsy',
       output: [
-        { file: `dist/plugin-net.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/plugin-net.mjs`, format: 'es' },
+        { file: `dist/plugin-net.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/plugin-net.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external:['net', 'tls', 'stream'], plugins },
+      external:['net', 'tls', 'stream'], plugins },
 
     { input: 'code/plugins/net/tcp.jsy',
       output: [
-        { file: `dist/plugin-tcp.js`, format: 'cjs', exports: 'named'  },
-        { file: `dist/plugin-tcp.mjs`, format: 'es' },
+        { file: `dist/plugin-tcp.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-tcp.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external:['net'], plugins },
+      external:['net'], plugins },
 
     { input: 'code/plugins/net/tls.jsy',
       output: [
-        { file: `dist/plugin-tls.js`, format: 'cjs', exports: 'named'  },
-        { file: `dist/plugin-tls.mjs`, format: 'es' },
+        { file: `dist/plugin-tls.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-tls.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external:['tls'], plugins },
+      external:['tls'], plugins },
 
     { input: 'code/plugins/net/direct.jsy',
       output: [
-        { file: `dist/plugin-direct.js`, format: 'cjs', exports: 'named'  },
-        { file: `dist/plugin-direct.mjs`, format: 'es' },
+        { file: `dist/plugin-direct.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/plugin-direct.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external:['stream'], plugins },
+      external:['stream'], plugins },
   ]}
 
 
@@ -69,44 +101,30 @@ function package_plugin_router() {
   return [
     { input: 'code/plugins/router/index.jsy',
       output: [
-        { file: `dist/plugin-router.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/plugin-router.mjs`, format: 'es' },
+        { file: `dist/plugin-router.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/plugin-router.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external: external_node, plugins },
+      external: external_node, plugins },
 
     { input: 'code/plugins/router/basic.jsy',
       output: [
-        { file: `dist/plugin-router-basic.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/plugin-router-basic.mjs`, format: 'es' },
+        { file: `dist/plugin-router-basic.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/plugin-router-basic.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external, plugins },
+      external, plugins },
 
     { input: 'code/plugins/router/node.jsy',
       output: [
-        { file: `dist/plugin-router-node.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/plugin-router-node.mjs`, format: 'es' },
+        { file: `dist/plugin-router-node.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/plugin-router-node.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external: external_node, plugins },
+      external: external_node, plugins },
 
     { input: 'code/plugins/router/browser.jsy',
       output: [
-        { file: `dist/plugin-router-browser.js`, format: 'cjs', exports: 'named' },
-        { file: `dist/plugin-router-browser.mjs`, format: 'es' },
+        { file: `dist/plugin-router-browser.js`, format: 'cjs', sourcemap, exports: 'named' },
+        { file: `dist/plugin-router-browser.mjs`, format: 'es', sourcemap },
       ],
-      sourcemap, external, plugins },
-
-    { input: 'code/plugins/router/browser.jsy',
-      name: 'msg-fabric-plugin-router-browser',
-      output: [{ file: `dist/plugin-router-browser.umd.js`, format: 'umd', exports: 'named' }],
-      sourcemap, external:[], plugins: plugins.concat([pi_resolve_es6]) },
+      external, plugins },
   ]}
-
-
-function jsy_plugin() {
-  const jsy_preset = [ 'jsy/lean', { no_stage_3: true, modules: false } ]
-  return rpi_babel({
-    exclude: 'node_modules/**',
-    presets: [ jsy_preset ],
-    plugins: [],
-    babelrc: false }) }
 

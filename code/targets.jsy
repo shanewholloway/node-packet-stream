@@ -1,0 +1,59 @@
+import {unregister, FabricBase} from './utils.jsy'
+
+export class TargetRouter extends FabricBase ::
+  _createTargetsMap() :: return new Map()
+
+  constructor(id_router, router) ::
+    super()
+    Object.defineProperties @ this, @{}
+      id_router: @{} value: id_router, enumerable: true
+      targetDiscovery: @{} value: []
+
+    const fn = this.bindDispatchTarget()
+    fn.id_router = id_router
+    if null != router ::
+      router.registerRoute @ id_router, fn
+
+  bindDispatchTarget() ::
+    const targets = this._createTargetsMap()
+
+    const dispatchTarget = async (pkt, channel, router) => ::
+      const id_target = pkt.id_target
+      let target = targets.get(id_target)
+      if undefined === target ::
+        target = await this.discoverTarget(id_target)
+        if undefined === target ::
+          return channel && channel.undeliverable(pkt, 'target')
+
+      if unregister === await target(pkt, this, router) ::
+        unregisterTarget(id_target)
+
+    Object.defineProperties @ this, @{}
+      registerTarget: @{} value: registerTarget
+      unregisterTarget: @{} value: unregisterTarget
+
+    return dispatchTarget
+
+    // as closures over private targets map
+    function registerTarget(id_target, target) ::
+      if 'function' !== typeof target ::
+        throw new TypeError @ `Expected 'target' function`
+
+      if targets.has @ id_target :: return false
+      return targets.set @ id_target, target
+
+    function unregisterTarget(id_target) ::
+      return targets.delete @ id_target
+
+
+  async discoverTarget(id_target) ::
+    const target = await this._discoverFirst @
+      query, this.targetDiscovery,
+      err => this._on_error @ 'target.discovery', err
+
+    if null != target ::
+      if ! target.ephemeral ::
+        this.registerTarget(id_target, target)
+      return target
+
+export default TargetRouter

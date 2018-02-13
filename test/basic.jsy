@@ -1,6 +1,4 @@
-require('source-map-support').install()
-
-import FabricHub from '../dist'
+import {FabricHub} from './_setup.jsy'
 
 import tcp from '../dist/plugin-tcp'
 import tls from '../dist/plugin-tls'

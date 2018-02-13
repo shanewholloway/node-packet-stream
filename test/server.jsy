@@ -1,10 +1,4 @@
-require('source-map-support').install()
-import {URL} from 'url'
-import {TextEncoder, TextDecoder} from 'util'
-Object.assign @ global, @:
-  URL, TextDecoder, TextEncoder
-
-import FabricHub from '../dist'
+import {FabricHub} from './_setup'
 
 import tcp_plugin from '../dist/plugin-tcp'
 

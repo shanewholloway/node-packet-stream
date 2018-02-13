@@ -1,0 +1,2 @@
+export function asBuffer(body) ::
+  return Buffer.from @ null!=body ? body : ''

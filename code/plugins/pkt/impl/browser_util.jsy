@@ -1,0 +1,30 @@
+export function asArrayBuffer(body) ::
+  if null === body :: return new ArrayBuffer(0)
+  return 'string' === typeof body
+    ? encode_utf8(body)
+    : new ArrayBuffer(body)
+
+export function decode_utf8(u8) ::
+  return new TextDecoder().decode(u8)
+
+export function encode_utf8(str) ::
+  return new TextEncoder().encode(str)
+
+const _fromCharCode = String.fromCharCode
+export function pack_base64(data) ::
+  const u8 = new Uint8Array(data.buffer || data), len = u8.byteLength
+
+  let res=''
+  for (let i=0; i<len; i++)
+    res += _fromCharCode(u8[i])
+  return window.btoa(res)
+
+const _charCodeAt = ''.charCodeAt
+export function unpack_base64(str_b64) ::
+  const sz = window.atob(str_b64), len = sz.length
+
+  const res = new Uint8Array(len)
+  for (let i=0; i<len; i++)
+    res[i] += _charCodeAt.call(sz, i)
+  return res
+

@@ -1,13 +1,43 @@
-import bindStreamChannel from './_stream_common.jsy'
+import stream_common from './_stream_common.jsy'
 
-net_common.net_common = net_common
 export default function net_common(hub, asURL) ::
+  const sock_conn_info = sock => @:
+    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
+    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
+
   // shared implementation between net/tcp and tls implementations
-  return @:
-    init_server(svr) ::
+  return @{} __proto__: stream_common(hub)
+    createSocketChannel(sock) ::
+      sock.setNoDelay(true)
+      return Object.defineProperties @ 
+        this.createChannel(sock, sock)
+        @{} conn_info: @{} value: sock_conn_info.bind(sock)
+
+
+    bindChannel(sock) ::
+      const channel = this.createSocketChannel(sock)
+      channel.sendRoutingHandshake(hub)
+      return channel
+
+    createClient(_impl_) ::
+      return new Promise @ (resolve, reject) => ::
+        _impl_ @ args, function() ::
+          const sock = this.unref().setKeepAlive(true)
+          const channel = _common_.bindChannel(sock)
+          resolve(channel)
+        .on @ 'error', reject
+
+    createServer(onPeer, _impl_) ::
+      const svr = _impl_ @ sock => ::
+        sock = sock.unref().setKeepAlive(false)
+        const channel = this.bindChannel(sock)
+        on_peer(channel)
+
+      const on_peer = this.bindOnPeer(svr, onPeer)
+
       svr.conn_info = function () ::
         const {address, port} = svr.address()
-        return @{} ip_server: @{} address, port, asURL
+        return @{} ip_server: @{} asURL, address, port, 
       return svr
 
     bindOnPeer(svr, onPeer) ::
@@ -17,13 +47,6 @@ export default function net_common(hub, asURL) ::
         return channel => svr.emit @ onPeer, channel
       return () => null
 
-    bindChannel(sock) ::
-      const channel = bindSocketChannel @
-        sock, hub._api_channel, asURL
-
-      channel.sendRoutingHandshake()
-      return channel
-
     unpackConnectArgs(args) ::
       if 1 === args.length ::
         if 'string' === typeof args[0].href ::
@@ -31,15 +54,10 @@ export default function net_common(hub, asURL) ::
           args[0] = @{} host, port
       return args
 
-
-net_common.bindSocketChannel = bindSocketChannel
-function bindSocketChannel(sock, api_channel, asURL) ::
-  sock.setNoDelay(true)
-
-  const conn_info = () => @:
-    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
-    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
-
-  return bindStreamChannel @ sock, sock, api_channel
-    @: conn_info: @: value: conn_info
+    unpackConnectURL(url, on_url_connect) ::
+      const {hostname:host, port} = url
+      const options = {host, port}
+      return on_url_connect
+        ? on_url_connect(options, url)
+        : options
 

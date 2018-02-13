@@ -1,0 +1,10 @@
+const pkt_api = @{}
+  id_route // used for route dispatch in ./router.jsy
+  id_target // used for target dispatch in ./targets.jsy
+  op // used for header extras in ./plugins/pkt/common.jsy
+
+const channel_api = @{}
+  undeliverable(pkt, mode) // used during dispatch in ./router.jsy and ./targets.jsy
+  send(pkt) // used for peer registration in ./router.jsy
+  shutdown() // assigned  in ./plugins/net/_stream_common.jsy
+

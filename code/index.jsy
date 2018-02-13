@@ -1,12 +1,5 @@
 export * from './hub.jsy'
 export * from './router.jsy'
+export * from './targets.jsy'
+export {default} from './hub.jsy'
 
-import * as channel from './channel.jsy'
-import * as control_protocol from './control_protocol.jsy'
-
-export @{}
-  channel
-  control_protocol
-
-import {FabricHub} from './hub.jsy'
-export default FabricHub

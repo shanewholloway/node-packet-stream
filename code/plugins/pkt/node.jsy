@@ -1,0 +1,14 @@
+import { fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket } from './impl/node_binary.jsy'
+import { fromObjLinePacket, unpackLinePacket, packLinePacket } from './impl/node_line.jsy'
+
+const _pkts_ = @{}
+  fromObjPacket: fromObjBinaryPacket
+  fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket
+  fromObjLinePacket, unpackLinePacket, packLinePacket
+
+export default function node_pkt_plugin() ::
+  return @: order: -4, subclass(FabricHub_PI) ::
+    Object.assign @ FabricHub_PI.prototype, @{}
+      _fromObjPacket: _pkts_.fromObjPacket
+      _pkts_, _pkts_node_: _pkts_
+

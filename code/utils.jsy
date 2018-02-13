@@ -1,0 +1,38 @@
+export function promiseQueue(src) ::
+  let tip = null
+  return function () ::
+    if null === tip ::
+      tip = Promise.resolve(src).then(clear)
+    return tip
+
+  function clear() :: tip = null
+
+
+export function discoverFirst(arg, lstFns, on_error) ::
+  return new Promise @ resolve => ::
+    const resolveIf = e => undefined !== e ? resolve(e) : e
+    tip = Promise.resolve(arg)
+    Promise.all @
+      Array.from @ lstFns, fn =>
+        tip.then(fn).then(resolveIf, on_error)
+    .then @ () => resolve(null)
+
+
+export function applyPlugins(key, pluginList, ...args) ::
+  if ! key :: key = null
+  for let plugin of pluginList ::
+    if null !== key ::
+      plugin = plugin[key]
+    if 'function' === typeof plugin ::
+      plugin(...args)
+
+
+export const unregister = Object.freeze @ Object.create @ null
+export class FabricBase ::
+
+Object.assign @ FabricBase.prototype, @{}
+  unregister
+  _promiseQueue: promiseQueue
+  _discoverFirst: discoverFirst
+  _on_error(scope, err) :: console.error @ scope, err
+

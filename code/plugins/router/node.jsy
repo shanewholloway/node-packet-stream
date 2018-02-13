@@ -1,20 +1,12 @@
 import {URL} from 'url'
 import {randomBytes} from 'crypto'
-import {createBufferPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
 
 export default function nodejs_router_plugin(plugin_options={}) ::
-  return @: order: -2, subclass(FabricHub_PI, bases) ::
-    Object.assign @ FabricHub_PI.prototype, @:
-      packetParser: createPacketParser @ plugin_options
-
+  return @: order: -2, subclass(FabricHub_PI) ::
+    Object.assign @ FabricHub_PI.prototype, @{}
+      _newRouteId
       _parseConnectURL(conn_url) ::
         return new URL(conn_url)
 
-      _init_router() ::
-        const id_self = random_id_self()
-        const router = new bases.Router(id_self)
-        router.allowUnverifiedRoutes = true
-        return router
-
-function random_id_self() ::
-  return randomBytes(4).readInt32LE()
+function _newRouteId() ::
+  return randomBytes(6).toString('base64').slice(0, 6)

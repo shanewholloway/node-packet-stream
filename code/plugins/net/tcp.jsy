@@ -1,30 +1,23 @@
-import { createServer as _tcp_createServer, createConnection as _tcp_createConnection } from 'net'
+import { createServer as _tcp_server, createConnection as _tcp_connect } from 'net'
 import net_common from './_net_common.jsy'
 
 export default function tcp_plugin(plugin_options={}) ::
-  function as_tcp_url() :: return `tcp://${this.address}:${this.port}`
+  const on_url_connect = plugin_options.on_url_connect
+  const protocol = plugin_options.protocol || 'tcp'
+  function asURL() :: return `${protocol}://${this.address}:${this.port}`
 
   return function(hub) ::
-    const _common_ = net_common(hub, as_tcp_url)
+    const _common_ = net_common @ hub, asURL
 
-    hub.registerConnectionProtocol @ 'tcp:', connect
-    return hub.tcp = @: connect, createServer
-
+    hub.registerConnectionProtocol @ `${protocol}:`,
+      url => connect @ _common_.unpackConnectURL(url, on_url_connect)
+    return hub[protocol] = @{} connect, createServer
 
     function connect(...args) ::
       args = _common_.unpackConnectArgs(args)
-      return new Promise @ (resolve, reject) => ::
-        _tcp_createConnection @ ...args, function() ::
-          const sock = this.unref().setKeepAlive(true)
-          const channel = _common_.bindChannel(sock)
-          resolve(channel)
-        .on @ 'error', reject
+      return _common_.createClient @
+        handler => _tcp_connect @ ...args, handler
 
     function createServer(onPeer) ::
-      const svr = _tcp_createServer @ function (sock) ::
-        sock = sock.unref().setKeepAlive(false)
-        const channel = _common_.bindChannel(sock)
-        on_peer(channel)
-      const on_peer = _common_.bindOnPeer(svr, onPeer)
-      return _common_.init_server(svr)
-
+      return _common_.createServer @ onPeer,
+        handler => _tcp_server @ handler

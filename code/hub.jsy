@@ -1,5 +1,7 @@
-import {Router} from './router.jsy'
-import {Channel} from './channel.jsy'
+import FabricRouter_Base from './router.jsy'
+import TargetRouter_Base from './targets.jsy'
+
+import {applyPlugins} from './utils.jsy'
 
 export class FabricHub ::
   static create() :: return new this()
@@ -7,92 +9,89 @@ export class FabricHub ::
   constructor() ::
     applyPlugins @ 'pre', this.pluginList, this
 
-    const packetParser = this.packetParser
-    if null==packetParser || ! packetParser.isPacketParser() ::
-      throw new TypeError @ `Invalid hub.packetParser`
-
-    const router = this._init_router()
-    const _api_channel = this._init_channelAPI(packetParser)
-    const _api_internal = this._init_internalAPI(packetParser)
-    router.initDispatch()
-    _api_internal.bindInternalChannel @ router.dispatch
+    const router = this._init_fabricRouter()
+    const local = this.createLocalRoute(router)
 
     Object.defineProperties @ this, @{}
+      dispatch: @{} value: router.dispatch
       router: @{} value: router
-      packetParser: @{} value: packetParser
-      _api_channel: @{} value: _api_channel
-      _api_internal: @{} value: _api_internal
+      local: @{} value: local
+
+      _connectByProtocol: @{} value: {}
 
     applyPlugins @ null, this.pluginList, this
     applyPlugins @ 'post', this.pluginList, this
     return this
 
-  _init_router() :: throw new Error @ `Plugin responsiblity`
 
-  _init_channelAPI(packetParser) ::
-    return Channel.asChannelAPI @ this, packetParser
-  _init_internalAPI(packetParser) ::
-    return Channel.asInternalAPI @ this, packetParser
+  _init_fabricRouter() ::
+    const klass = this.constructor
+    return new klass.FabricRouter()
 
-
-  static plugin(...pluginFunctions) ::
-    return this.plugins(...pluginFunctions)
-  static plugins(...pluginFunctions) ::
-    const pluginList = [].concat @
-      this.prototype.pluginList || []
-      pluginFunctions
-
-    pluginList.sort @ (a, b) => (0 | a.order) - (0 | b.order)
-
-    const BaseHub = this._BaseHub_ || this
-    class FabricHub_PI extends BaseHub ::
-    Object.defineProperties @ FabricHub_PI.prototype, @:
-      pluginList: @{} value: Object.freeze @ pluginList
-    Object.defineProperties @ FabricHub_PI, @:
-      _BaseHub_: @{} value: BaseHub
-
-    applyPlugins @ 'subclass', pluginList, FabricHub_PI, @: Router, Channel
-    return FabricHub_PI
-
-
-  get id_self() :: return this.router.id_self
-  id_router_self() ::
-    return this.packetParser.packId @
-      this.router.id_self
-
-  connect_self() ::
-    return this._api_internal.clone()
+  createLocalRoute(router=this.router) ::
+    const klass = this.constructor
+    return new klass.TargetRouter @
+      this._newRouteId(), router
+  //_newRouteId() :: throw new Error @ `subclass responsiblity`
 
 
   connect(conn_url) ::
     if null == conn_url ::
-      return this.connect_self()
+      return this._api_internal.clone()
 
     if 'string' === typeof conn_url ::
       conn_url = this._parseConnectURL(conn_url)
 
     const connect = this._connectByProtocol[conn_url.protocol]
     if ! connect ::
-      throw new Error @ `Connection protocol "${conn_url.protocol}" not registered for "${conn_url.toString()}"`
-
+      throw new Error @ `Connection protocol "${conn_url.protocol}" not registered`
     return connect(conn_url)
 
+  _parseConnectURL(conn_url) :: return new URL(conn_url)
   registerConnectionProtocol(protocol, cb_connect) ::
     if 'function' !== typeof cb_connect ::
       throw new TypeError @ `Expected 'cb_connect' function`
-    const byProtocol = Object.assign @ {}, this._connectByProtocol
-    byProtocol[protocol] = cb_connect
-    return Object.defineProperty @ this, '_connectByProtocol',
-      @: value: byProtocol, configurable: true
+    this._connectByProtocol[protocol] = cb_connect
+    return this
 
-  _parseConnectURL(conn_url) ::
-    return new URL(conn_url)
+
+  send(...objs) ::
+    const pktList = objs.map @ this._fromObjPacket
+    return this.dispatch @ pktList, this._hub_channel_
+  _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
+
+
+  static plugin(...pluginFunctions) ::
+    return this.plugins(...pluginFunctions)
+  static plugins(...pluginFunctions) ::
+    const pluginList = Object.freeze @
+      this.prototype.pluginList
+        .concat @ pluginFunctions
+        .sort @ (a, b) => (0 | a.order) - (0 | b.order)
+
+    class FabricHub_PI extends this ::
+    Object.defineProperties @ FabricHub_PI.prototype, @{}
+      pluginList: @{} value: pluginList
+
+    class FabricRouter extends this.FabricRouter ::
+    class TargetRouter extends this.TargetRouter ::
+    Object.assign @ FabricHub_PI, @{}
+      FabricRouter, TargetRouter
+
+    applyPlugins @ 'subclass', pluginList, FabricHub_PI
+    return FabricHub_PI
+
+
+const _hub_channel_ = @{}
+  undeliverable(pkt, mode) ::
+    console.warn @ `Undeliverable[${mode}]: ${pkt.id_target} of ${pkt.id_router}`
+
+Object.defineProperties @ FabricHub_PI.prototype, @{}
+  pluginList: @{} value: Object.freeze([])
+  _hub_channel_
+
+Object.assign @ FabricHub, @{}
+  FabricRouter: FabricRouter_Base
+  TargetRouter: TargetRouter_Base
 
 export default FabricHub
-
-export function applyPlugins(key, pluginList, ...args) ::
-  if ! key :: key = null
-  for let plugin of pluginList ::
-    if null !== key :: plugin = plugin[key]
-    if 'function' === typeof plugin ::
-      plugin(...args)

@@ -1,0 +1,14 @@
+import { fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket } from './impl/browser_binary.jsy'
+import { fromObjLinePacket, unpackLinePacket, packLinePacket } from './impl/browser_line.jsy'
+
+const _pkts_ = @{}
+  fromObjPacket: fromObjBinaryPacket
+  fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket
+  fromObjLinePacket, unpackLinePacket, packLinePacket
+
+export default function browser_pkt_plugin() ::
+  return @: order: -3, post(hub) ::
+    Object.assign @ FabricHub_PI.prototype, @{}
+      _fromObjPacket: packets.fromObjPacket
+      _pkts_: packets
+

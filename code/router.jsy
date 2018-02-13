@@ -1,185 +1,77 @@
-import {dispControlByType} from './control_protocol.jsy'
+import {FabricBase} from './utils.jsy'
 
-const sym_unregister = Symbol('msg-fabirc unregister')
-export class Router ::
-  constructor(id_self) ::
-    if id_self ::
-      Object.defineProperties @ this, @: id_self: @: value: id_self
-
-  // --- Dispatch core ---
-
-  initDispatch() ::
-    const routes = this._createRoutesMap()
-    routes.set @ 0, this.bindDispatchControl()
-    if null != this.id_self ::
-      routes.set @ this.id_self, this.bindDispatchSelf()
-
-    this.bindDispatchRoutes(routes)
-
-  on_error_in_dispatch(err, pkt) ::
-    console.error @ 'Error during packet dispatch\n  pkt:', pkt, '\n', err, '\n'
-
+export class FabricRouter extends FabricBase ::
   _createRoutesMap() :: return new Map()
 
-  // --- Dispatch to route ---
+  constructor() ::
+    super()
+    Object.defineProperties @ this, @{}
+      routeDiscovery: @{} value: []
 
-  routeDiscovery = []
-  async dispatch_discover_route(id_router) ::
-    const dispatch_route = await this._firstRoute @ id_router, this.routeDiscovery
-    if null == dispatch_route :: return
-    this.registerRoute(id_router, dispatch_route)
-    return dispatch_route
+    this.bindDispatchRoutes()
 
-  bindDispatchRoutes(routes) ::
-    const pqueue = promiseQueue()
+
+  bindDispatchRoutes() ::
+    const routes = this._createRoutesMap()
+
+    const resolveRoute = id_route =>
+      routes.get(id_route) ||
+        this.discoverRoute(id_route)
+
+    const dispatch_one = async (pkt, channel) => ::
+      try ::
+        const id_route = pkt.id_route
+        let dispatch_route = routes.get(id_route)
+        if undefined === dispatch_route ::
+          dispatch_route = await this.discoverRoute(id_route)
+          if undefined === dispatch_route ::
+            return channel && channel.undeliverable(pkt, 'route')
+
+        if unregister === await dispatch_route(pkt, channel, this) ::
+          this.unregisterRoute(id_route)
+      catch err ::
+        this._on_error @ 'router.dispatch', err, {pkt, channel}
+
+    const pqueue = this._promiseQueue()
     function dispatch(pktList, channel) ::
       const pq = pqueue() // pq will dispatch during Promise resolutions
       return pktList.map @ pkt =>
         pq.then @ () => dispatch_one(pkt, channel)
 
-    const dispatch_one = async (pkt, channel) => ::
-      try ::
-        const id_router = pkt.id_router
-        let dispatch_route = routes.get(id_router)
-        if undefined === dispatch_route ::
-          dispatch_route = await this.dispatch_discover_route(id_router)
-          if undefined === dispatch_route ::
-            return channel && channel.undeliverable(pkt, 'route')
-
-        if sym_unregister === await dispatch_route(pkt, channel) ::
-          this.unregisterRoute(id_router)
-      catch err ::
-        this.on_error_in_dispatch(err, pkt, channel)
-
-    const resolveRoute = id_router =>
-      routes.get(id_router) ||
-        this.dispatch_discover_route(id_router)
-
     Object.defineProperties @ this, @:
-      routes: @: value: routes
       dispatch: @: value: dispatch
       resolveRoute: @: value: resolveRoute
+      registerRoute: @{} value: registerRoute
+      unregisterRoute: @{} value: unregisterRoute
     return dispatch
 
-  registerRoute(id_router, dispatch_route) ::
-    if 'function' !== typeof dispatch_route ::
-      if null != dispatch_route ::
+
+    // as closures over private routes map
+    function registerRoute(id_route, dispatch_route) ::
+      if 'function' !== typeof dispatch_route ::
         throw new TypeError @ `Expected 'dispatch_route' to be a function`
-      else return false
-    if this.routes.has @ id_router :: return false
-    if 0 === id_router :: return false
-    if this.id_self === id_router :: return false
+      if routes.has @ id_route :: return false
 
-    this.routes.set @ id_router, dispatch_route
-    return true
-  unregisterRoute(id_router) ::
-    return this.routes.delete @ id_router
-  registerPeerRoute(id_router, channel) ::
-    return this.registerRoute @ id_router, pkt => ::
-      if 0 !== pkt.ttl :: channel.sendRaw(pkt)
-  verifiedPeerRoute(id_router, channel) ::
-    return this.registerPeerRoute(id_router, channel)
-  unverifiedPeerRoute(id_router, channel) ::
-    if this.allowUnverifiedRoutes || channel.allowUnverifiedRoutes ::
-      return this.registerPeerRoute(id_router, channel)
-    else console.warn @ 'Unverified peer route (ignored):', @: id_router, channel
+      routes.set @ id_route, dispatch_route
+      return true
+    function unregisterRoute(id_route) ::
+      return routes.delete @ id_route
 
 
-  // --- Dispatch to local target
-
-  targetDiscovery = []
-  discoverTarget(query) ::
-    return this._firstTarget @ query, this.targetDiscovery
-
-  bindDispatchSelf() ::
-    const dispatchSelf = async (pkt, channel) => ::
-      const id_target = pkt.id_target
-      let target = this.targets.get(id_target)
-      if undefined === target ::
-        return channel && channel.undeliverable(pkt, 'target')
-
-      if sym_unregister === await target(pkt, this) ::
-        this.unregisterTarget(id_target)
-
-    this.dispatchSelf = dispatchSelf
-    return dispatchSelf
-
-  _createTargetsMap() :: return new Map()
-  targets = this._createTargetsMap()
-  registerTarget(id_target, target) ::
-    if 'function' === typeof id_target && undefined === target ::
-      target = id_target
-      id_target = target.id_target || target.id
-
-    if 'function' !== typeof target ::
-      throw new TypeError @ `Expected 'target' to be a function`
-    if ! Number.isSafeInteger @ id_target ::
-      throw new TypeError @ `Expected 'id_target' to be an integer`
-    if this.targets.has @ id_target ::
-      return false
-    return this.targets.set @ id_target, target
-  unregisterTarget(id_target) ::
-    return this.targets.delete @ id_target
+  registerPeerRoute(id_route, channel) ::
+    return this.registerRoute @ id_route
+      pkt => :: channel.send(pkt)
 
 
+  async discoverRoute(id_route) ::
+    const dispatch_route = await this._discoverFirst @
+      id_route, this.routeDiscovery,
+      err => this._on_error @ 'router.discovery', err
 
-  // --- Dispatch control packets
-
-  bindDispatchControl() ::
-    return (pkt, channel) => ::
-      if 0 !== pkt.id_target :: // connection-dispatched
-        return this.dispatchSelf(pkt, channel)
-
-      const handler = this.dispControlByType[pkt.type]
-      if undefined !== handler ::
-        return handler(this, pkt, channel)
-      else ::
-        return this.dnu_dispatch_control(pkt, channel)
-
-  dispControlByType = Object.create @ this.dispControlByType
-  dnu_dispatch_control(pkt, channel) ::
-    console.warn @ 'dnu_dispatch_control', pkt.type, pkt
+    if null != dispatch_route ::
+      if ! dispatch_route.ephemeral ::
+        this.registerRoute(id_route, dispatch_route)
+      return dispatch_route
 
 
-Object.assign @ Router.prototype, @{}
-  dispControlByType: Object.assign @ {}
-    dispControlByType
-
-  unregister: sym_unregister
-  bindPromiseFirstResult
-  _firstRoute: bindPromiseFirstResult()
-  _firstTarget: bindPromiseFirstResult()
-
-export default Router
-
-
-export function promiseQueue() ::
-  let tip = null
-  return function () ::
-    if null === tip ::
-      tip = Promise.resolve()
-      tip.then @ clear_tip
-    return tip
-
-  function clear_tip() ::
-    tip = null
-
-function is_defined(e) :: return undefined !== e
-export function bindPromiseFirstResult(options={}) ::
-  const test = options.test || is_defined
-  const on_error = options.on_error || console.error
-  const ifAbsent = options.absent || null
-
-  return (tip, lstFns) =>
-    new Promise @ resolve => ::
-      const resolveIf = e => test(e) ? resolve(e) : e
-      tip = Promise.resolve(tip)
-      Promise.all @
-        Array.from @ lstFns, fn =>
-          tip.then(fn).then(resolveIf, on_error)
-      .then @ absent, absent
-
-      function absent() ::
-        if 'function' === typeof ifAbsent ::
-          resolve @ ifAbsent()
-        else resolve @ ifAbsent
+export default FabricRouter

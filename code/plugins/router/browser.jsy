@@ -1,20 +1,15 @@
-import {createDataViewPacketParser as createPacketParser} from 'msg-fabric-packet-stream'
-
 export default function browser_router_plugin(plugin_options={}) ::
-  return @: order: -2, subclass(FabricHub_PI, bases) ::
-    Object.assign @ FabricHub_PI.prototype, @:
-      packetParser: createPacketParser @ plugin_options
+  return @: order: -2, subclass(FabricHub_PI) ::
+    Object.assign @ FabricHub_PI.prototype, @{}
+      _newRouteId
 
-      _init_router() ::
-        const id_self = random_id_self()
-        const router = new bases.Router(id_self)
-        router.allowUnverifiedRoutes = true
-        return router
+const max_id = parseInt('zzzzzz', 36)
+function _newRouteId() ::
+  if 'undefined' === typeof window ::
+    return (0 | Math.random() * max_id).toString(36)
 
-function random_id_self() ::
-  const ua = new Int32Array(1), dv = new DataView(ua.buffer)
-  if 'undefined' !== typeof window ::
+  const ua = new Uint32Array(1)
+  while 1 ::
     window.crypto.getRandomValues(ua)
-  else ::
-    ua[0] = 0xffffffff * Math.random()
-  return dv.getInt32(0, true)
+    if ua[0] <= max_id ::
+      return ua[0].toString(36)

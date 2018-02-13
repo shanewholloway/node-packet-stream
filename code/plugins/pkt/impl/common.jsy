@@ -1,0 +1,118 @@
+export const PktBase = @{}
+  __proto__: null
+  is_pkt: true
+  get id_route() :: return this._hdr_[0]
+  get id_target() :: return this._hdr_[1]
+  op() :: return this._hdr_.slice(2)
+
+  json(reviver) :: return JSON.parse @ this.text(), reviver
+  // repack_pkt(repack) :: return repack @ null, this._hdr_, this._body_
+
+
+export const PktJsonBase = @{} __proto__: PktBase
+  repack_pkt(repack) :: return repack @ true, this._hdr_.join(' '), this
+  // text() ::
+
+export const PktDataBase = @{} __proto__: PktBase
+  repack_pkt(repack) :: return repack @ false, this._hdr_.join(' '), this
+  // text() ::
+  // buffer() ::
+  // base64() ::
+
+
+
+export function as_hdr({id_route, id_target, op}) ::
+  return `${id_route||''} ${id_target||''} ${op?op.join(' '):''}`
+
+export function as_pkt0(hdr, body, aPktBase) ::
+  return Object.create @ aPktBase, @{}
+    _hdr_: @{} value: Object.freeze @ hdr.split(/\s/)
+    _body_: @{} value: body
+
+export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
+  return function (obj) ::
+    if 'function' === typeof obj.repack_pkt ::
+      return obj.repack_pkt(repack)
+
+    const hdr = as_hdr(obj), body = obj.body
+    return is_json_body(body)
+      ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
+      : as_pkt0 @ hdr, packBody(body), PktData
+
+
+
+export function bind_binaryPacket(options) ::
+  const @{}
+    decode_utf8, packBody, packParts
+    PktData, PktJson
+  = options
+
+  return @{}
+    unpackBinaryPacket(pkt_buf) ::
+      const len = pkt_buf[0]<<8 | pkt_buf[1] // as Uint16 LE
+      if len !== pkt_buf.length ::
+        throw new Error @ 'Invalid packet length'
+
+      const idx = pkt_buf.indexOf(0x9, 2) // 0x9 == '\t'.charCodeAt(0)
+      if -1 === idx :: throw new Error @ 'Invalid packet'
+
+      const hdr = decode_utf8 @ pkt_buf.slice(2, idx)
+      const body = pkt_buf.slice(idx+1)
+
+      // a formfeed indicates json payload
+      return as_pkt0 @ hdr, body,
+        hdr.endsWith('\f') ? PktJson : PktData
+
+    packBinaryPacket(obj) ::
+      if 'function' === typeof obj.repack_pkt ::
+        return obj.repack_pkt(repack)
+
+      const hdr = as_hdr(obj), body = obj.body
+      return is_json_body(body)
+        ? packParts @ `${hdr}\f\t${JSON.stringify(body)}`
+        : packParts @ `${hdr}\t`, body
+
+    fromObjBinaryPacket:
+      bind_packObjPacket(options, repack_binary)
+
+  function repack_binary(is_json, hdr, pkt) ::
+    return is_json
+      ? packParts @ `${hdr}\f\t${pkt.text()}`
+      : packParts @ `${hdr}\t`, pkt.buffer()
+
+
+export function bind_linePacket(options) ::
+  const { packBody, packBody64, PktData, PktJson } = options
+
+  return @{}
+    unpackLinePacket(pkt_line) ::
+      const idx = pkt_line.indexOf('\t')
+      if -1 === idx :: throw new Error @ 'Invalid packet'
+
+      const hdr = pkt_line.slice(0, idx)
+      const body = pkt_line.slice(idx)
+
+      // a formfeed indicates json payload
+      return as_pkt0 @ hdr, body,
+        hdr.endsWith('\f') ? PktJson : PktData
+
+    packLinePacket(obj) ::
+      const hdr = as_hdr(obj), body = obj.body
+      return is_json_body(body)
+        ? `${hdr}\f\t${JSON.stringify(body)}`
+        : `${hdr}\t${packBody64(body)}`
+
+    fromObjLinePacket:
+      bind_packObjPacket(options, repack_line)
+
+  function repack_line(is_json, hdr, pkt) ::
+    return is_json
+      ? `${hdr}\f\t${pkt.text()}`
+      : `${hdr}\t${pkt.base64()}`
+
+
+export function is_json_body(body) ::
+  if null == body :: return true
+  return undefined === body.byteLength
+    && 'string' !== typeof body
+

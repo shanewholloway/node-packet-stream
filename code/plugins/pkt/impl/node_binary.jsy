@@ -1,0 +1,39 @@
+import { PktJsonBase, PktDataBase, bind_binaryPacket } from './common.jsy'
+import { asBuffer as packBody } from './node_util.jsy'
+
+const PktJson = @{} __proto__: PktJsonBase
+  text() :: return this._body_.toString('utf-8')
+
+const PktData = @{} __proto__: PktDataBase
+  text() :: return this._body_.toString('utf-8')
+  base64() :: return this._body_.toString('base64')
+  buffer() :: return this._body_
+
+
+export const {fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket} =
+  bind_binaryPacket @:
+    decode_utf8, packBody, packParts
+    PktData, PktJson
+
+
+function packParts(hdr, body) ::
+  return packLenPrefixBuffer @ hdr, packBody(body)
+
+export function packLenPrefixBuffer(hdr, body) ::
+  hdr = Buffer.from(hdr)
+  const len0 = (2 + hdr.byteLength ) | 0
+  const len = (len0 + body.byteLength ) | 0
+
+  if len > 0xffff || len < 16 ::
+    throw new Error @ `Packet malformed (${len} b)`
+
+  const buf = Buffer.alloc(len)
+  buf.writeUInt16LE(len, 0)
+
+  hdr.copy(buf, 2)
+
+  if len0 !== len ::
+    body.copy(buf, len0)
+  return buf
+
+function decode_utf8(buf) :: return buf.toString('utf-8')

@@ -1,8 +1,9 @@
 import {PassThrough} from 'stream'
-import bindStreamChannel from './_stream_common.jsy'
+import stream_common from './_stream_common.jsy'
 
 export default function stream_plugin(plugin_options={}) ::
   return function(hub) ::
+    const _common_ = stream_common(hub)
     return hub.direct = Object.assign @ connect, @{}
       connect, connectDirect, createDirectChannel
 
@@ -19,8 +20,6 @@ export default function stream_plugin(plugin_options={}) ::
         peer.createDirectChannel @ streams[1], streams[0]
 
     function createDirectChannel(rstream, wstream) ::
-      const channel = bindStreamChannel @
-        rstream, wstream, hub._api_channel
-
-      channel.sendRoutingHandshake()
+      const channel = _common_.createRWChannel(rstream, wstream)
+      channel.sendRoutingHandshake(hub)
       return channel
