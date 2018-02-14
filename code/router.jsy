@@ -8,37 +8,18 @@ export class FabricRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       routeDiscovery: @{} value: []
 
-    this.bindDispatchRoutes()
+    this._bindDispatchRoutes()
 
 
-  bindDispatchRoutes() ::
+  _bindDispatchRoutes() ::
+    // as closures over private variables (targets map)
+    const hub_router = this
+    const unregister = this.unregister
     const routes = this._createRoutesMap()
-
-    const resolveRoute = id_route =>
-      routes.get(id_route) ||
-        this.discoverRoute(id_route)
-
-    const dispatch_one = async (pkt, channel) => ::
-      try ::
-        const id_route = pkt.id_route
-        let dispatch_route = routes.get(id_route)
-        if undefined === dispatch_route ::
-          dispatch_route = await this.discoverRoute(id_route)
-          if undefined === dispatch_route ::
-            return channel && channel.undeliverable(pkt, 'route')
-
-        if unregister === await dispatch_route(pkt, channel, this) ::
-          this.unregisterRoute(id_route)
-      catch err ::
-        this._on_error @ 'router.dispatch', err, {pkt, channel}
-
     const pqueue = this._promiseQueue()
-    function dispatch(pktList, channel) ::
-      const pq = pqueue() // pq will dispatch during Promise resolutions
-      return pktList.map @ pkt =>
-        pq.then @ () => dispatch_one(pkt, channel)
 
     Object.defineProperties @ this, @:
+      _bindDispatchRoutes: @{} value: false
       dispatch: @: value: dispatch
       resolveRoute: @: value: resolveRoute
       registerRoute: @{} value: registerRoute
@@ -46,7 +27,31 @@ export class FabricRouter extends FabricBase ::
     return dispatch
 
 
-    // as closures over private routes map
+    function resolveRoute(id_route) ::
+      return routes.get(id_route) ||
+        hub_router.discoverRoute(id_route)
+
+    async function dispatch_one(pkt, pktctx) ::
+      try ::
+        const id_route = pkt.id_route
+        let dispatch_route = routes.get(id_route)
+        if undefined === dispatch_route ::
+          dispatch_route = await hub_router.discoverRoute(id_route)
+          if undefined === dispatch_route ::
+            const channel = pktctx.channel
+            return channel && channel.undeliverable(pkt, 'route')
+
+        if unregister === await dispatch_route(pkt, pktctx) ::
+          hub_router.unregisterRoute(id_route)
+      catch err ::
+        hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
+
+    function dispatch(pktList, channel) ::
+      const pq = pqueue() // pq will dispatch during Promise resolutions
+      return pktList.map @ pkt =>
+        pq.then @ () => dispatch_one @ pkt, {channel, hub_router}
+
+
     function registerRoute(id_route, dispatch_route) ::
       if 'function' !== typeof dispatch_route ::
         throw new TypeError @ `Expected 'dispatch_route' to be a function`
@@ -65,7 +70,7 @@ export class FabricRouter extends FabricBase ::
 
   async discoverRoute(id_route) ::
     const dispatch_route = await this._discoverFirst @
-      id_route, this.routeDiscovery,
+      {id_route}, this.routeDiscovery,
       err => this._on_error @ 'router.discovery', err
 
     if null != dispatch_route ::

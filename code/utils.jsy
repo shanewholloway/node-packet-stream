@@ -11,7 +11,7 @@ export function promiseQueue(src) ::
 export function discoverFirst(arg, lstFns, on_error) ::
   return new Promise @ resolve => ::
     const resolveIf = e => undefined !== e ? resolve(e) : e
-    tip = Promise.resolve(arg)
+    const tip = Promise.resolve(arg)
     Promise.all @
       Array.from @ lstFns, fn =>
         tip.then(fn).then(resolveIf, on_error)
@@ -27,11 +27,10 @@ export function applyPlugins(key, pluginList, ...args) ::
       plugin(...args)
 
 
-export const unregister = Object.freeze @ Object.create @ null
 export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
-  unregister
+  unregister: Object.freeze @ Object.create @ null
   _promiseQueue: promiseQueue
   _discoverFirst: discoverFirst
   _on_error(scope, err) :: console.error @ scope, err

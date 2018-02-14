@@ -24,12 +24,12 @@ export function packLenPrefixU8(hdr, body) ::
   const len0 = (2 + hdr.byteLength) | 0
   const len = (len0 + body.byteLength) | 0
 
-  if len > 0xffff || len < 16 ::
+  if len > 0xffff || len < 4 ::
     throw new Error @ `Packet malformed (${len} b)`
 
   const u8 = new Uint8Array(len)
-  u8[0] = 0xff & (len >> 8)
-  u8[1] = 0xff & len
+  u8[0] = 0xff & len
+  u8[1] = 0xff & (len >>> 8)
 
   u8.set @ hdr, 2
 

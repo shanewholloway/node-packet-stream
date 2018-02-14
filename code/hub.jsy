@@ -1,5 +1,6 @@
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
+import P2PRouter_Base from './p2p.jsy'
 
 import {applyPlugins} from './utils.jsy'
 
@@ -10,11 +11,14 @@ export class FabricHub ::
     applyPlugins @ 'pre', this.pluginList, this
 
     const router = this._init_fabricRouter()
+    const p2p = this.createP2PRoute(router)
     const local = this.createLocalRoute(router)
+    p2p.publishRoute(local)
 
     Object.defineProperties @ this, @{}
       dispatch: @{} value: router.dispatch
       router: @{} value: router
+      p2p: @{} value: p2p
       local: @{} value: local
 
       _connectByProtocol: @{} value: {}
@@ -28,11 +32,21 @@ export class FabricHub ::
     const klass = this.constructor
     return new klass.FabricRouter()
 
+  createP2PRoute(router=this.router) ::
+    const klass = this.constructor
+    return new klass.P2PRouter @ router
+
   createLocalRoute(router=this.router) ::
     const klass = this.constructor
     return new klass.TargetRouter @
       this._newRouteId(), router
   //_newRouteId() :: throw new Error @ `subclass responsiblity`
+
+  newLocalRoute(privateRoute) ::
+    const route = this.createLocalRoute(this.router)
+    if ! privateRoute ::
+      this.p2p.publishRoute(route)
+    return route
 
 
   connect(conn_url) ::
@@ -75,8 +89,9 @@ export class FabricHub ::
 
     class FabricRouter extends this.FabricRouter ::
     class TargetRouter extends this.TargetRouter ::
+    class P2PRouter extends this.P2PRouter ::
     Object.assign @ FabricHub_PI, @{}
-      FabricRouter, TargetRouter
+      FabricRouter, TargetRouter, P2PRouter
 
     applyPlugins @ 'subclass', pluginList, FabricHub_PI
     return FabricHub_PI
@@ -84,7 +99,7 @@ export class FabricHub ::
 
 const _hub_channel_ = @{}
   undeliverable(pkt, mode) ::
-    console.warn @ `Undeliverable[${mode}]: ${pkt.id_target} of ${pkt.id_router}`
+    console.warn @ `Undeliverable[${mode}]: target '${pkt.id_target}' of route '${pkt.id_route}'`
 
 Object.defineProperties @ FabricHub.prototype, @{}
   pluginList: @{} value: Object.freeze([])
@@ -93,5 +108,6 @@ Object.defineProperties @ FabricHub.prototype, @{}
 Object.assign @ FabricHub, @{}
   FabricRouter: FabricRouter_Base
   TargetRouter: TargetRouter_Base
+  P2PRouter: P2PRouter_Base
 
 export default FabricHub

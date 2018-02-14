@@ -24,7 +24,7 @@ export function packLenPrefixBuffer(hdr, body) ::
   const len0 = (2 + hdr.byteLength ) | 0
   const len = (len0 + body.byteLength ) | 0
 
-  if len > 0xffff || len < 16 ::
+  if len > 0xffff || len < 4 ::
     throw new Error @ `Packet malformed (${len} b)`
 
   const buf = Buffer.alloc(len)

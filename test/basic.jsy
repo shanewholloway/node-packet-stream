@@ -1,7 +1,7 @@
-import {TestHub} from './_setup.jsy'
+import Hub from './_setup.jsy'
 
-const h1 = new TestHub()
+const h1 = new Hub()
 console.dir @ h1, @{} colors: true
 
-const h2 = TestHub.create()
+const h2 = Hub.create()
 console.dir @ h2, @{} colors: true

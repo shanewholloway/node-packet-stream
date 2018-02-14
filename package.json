@@ -34,7 +34,7 @@
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-jsy": "^0.9.3",
+    "babel-preset-jsy": "^0.10.1",
     "rollup": "^0.55.5",
     "rollup-plugin-jsy-babel": "^1.0.1"
   },

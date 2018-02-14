@@ -13,12 +13,19 @@ import tls from '../dist/plugin-tls'
 import direct from '../dist/plugin-direct'
 
 
-const TestHub = FabricHub.plugin @
+const BasicHub = FabricHub.plugin @
   pkt(), router()
-  tcp(), tls(), direct()
+
+const TestDirectHub = BasicHub.plugin @
+  direct()
+
+const TestNetHub = BasicHub.plugin @
+  tcp(), tls()
 
 
+export default BasicHub
 export @{}
   FabricHub
-  TestHub
-  TestHub as default
+  BasicHub
+  TestDirectHub
+  TestNetHub

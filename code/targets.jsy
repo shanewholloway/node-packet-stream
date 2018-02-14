@@ -1,40 +1,45 @@
-import {unregister, FabricBase} from './utils.jsy'
+import {FabricBase} from './utils.jsy'
 
 export class TargetRouter extends FabricBase ::
   _createTargetsMap() :: return new Map()
 
-  constructor(id_router, router) ::
+  constructor(id_route, router) ::
     super()
     Object.defineProperties @ this, @{}
-      id_router: @{} value: id_router, enumerable: true
+      id_route: @{} value: id_route, enumerable: true
       targetDiscovery: @{} value: []
 
-    const fn = this.bindDispatchTarget()
-    fn.id_router = id_router
-    if null != router ::
-      router.registerRoute @ id_router, fn
+    this._bindDispatchTarget(id_route, router)
 
-  bindDispatchTarget() ::
+  _bindDispatchTarget(id_route, router) ::
+    // as closures over private variables (targets map)
+
+    const tgt_router = this, unregister = this.unregister
     const targets = this._createTargetsMap()
-
-    const dispatchTarget = async (pkt, channel, router) => ::
-      const id_target = pkt.id_target
-      let target = targets.get(id_target)
-      if undefined === target ::
-        target = await this.discoverTarget(id_target)
-        if undefined === target ::
-          return channel && channel.undeliverable(pkt, 'target')
-
-      if unregister === await target(pkt, this, router) ::
-        unregisterTarget(id_target)
 
     Object.defineProperties @ this, @{}
       registerTarget: @{} value: registerTarget
       unregisterTarget: @{} value: unregisterTarget
+      _bindDispatchTarget: @{} value: false
 
-    return dispatchTarget
+    dispatch_target.id_route = id_route
+    router.registerRoute @ id_route, dispatch_target
+    return this
 
-    // as closures over private targets map
+    async function dispatch_target(pkt, pktctx) ::
+      const id_target = pkt.id_target
+      let target = targets.get(id_target)
+      if undefined === target ::
+        target = await tgt_router.discoverTarget(id_target)
+        if undefined === target ::
+          const channel = pktctx.channel
+          return channel && channel.undeliverable(pkt, 'target')
+
+      pktctx.tgt_router = tgt_router
+      if unregister === await target(pkt, pktctx) ::
+        unregisterTarget(id_target)
+
+
     function registerTarget(id_target, target) ::
       if 'function' !== typeof target ::
         throw new TypeError @ `Expected 'target' function`
@@ -48,7 +53,7 @@ export class TargetRouter extends FabricBase ::
 
   async discoverTarget(id_target) ::
     const target = await this._discoverFirst @
-      query, this.targetDiscovery,
+      {id_target}, this.targetDiscovery,
       err => this._on_error @ 'target.discovery', err
 
     if null != target ::

@@ -1,55 +1,37 @@
-import {FabricHub} from './_setup'
+import {TestDirectHub as Hub} from './_setup.jsy'
 
-import direct_plugin from '../dist/plugin-direct'
+const ha = Hub.create()
+const hb = Hub.create()
+const hc = Hub.create()
 
-import generic_router from '../dist/plugin-router'
-import node_router from '../dist/plugin-router-node'
-import basic_router from '../dist/plugin-router-basic'
-import browser_router from '../dist/plugin-router-browser'
+addTarget @ ha.local, 'ha_apple'
+addTarget @ ha.local, 'ha_orange'
 
-const all_routers = @{} generic_router, node_router, basic_router, browser_router
+addTarget @ hb.local, 'hb_snake'
+addTarget @ hb.local, 'hb_turtle'
 
-function pick_a_router(key) ::
-  if null == key ::
-    const lst = Array.from @ Object.keys @ all_routers
-    const idx = 0 | lst.length * Math.random()
-    key = lst[idx]
-    console.log @ `\n\nUsing Router Plugin "${key}" [${idx}]\n`
-  else ::
-    console.log @ `\n\nUsing Router Plugin "${key}"\n`
-    
-  return all_routers[key]()
+addTarget @ hc.local, 'hc_crow'
+addTarget @ hc.local, 'hc_hawk'
+
+function addTarget(host, id) ::
+  host.registerTarget @ id, (pkt, tgt_router, hub_router) => ::
+    console.log @ `"${id}" recieved packet`, pkt
 
 
-var next_hub_port = 18000
-async function main_demo(router_plugin) ::
-  if ! router_plugin || 'string' === typeof router_plugin ::
-    router_plugin = pick_a_router(router_plugin)
+call @=>> ::
+  const chan_ab = await ha.direct.connect(hb)
+  return
+  const chan_ac = await ha.direct.connect(hc)
 
-  const Hub = FabricHub.plugin @
-    router_plugin
-    direct_plugin()
+  const chan_ca = await hc.direct.connect(ha)
+  const chan_cb = await hc.direct.connect(hb)
 
-  try ::
-    var hub_port = next_hub_port++
-    var peer = await main_server()
+  const chan_ba = await hb.direct.connect(ha)
+  const chan_bc = await hb.direct.connect(hc)
 
-    await main_client_one @ peer
-    await main_client_two @ peer
-    return true
-  catch err ::
-    console.error(err)
-    return false
-
-
-
+/*
   async function main_server() ::
     const hub = new Hub()
-
-    hub.router.registerTarget @ 123, (pkt, router) => ::
-      const header = pkt.header_json()
-      const body = pkt.body_json()
-      console.log @ 'target got packet!', @: header, body
 
     const channel = await hub.connect_self()
     channel.sendJSON @:
@@ -74,13 +56,9 @@ async function main_demo(router_plugin) ::
       id_router: peer
       id_target: 123
       body: @: hello: 'there'
+*/
 
 
-if module === require.main ::
-  ::
-    let tip = Promise.resolve()
-    for const key of Object.keys(all_routers) ::
-      tip = tip.then @ () => main_demo(key)
 
-  process.on @ 'unhandledRejection', (reason, p) => ::
-    console.log @ 'Unhandled Rejection at:', p, 'reason:', reason
+
+function call(f) :: return f()

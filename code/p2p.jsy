@@ -1,0 +1,40 @@
+import TargetRouter from './targets.jsy'
+
+export class P2PRouter extends TargetRouter ::
+  constructor(router) ::
+    super('', router)
+    this.id_route_list = []
+    this.initP2P()
+
+  publishRoute(route) ::
+    const id = route.id_route ? route.id_route
+      : 'string' === typeof route ? route
+      : null
+
+    if ! id :: throw new Error @ 'Invalid route identifier'
+    this.id_route_list.push(id)
+    return this
+
+
+  initP2P() ::
+    this.registerTarget @ 'hello', this._tgt_hello.bind(this)
+    this.registerTarget @ 'olleh', this._tgt_olleh.bind(this)
+
+  _tgt_hello(pkt, pktctx) ::
+    const {channel, hub_router} = pktctx
+    channel.send @:
+      id_target: 'olleh', id_route: ''
+      body: this.id_route_list
+
+    for const id_route of pkt.json() ::
+      hub_router.registerPeerRoute @
+        id_route, channel
+
+  _tgt_olleh(pkt, pktctx) ::
+    const {channel, hub_router} = pktctx
+    for const id_route of pkt.json() ::
+      hub_router.registerPeerRoute @
+        id_route, channel
+
+
+export default P2PRouter
