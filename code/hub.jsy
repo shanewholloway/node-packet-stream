@@ -5,14 +5,14 @@ import P2PRouter_Base from './p2p.jsy'
 import {applyPlugins} from './utils.jsy'
 
 export class FabricHub ::
-  static create() :: return new this()
+  static create(...args) :: return new this(...args)
 
-  constructor() ::
+  constructor(id_local_route) ::
     applyPlugins @ 'pre', this.pluginList, this
 
     const router = this._init_fabricRouter()
     const p2p = this.createP2PRoute(router)
-    const local = this.createLocalRoute(router)
+    const local = this.createLocalRoute(router, id_local_route)
     p2p.publishRoute(local)
 
     Object.defineProperties @ this, @{}
@@ -36,16 +36,16 @@ export class FabricHub ::
     const klass = this.constructor
     return new klass.P2PRouter @ router
 
-  createLocalRoute(router=this.router) ::
+  createLocalRoute(router=this.router, id_route) ::
+    if null == id_route :: id_route = this._newRouteId()
     const klass = this.constructor
     return new klass.TargetRouter @
-      this._newRouteId(), router
+      id_route, router
   //_newRouteId() :: throw new Error @ `subclass responsiblity`
 
-  newLocalRoute(privateRoute) ::
-    const route = this.createLocalRoute(this.router)
-    if ! privateRoute ::
-      this.p2p.publishRoute(route)
+  newLocalRoute(privateRoute, id_route) ::
+    const route = this.createLocalRoute(this.router, id_route)
+    this.p2p.publishRoute(route)
     return route
 
 
@@ -99,11 +99,13 @@ export class FabricHub ::
 
 const _hub_channel_ = @{}
   undeliverable(pkt, mode) ::
-    console.warn @ `Undeliverable[${mode}]: target '${pkt.id_target}' of route '${pkt.id_route}'`
+    const {id_route, id_target} = pkt
+    console.warn @ '~~ undeliverable «hub»', @{}
+      mode, id_route, id_target
 
 Object.defineProperties @ FabricHub.prototype, @{}
   pluginList: @{} value: Object.freeze([])
-  _hub_channel_
+  _hub_channel_: @{} value: _hub_channel_
 
 Object.assign @ FabricHub, @{}
   FabricRouter: FabricRouter_Base

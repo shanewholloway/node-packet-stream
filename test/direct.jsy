@@ -1,64 +1,55 @@
 import {TestDirectHub as Hub} from './_setup.jsy'
 
-const ha = Hub.create()
-const hb = Hub.create()
-const hc = Hub.create()
+const ha = Hub.create('$ha$')
+const hb = Hub.create('$hb$')
+const hc = Hub.create('$hc$')
 
-addTarget @ ha.local, 'ha_apple'
-addTarget @ ha.local, 'ha_orange'
+const msg_apple = addTarget @ 'ha_apple', ha.local
+const msg_orange = addTarget @ 'ha_orange', ha.local
 
-addTarget @ hb.local, 'hb_snake'
-addTarget @ hb.local, 'hb_turtle'
+const msg_snake = addTarget @ 'hb_snake', hb.local
+const msg_turtle = addTarget @ 'hb_turtle', hb.local
 
-addTarget @ hc.local, 'hc_crow'
-addTarget @ hc.local, 'hc_hawk'
+const msg_crow = addTarget @ 'hc_crow', hc.local
+const msg_hawk = addTarget @ 'hc_hawk', hc.local
 
-function addTarget(host, id) ::
-  host.registerTarget @ id, (pkt, tgt_router, hub_router) => ::
-    console.log @ `"${id}" recieved packet`, pkt
+function addTarget(id_target, {id_route, registerTarget}) ::
+  registerTarget @ id_target, pkt => ::
+    console.log @ `"${id_target}" recieved packet`, pkt
+    console.dir @ pkt.json(), {colors:true}
+    console.log()
+
+  return body => @: id_target, id_route, body
 
 
-call @=>> ::
+console.log()
+
+Promise.resolve()
+.then @ do_ha_local
+.then @ do_ha_remote // will not work before do_connect
+//.then @ do_connect
+.then @ do_ha_remote
+
+async function do_connect() ::
   const chan_ab = await ha.direct.connect(hb)
-  return
   const chan_ac = await ha.direct.connect(hc)
 
-  const chan_ca = await hc.direct.connect(ha)
-  const chan_cb = await hc.direct.connect(hb)
+  chan_ab.send @ msg_turtle @: hello: 'soup', mode: 'channel'
+  chan_ab.send @ msg_snake @: hello: 'bites', mode: 'channel'
 
-  const chan_ba = await hb.direct.connect(ha)
-  const chan_bc = await hb.direct.connect(hc)
-
-/*
-  async function main_server() ::
-    const hub = new Hub()
-
-    const channel = await hub.connect_self()
-    channel.sendJSON @:
-      id_router: hub.router.id_self
-      id_target: 123
-      body: 'self-echo packet works'
-
-    return hub
-
-  async function main_client_one(peer) ::
-    const hub = new Hub()
-    const channel = await hub.direct.connect @ peer
-    channel.sendJSON @:
-      id_router: peer
-      id_target: 123
-      header: @: bonkers: true
-
-  async function main_client_two(peer) ::
-    const hub = new Hub()
-    const channel = await hub.direct.connect @ peer
-    channel.sendJSON @:
-      id_router: peer
-      id_target: 123
-      body: @: hello: 'there'
-*/
+  chan_ac.send @ msg_crow @: look: 'shiny', mode: 'channel'
+  chan_ac.send @ msg_hawk @: look: 'a bunny!', mode: 'channel'
 
 
+async function do_ha_local() ::
+  ha.send @ msg_apple @: goodbye: 'doctor', mode: 'local'
+  ha.send @ msg_orange @: goodbye: 'scurvy', mode: 'local'
 
 
-function call(f) :: return f()
+async function do_ha_remote() ::
+  ha.send @ msg_turtle @: hello: 'soup', mode: 'remote'
+  ha.send @ msg_snake @: hello: 'bites', mode: 'remote'
+
+  ha.send @ msg_crow @: look: 'shiny!', mode: 'remote'
+  ha.send @ msg_hawk @: look: 'a bunny!', mode: 'remote'
+
