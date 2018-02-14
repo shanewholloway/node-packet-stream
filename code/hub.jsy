@@ -11,13 +11,17 @@ export class FabricHub ::
     applyPlugins @ 'pre', this.pluginList, this
 
     const router = this._init_fabricRouter()
+    const dispatch = router.dispatch
+
     const p2p = this.createP2PRoute(router)
     const local = this.createLocalRoute(router, id_local_route)
     p2p.publishRoute(local)
 
     Object.defineProperties @ this, @{}
-      dispatch: @{} value: router.dispatch
       router: @{} value: router
+      dispatch: @{} value: dispatch
+      send: @{} value: this._bindSendLocal(dispatch)
+
       p2p: @{} value: p2p
       local: @{} value: local
 
@@ -69,9 +73,11 @@ export class FabricHub ::
     return this
 
 
-  send(...objs) ::
-    const pktList = objs.map @ this._fromObjPacket
-    return this.dispatch @ pktList, this._hub_channel_
+  _bindSendLocal(dispatch) ::
+    const {_fromObjPacket, _hub_channel_} = this
+    return function send(...objs) ::
+      const pktList = objs.map @ _fromObjPacket
+      return dispatch @ pktList, _hub_channel_
   _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
 
 
@@ -98,6 +104,7 @@ export class FabricHub ::
 
 
 const _hub_channel_ = @{}
+  is_local: true
   undeliverable(pkt, mode) ::
     const {id_route, id_target} = pkt
     console.warn @ '~~ undeliverable «hub»', @{}
@@ -105,7 +112,7 @@ const _hub_channel_ = @{}
 
 Object.defineProperties @ FabricHub.prototype, @{}
   pluginList: @{} value: Object.freeze([])
-  _hub_channel_: @{} value: _hub_channel_
+  _hub_channel_: @{} value: Object.create(_hub_channel_)
 
 Object.assign @ FabricHub, @{}
   FabricRouter: FabricRouter_Base

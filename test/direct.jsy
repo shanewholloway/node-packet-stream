@@ -26,8 +26,8 @@ console.log()
 
 Promise.resolve()
 .then @ do_ha_local
-.then @ do_ha_remote // will not work before do_connect
-//.then @ do_connect
+//.then @ do_ha_remote // will not work before do_connect
+.then @ do_connect
 .then @ do_ha_remote
 
 async function do_connect() ::

@@ -30,7 +30,7 @@ export class TargetRouter extends FabricBase ::
       const id_target = pkt.id_target
       let target = targets.get(id_target)
       if undefined === target ::
-        target = await tgt_router.discoverTarget(id_target)
+        target = await tgt_router.discoverTarget(id_target, pktctx)
         if undefined === target ::
           const channel = pktctx.channel
           return channel && channel.undeliverable(pkt, 'target')
@@ -51,9 +51,9 @@ export class TargetRouter extends FabricBase ::
       return targets.delete @ id_target
 
 
-  async discoverTarget(id_target) ::
+  async discoverTarget(id_target, pktctx) ::
     const target = await this._discoverFirst @
-      {id_target}, this.targetDiscovery,
+      {id_target, pktctx}, this.targetDiscovery,
       err => this._on_error @ 'target.discovery', err
 
     if null != target ::

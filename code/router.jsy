@@ -36,7 +36,7 @@ export class FabricRouter extends FabricBase ::
         const id_route = pkt.id_route
         let dispatch_route = routes.get(id_route)
         if undefined === dispatch_route ::
-          dispatch_route = await hub_router.discoverRoute(id_route)
+          dispatch_route = await hub_router.discoverRoute(id_route, pktctx)
           if undefined === dispatch_route ::
             const channel = pktctx.channel
             return channel && channel.undeliverable(pkt, 'route')
@@ -68,9 +68,9 @@ export class FabricRouter extends FabricBase ::
       pkt => :: channel.send(pkt)
 
 
-  async discoverRoute(id_route) ::
+  async discoverRoute(id_route, pktctx) ::
     const dispatch_route = await this._discoverFirst @
-      {id_route}, this.routeDiscovery,
+      {id_route, pktctx}, this.routeDiscovery,
       err => this._on_error @ 'router.discovery', err
 
     if null != dispatch_route ::
