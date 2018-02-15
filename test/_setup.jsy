@@ -1,31 +1,18 @@
 require('source-map-support').install()
+
 import {URL} from 'url'
 import {TextEncoder, TextDecoder} from 'util'
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
-import FabricHub from '../dist'
-import pkt from '../dist/plugin-pkt-nodejs'
-import router from '../dist/plugin-router-node'
+import BasicHub from '../dist/index.js'
 
 import tcp from '../dist/plugin-tcp'
 import tls from '../dist/plugin-tls'
 import direct from '../dist/plugin-direct'
 
 
-const BasicHub = FabricHub.plugin @
-  pkt(), router()
-
-const TestDirectHub = BasicHub.plugin @
-  direct()
-
-const TestNetHub = BasicHub.plugin @
-  tcp(), tls()
-
+export const TestDirectHub = BasicHub.plugin @ direct()
+export const TestNetHub = BasicHub.plugin @ tcp(), tls()
 
 export default BasicHub
-export @{}
-  FabricHub
-  BasicHub
-  TestDirectHub
-  TestNetHub

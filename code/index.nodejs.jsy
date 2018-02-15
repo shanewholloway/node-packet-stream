@@ -1,0 +1,5 @@
+import FabricHub from './index.jsy'
+import pkt from './plugins/pkt/node.jsy'
+import router from './plugins/router/node.jsy'
+
+export default FabricHub.plugin @ pkt(), router()

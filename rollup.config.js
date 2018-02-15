@@ -1,7 +1,13 @@
+import pkg from './package.json'
+import {minify} from 'uglify-es'
 import rpi_jsy from 'rollup-plugin-jsy-babel'
+import rpi_uglify from 'rollup-plugin-uglify'
 
 const sourcemap = 'inline'
 const plugins = [rpi_jsy()]
+
+const ugly = { warnings: true, output: {comments: false, max_line_len: 256}}
+const prod_plugins = plugins.concat([rpi_uglify(ugly, minify)])
 
 export default [].concat(
   package_core(),
@@ -16,11 +22,16 @@ function package_core() {
 
   return [
     { input: 'code/index.jsy',
-      output: [
-        { file: `dist/index.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/index.mjs`, format: 'es', sourcemap },
-      ],
+      output: { file: pkg.module, format: 'es', sourcemap },
       external, plugins },
+
+    { input: 'code/index.nodejs.jsy',
+      output: { file: pkg.main, format: 'cjs', sourcemap },
+      external: ['crypto', 'url'], plugins },
+
+    { input: 'code/index.browser.jsy',
+      output: { file: pkg.browser, name:'msg_fabric', format: 'umd', sourcemap },
+      external, plugins: prod_plugins },
   ]}
 
 
