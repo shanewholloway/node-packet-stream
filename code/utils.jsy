@@ -8,14 +8,27 @@ export function promiseQueue(src) ::
   function clear() :: tip = null
 
 
-export function discoverFirst(arg, lstFns, on_error) ::
-  return new Promise @ resolve => ::
-    const resolveIf = e => undefined !== e ? resolve(e) : e
-    const tip = Promise.resolve(arg)
-    Promise.all @
-      Array.from @ lstFns, fn =>
-        tip.then(fn).then(resolveIf, on_error)
-    .then @ () => resolve(null)
+const sym_dedup = Symbol('msg_fabric_discovery')
+export function discoverFirst(key, arg, lstFns, on_error) ::
+  let dedup = lstFns[sym_dedup]
+  if undefined === dedup ::
+    dedup = new Map()
+    Object.defineProperty @ lstFns, sym_dedup, @{} value: dedup
+
+  let res = dedup.get(key)
+  if undefined === res ::
+    dedup.set @ key, res = new Promise @ resolve => ::
+      const resolveIf = e => undefined !== e ? resolve(e) : e
+      const tip = Promise.resolve(arg)
+      Promise.all @
+        Array.from @ lstFns, fn =>
+          tip.then(fn).then(resolveIf, on_error)
+      .then @ () => resolve(null)
+  return res
+
+export const timeoutResolve = (ms, answer) =>
+  new Promise @ resolve =>
+    setTimeout @ resolve, ms, answer
 
 
 export function applyPlugins(key, pluginList, ...args) ::
@@ -30,8 +43,8 @@ export function applyPlugins(key, pluginList, ...args) ::
 export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
-  unregister: Object.freeze @ Object.create @ null
   _promiseQueue: promiseQueue
   _discoverFirst: discoverFirst
+  _discoveryDefault: @[] () => timeoutResolve(5000, null)
   _on_error(scope, err) :: console.error @ scope, err
 

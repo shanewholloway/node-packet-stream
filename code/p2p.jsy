@@ -6,7 +6,6 @@ export class P2PRouter extends TargetRouter ::
     this.public_routes = []
     this.initP2P()
 
-  publishRoutes() ::
   publishRoute(route) ::
     const id = route.id_route ? route.id_route
       : 'string' === typeof route ? route

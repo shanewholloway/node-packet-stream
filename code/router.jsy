@@ -6,7 +6,7 @@ export class FabricRouter extends FabricBase ::
   constructor() ::
     super()
     Object.defineProperties @ this, @{}
-      routeDiscovery: @{} value: []
+      routeDiscovery: @{} value: this._discoveryDefault.slice()
 
     this._bindDispatchRoutes()
 
@@ -14,7 +14,6 @@ export class FabricRouter extends FabricBase ::
   _bindDispatchRoutes() ::
     // as closures over private variables (targets map)
     const hub_router = this
-    const unregister = this.unregister
     const routes = this._createRoutesMap()
     const pqueue = this._promiseQueue()
 
@@ -41,8 +40,7 @@ export class FabricRouter extends FabricBase ::
             const channel = pktctx.channel
             return channel && channel.undeliverable(pkt, 'route')
 
-        if unregister === await dispatch_route(pkt, pktctx) ::
-          hub_router.unregisterRoute(id_route)
+        await dispatch_route(pkt, pktctx)
       catch err ::
         hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
 
@@ -69,14 +67,14 @@ export class FabricRouter extends FabricBase ::
 
 
   async discoverRoute(id_route, pktctx) ::
-    const dispatch_route = await this._discoverFirst @
-      {id_route, pktctx}, this.routeDiscovery,
+    const route = await this._discoverFirst @
+      id_route, {id_route, pktctx}, this.routeDiscovery,
       err => this._on_error @ 'router.discovery', err
 
-    if null != dispatch_route ::
-      if ! dispatch_route.ephemeral ::
-        this.registerRoute(id_route, dispatch_route)
-      return dispatch_route
+    if null != route ::
+      if ! route.ephemeral ::
+        this.registerRoute(id_route, route)
+      return route
 
 
 export default FabricRouter

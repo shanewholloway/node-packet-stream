@@ -7,14 +7,14 @@ export class TargetRouter extends FabricBase ::
     super()
     Object.defineProperties @ this, @{}
       id_route: @{} value: id_route, enumerable: true
-      targetDiscovery: @{} value: []
+      targetDiscovery: @{} value: this._discoveryDefault.slice()
 
     this._bindDispatchTarget(id_route, router)
 
   _bindDispatchTarget(id_route, router) ::
     // as closures over private variables (targets map)
 
-    const tgt_router = this, unregister = this.unregister
+    const tgt_router = this
     const targets = this._createTargetsMap()
 
     Object.defineProperties @ this, @{}
@@ -36,8 +36,7 @@ export class TargetRouter extends FabricBase ::
           return channel && channel.undeliverable(pkt, 'target')
 
       pktctx.tgt_router = tgt_router
-      if unregister === await target(pkt, pktctx) ::
-        unregisterTarget(id_target)
+      await target(pkt, pktctx)
 
 
     function registerTarget(id_target, target) ::
@@ -53,7 +52,7 @@ export class TargetRouter extends FabricBase ::
 
   async discoverTarget(id_target, pktctx) ::
     const target = await this._discoverFirst @
-      {id_target, pktctx}, this.targetDiscovery,
+      id_target, {id_target, pktctx}, this.targetDiscovery,
       err => this._on_error @ 'target.discovery', err
 
     if null != target ::
