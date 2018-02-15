@@ -11,19 +11,25 @@ export function promiseQueue(src) ::
 const sym_dedup = Symbol('msg_fabric_discovery')
 export function discoverFirst(key, arg, lstFns, on_error) ::
   let dedup = lstFns[sym_dedup]
-  if undefined === dedup ::
+  if undefined !== dedup ::
+    const res = dedup.get(key)
+    if undefined !== res ::
+      return res
+
+  else ::
     dedup = new Map()
     Object.defineProperty @ lstFns, sym_dedup, @{} value: dedup
 
-  let res = dedup.get(key)
-  if undefined === res ::
-    dedup.set @ key, res = new Promise @ resolve => ::
-      const resolveIf = e => undefined !== e ? resolve(e) : e
-      const tip = Promise.resolve(arg)
-      Promise.all @
-        Array.from @ lstFns, fn =>
-          tip.then(fn).then(resolveIf, on_error)
-      .then @ () => resolve(null)
+  const res = new Promise @ resolve => ::
+    const resolveIf = e => undefined !== e ? resolve(e) : e
+    const tip = Promise.resolve(arg)
+    Promise.all @
+      Array.from @ lstFns, fn =>
+        tip.then(fn).then(resolveIf, on_error)
+    .then @=> resolve(null)
+
+  dedup.set @ key, res
+  res.then @=> dedup.delete(key)
   return res
 
 export const timeoutResolve = (ms, answer) =>
