@@ -12,9 +12,9 @@ export class FabricRouter extends FabricBase ::
 
 
   _bindDispatchRoutes() ::
-    // as closures over private variables (targets map)
+    // as closures over private variables (routes_map)
     const hub_router = this
-    const routes = this._createRoutesMap()
+    const routes_map = this._createRoutesMap()
     const pqueue = this._promiseQueue()
 
     Object.defineProperties @ this, @:
@@ -27,20 +27,20 @@ export class FabricRouter extends FabricBase ::
 
 
     function resolveRoute(id_route) ::
-      return routes.get(id_route) ||
+      return routes_map.get(id_route) ||
         hub_router.discoverRoute(id_route)
 
     async function dispatch_one(pkt, pktctx) ::
       try ::
         const id_route = pkt.id_route
-        let dispatch_route = routes.get(id_route)
-        if undefined === dispatch_route ::
-          dispatch_route = await hub_router.discoverRoute(id_route, pktctx)
-          if undefined === dispatch_route ::
+        let route = routes_map.get(id_route)
+        if undefined === route ::
+          route = await hub_router.discoverRoute(id_route, pktctx)
+          if undefined === route ::
             const channel = pktctx.channel
             return channel && channel.undeliverable(pkt, 'route')
 
-        await dispatch_route(pkt, pktctx)
+        await route(pkt, pktctx)
       catch err ::
         hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
 
@@ -50,15 +50,16 @@ export class FabricRouter extends FabricBase ::
         pq.then @ () => dispatch_one @ pkt, {channel, hub_router}
 
 
-    function registerRoute(id_route, dispatch_route) ::
-      if 'function' !== typeof dispatch_route ::
-        throw new TypeError @ `Expected 'dispatch_route' to be a function`
-      if routes.has @ id_route :: return false
+    function registerRoute(id_route, route) ::
+      if 'function' !== typeof route ::
+        throw new TypeError @ `Expected 'route' to be a function`
+      if routes_map.has @ id_route ::
+        return routes_map.get(id_route)
 
-      routes.set @ id_route, dispatch_route
-      return true
+      routes_map.set @ id_route, route
+      return route
     function unregisterRoute(id_route) ::
-      return routes.delete @ id_route
+      return routes_map.delete @ id_route
 
 
   registerPeerRoute(id_route, channel) ::
@@ -73,13 +74,11 @@ export class FabricRouter extends FabricBase ::
       err => this._on_error @ 'router.discovery', err
 
     if null == route :: return
+    if route.ephemeral :: return route
 
-    if ! route.ephemeral ::
-      if 'function' === typeof route.send ::
-        this.registerPeerRoute(id_route, route)
-      else if 'function' === typeof route ::
-        this.registerRoute(id_route, route)
-    return route
+    if 'function' !== typeof route ::
+      return this.registerPeerRoute(id_route, route)
+    return this.registerRoute(id_route, route)
 
 
 export default FabricRouter

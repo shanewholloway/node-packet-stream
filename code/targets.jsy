@@ -12,10 +12,10 @@ export class TargetRouter extends FabricBase ::
     this._bindDispatchTarget(id_route, router)
 
   _bindDispatchTarget(id_route, router) ::
-    // as closures over private variables (targets map)
+    // as closures over private variables (targets_map)
 
     const tgt_router = this
-    const targets = this._createTargetsMap()
+    const targets_map = this._createTargetsMap()
 
     Object.defineProperties @ this, @{}
       registerTarget: @{} value: registerTarget
@@ -28,7 +28,7 @@ export class TargetRouter extends FabricBase ::
 
     async function dispatch_target(pkt, pktctx) ::
       const id_target = pkt.id_target
-      let target = targets.get(id_target)
+      let target = targets_map.get(id_target)
       if undefined === target ::
         target = await tgt_router.discoverTarget(id_target, pktctx)
         if undefined === target ::
@@ -43,11 +43,13 @@ export class TargetRouter extends FabricBase ::
       if 'function' !== typeof target ::
         throw new TypeError @ `Expected 'target' function`
 
-      if targets.has @ id_target :: return false
-      return targets.set @ id_target, target
+      if targets_map.has @ id_target ::
+        return targets_map.get(target)
+      targets_map.set @ id_target, target
+      return target
 
     function unregisterTarget(id_target) ::
-      return targets.delete @ id_target
+      return targets_map.delete @ id_target
 
 
   async discoverTarget(id_target, pktctx) ::
