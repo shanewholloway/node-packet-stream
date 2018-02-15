@@ -4,16 +4,12 @@ import net_common from './_net_common.jsy'
 export default function tls_plugin(plugin_options={}) ::
   const on_url_connect = plugin_options.on_url_connect
   const protocol = plugin_options.protocol || 'tls'
-  function asURL() :: return `${protocol}://${this.address}:${this.port}`
 
   return function(hub) ::
-    const _common_ = net_common(hub, asURL)
-
-    hub.registerConnectionProtocol @ `${protocol}:`,
-      url => connect @ _common_.unpackConnectURL(url, on_url_connect)
-
     const plugin = Object.assign @ connect, @{}
-      connect, createServer
+      connect, createServer, on_url_connect
+
+    const _common_ = net_common @ hub, plugin, protocol
     return hub[protocol] = plugin
 
     function connect(...args) ::

@@ -54,9 +54,6 @@ export class FabricHub ::
 
 
   connect(conn_url) ::
-    if null == conn_url ::
-      return this._api_internal.clone()
-
     if 'string' === typeof conn_url ::
       conn_url = this._parseConnectURL(conn_url)
 
@@ -66,10 +63,11 @@ export class FabricHub ::
     return connect(conn_url)
 
   _parseConnectURL(conn_url) :: return new URL(conn_url)
-  registerConnectionProtocol(protocol, cb_connect) ::
+  registerProtocols(protocolList, cb_connect) ::
     if 'function' !== typeof cb_connect ::
       throw new TypeError @ `Expected 'cb_connect' function`
-    this._connectByProtocol[protocol] = cb_connect
+    for const protocol of protocolList ::
+      this._connectByProtocol[protocol] = cb_connect
     return this
 
 

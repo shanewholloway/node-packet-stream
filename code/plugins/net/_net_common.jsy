@@ -1,16 +1,26 @@
 import stream_common from './_stream_common.jsy'
 
-export default function net_common(hub, asURL) ::
+export default function net_common(hub, plugin, protocol, asURL) ::
+  var _common_
+  if null == asURL ::
+    asURL = function () :: return `${protocol}://${this.address}:${this.port}`
+
+  const conn_info_base = @{} toString: asURL, asURL, protocol
   const sock_conn_info = sock => @:
-    ip_remote: @{} asURL, address: sock.remoteAddress, port: sock.remotePort
-    ip_local: @{} asURL, address: sock.localAddress, port: sock.localPort
+    __proto__: conn_info_base
+    address: sock.localAddress, port: sock.localPort
+    remote: @{} __proto__: conn_info_base
+      address: sock.remoteAddress, port: sock.remotePort
+
+  hub.registerProtocols @ [protocol, `${protocol}:`],
+    url => plugin.connect @ _common_.unpackConnectURL(url)
 
   // shared implementation between net/tcp and tls implementations
-  return @{} __proto__: stream_common(hub)
+  return _common_ = @{} __proto__: stream_common(hub)
     createSocketChannel(sock) ::
       sock.setNoDelay(true)
       return Object.defineProperties @ 
-        this.createChannel(sock, sock)
+        this.createRWChannel(sock, sock)
         @{} conn_info: @{} value: sock_conn_info.bind(sock)
 
 
@@ -21,7 +31,7 @@ export default function net_common(hub, asURL) ::
 
     createClient(_impl_) ::
       return new Promise @ (resolve, reject) => ::
-        _impl_ @ args, function() ::
+        _impl_ @ function() ::
           const sock = this.unref().setKeepAlive(true)
           const channel = _common_.bindChannel(sock)
           resolve(channel)
@@ -35,9 +45,20 @@ export default function net_common(hub, asURL) ::
 
       const on_peer = this.bindOnPeer(svr, onPeer)
 
-      svr.conn_info = function () ::
-        const {address, port} = svr.address()
-        return @{} ip_server: @{} asURL, address, port, 
+      svr.conn_info = function (asPromise) ::
+        const addr = svr.address()
+        if null != addr ::
+          const res = @{} __proto__: conn_info_base
+            address: addr.address, port: addr.port
+          return asPromise ? Promise.resolve(res) : res
+
+        else if asPromise ::
+          return new Promise @ (resolve, reject) => ::
+            svr.once @ 'listening', () => resolve(svr.conn_info(false))
+            svr.once @ 'error', reject
+
+        else return null
+
       return svr
 
     bindOnPeer(svr, onPeer) ::
@@ -54,10 +75,10 @@ export default function net_common(hub, asURL) ::
           args[0] = @{} host, port
       return args
 
-    unpackConnectURL(url, on_url_connect) ::
+    unpackConnectURL(url) ::
       const {hostname:host, port} = url
       const options = {host, port}
-      return on_url_connect
-        ? on_url_connect(options, url)
+      return plugin.on_url_connect
+        ? plugin.on_url_connect(options, url)
         : options
 

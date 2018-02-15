@@ -5,9 +5,7 @@ export const channel_base = @{}
       mode, id_route, id_target
 
   sendRoutingHandshake(hub) ::
-    return this.send @:
-      id_target: 'hello', id_route: ''
-      body: hub.p2p.id_route_list
+    return this.send @ hub.p2p.helloHandshake()
 
 
 export default stream_common

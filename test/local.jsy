@@ -1,0 +1,21 @@
+import {TestDirectHub as Hub} from './_setup.jsy'
+
+const ha = Hub.create('$ha$')
+
+const msg_apple = addTarget @ 'ha_apple', ha.local
+const msg_orange = addTarget @ 'ha_orange', ha.local
+
+
+function addTarget(id_target, {id_route, registerTarget}) ::
+  registerTarget @ id_target, pkt => ::
+    console.log @ `"${id_target}" recieved packet`, pkt
+    console.dir @ pkt.json(), {colors:true}
+    console.log()
+
+  return body => @: id_target, id_route, body
+
+
+console.log()
+ha.send @ msg_apple @: goodbye: 'doctor', mode: 'local'
+ha.send @ msg_orange @: goodbye: 'scurvy', mode: 'local'
+

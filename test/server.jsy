@@ -1,94 +1,66 @@
-import {FabricHub} from './_setup'
+import {TestNetHub as Hub} from './_setup.jsy'
 
-import tcp_plugin from '../dist/plugin-tcp'
+const ha = Hub.create('$ha$')
+const hb = Hub.create('$hb$')
+const hc = Hub.create('$hc$')
 
-import generic_router from '../dist/plugin-router'
-import node_router from '../dist/plugin-router-node'
-import basic_router from '../dist/plugin-router-basic'
-import browser_router from '../dist/plugin-router-browser'
+const msg_apple = addTarget @ 'ha_apple', ha.local
+const msg_orange = addTarget @ 'ha_orange', ha.local
 
-const all_routers = @{} generic_router, node_router, basic_router, browser_router
+const msg_snake = addTarget @ 'hb_snake', hb.local
+const msg_turtle = addTarget @ 'hb_turtle', hb.local
 
-function pick_a_router(key) ::
-  if null == key ::
-    const lst = Array.from @ Object.keys @ all_routers
-    const idx = 0 | lst.length * Math.random()
-    key = lst[idx]
-    console.log @ `\n\nUsing Router Plugin "${key}" [${idx}]\n`
-  else ::
-    console.log @ `\n\nUsing Router Plugin "${key}"\n`
-    
-  return all_routers[key]()
+const msg_crow = addTarget @ 'hc_crow', hc.local
+const msg_hawk = addTarget @ 'hc_hawk', hc.local
 
+function addTarget(id_target, {id_route, registerTarget}) ::
+  registerTarget @ id_target, pkt => ::
+    console.log @ `"${id_target}" recieved packet`, pkt
+    console.dir @ pkt.json(), {colors:true}
+    console.log()
 
-var next_hub_port = 18000
-async function main_demo(router_plugin) ::
-  if ! router_plugin || 'string' === typeof router_plugin ::
-    router_plugin = pick_a_router(router_plugin)
-
-  const Hub = FabricHub.plugin @
-    router_plugin
-    tcp_plugin()
-
-  try ::
-    var hub_port = next_hub_port++
-    var id_hub = await main_server()
-
-    await main_client_one @ id_hub
-    await main_client_two @ id_hub
-    return true
-  catch err ::
-    console.error(err)
-    return false
+  return body => @: id_target, id_route, body
 
 
+console.log()
 
-  async function main_server() ::
-    const hub = new Hub()
-    const svr = hub.tcp.createServer()
-      .listen(hub_port, '127.0.0.1')
+const chain = Promise.resolve()
+.then @ do_ha_local
+//.then @ do_ha_remote // will not work before do_connect
+.then @ do_serve
+.then @ do_connect
+.then @=> sleep(10) // allow some time for handshaking
+.then @ do_ha_remote
 
-    setTimeout @
-      () => ::
-        console.log @ 'Allowing server to expire…'
-        svr.unref()
-      200
+async function do_serve() ::
+  const svr = ha.tcp.createServer()
+    .listen(0, '127.0.0.1')
 
-    hub.router.registerTarget @ 123, (pkt, router) => ::
-      const header = pkt.header_json()
-      const body = pkt.body_json()
-      console.log @ 'target got packet!', @: header, body
+  chain.then @=> svr.unref()
+  return svr.conn_info(true)
 
-    const channel = await hub.connect_self()
-    channel.sendJSON @:
-      id_router: hub.router.id_self
-      id_target: 123
-      body: 'self-echo packet works'
+async function do_connect(addr) ::
+  const chan_ab = await hb.connect(addr)
+  const chan_ac = await hc.connect(addr)
 
-    return hub.router.id_self
+  chan_ab.send @ msg_turtle @: hello: 'soup', mode: 'channel'
+  chan_ab.send @ msg_snake @: hello: 'bites', mode: 'channel'
 
-  async function main_client_one(id_hub) ::
-    const hub = new Hub()
-    const channel = await hub.tcp.connect @: host:'127.0.0.1', port: hub_port
-    channel.sendJSON @:
-      id_router: id_hub
-      id_target: 123
-      header: @: bonkers: true
-
-  async function main_client_two(id_hub) ::
-    const hub = new Hub()
-    const channel = await hub.connect(`tcp://127.0.0.1:${hub_port}`)
-    channel.sendJSON @:
-      id_router: id_hub
-      id_target: 123
-      body: @: hello: 'there'
+  chan_ac.send @ msg_crow @: look: 'shiny', mode: 'channel'
+  chan_ac.send @ msg_hawk @: look: 'a bunny!', mode: 'channel'
 
 
-if module === require.main ::
-  ::
-    let tip = Promise.resolve()
-    for const key of Object.keys(all_routers) ::
-      tip = tip.then @ () => main_demo(key)
+async function do_ha_local() ::
+  ha.send @ msg_apple @: goodbye: 'doctor', mode: 'local'
+  ha.send @ msg_orange @: goodbye: 'scurvy', mode: 'local'
 
-  process.on @ 'unhandledRejection', (reason, p) => ::
-    console.log @ 'Unhandled Rejection at:', p, 'reason:', reason
+
+async function do_ha_remote() ::
+  ha.send @ msg_turtle @: hello: 'soup', mode: 'remote'
+  ha.send @ msg_snake @: hello: 'bites', mode: 'remote'
+
+  ha.send @ msg_crow @: look: 'shiny!', mode: 'remote'
+  ha.send @ msg_hawk @: look: 'a bunny!', mode: 'remote'
+
+
+function sleep(ms, res) :: return new Promise @ resolve => setTimeout @ resolve, ms|0, res
