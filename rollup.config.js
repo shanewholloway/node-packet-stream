@@ -23,8 +23,8 @@ function package_core() {
   return [
     { input: 'code/index.jsy',
       output: [
-        { file: 'dist/esm/index.js', format: 'es', sourcemap },
-        { file: 'dist/cjs/index.js', format: 'cjs', sourcemap, exports: 'named' },
+        { file: 'esm/index.js', format: 'es', sourcemap },
+        { file: 'cjs/index.js', format: 'cjs', sourcemap, exports: 'named' },
       ],
       external, plugins },
 
@@ -80,7 +80,7 @@ function bundleForPlugin(plugin_name) {
   return ([name, [out, external]]) => (
     { input: `code/plugins/${plugin_name}/${name}.jsy`,
       output: [
-        { file: `dist/cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/esm/${out}.js`, format: 'es', sourcemap },
+        { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `esm/${out}.js`, format: 'es', sourcemap },
       ],
       external, plugins } )}
