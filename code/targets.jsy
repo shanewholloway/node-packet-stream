@@ -52,12 +52,14 @@ export class TargetRouter extends FabricBase ::
 
   async discoverTarget(id_target, pktctx) ::
     const target = await this._discoverFirst @
-      id_target, {id_target, pktctx}, this.targetDiscovery,
+      this.targetDiscovery
+      @{} key: id_target, id_target, pktctx
       err => this._on_error @ 'target.discovery', err
 
-    if null != target ::
-      if ! target.ephemeral ::
-        this.registerTarget(id_target, target)
-      return target
+    if null == target :: return
+
+    if ! target.ephemeral ::
+      this.registerTarget(id_target, target)
+    return target
 
 export default TargetRouter

@@ -9,7 +9,8 @@ export function promiseQueue(src) ::
 
 
 const sym_dedup = Symbol('msg_fabric_discovery')
-export function discoverFirst(key, arg, lstFns, on_error) ::
+export function discoverFirst(lstFns, query, on_error) ::
+  const key = query.key
   let dedup = lstFns[sym_dedup]
   if undefined !== dedup ::
     const res = dedup.get(key)
@@ -18,11 +19,11 @@ export function discoverFirst(key, arg, lstFns, on_error) ::
 
   else ::
     dedup = new Map()
-    Object.defineProperty @ lstFns, sym_dedup, @{} value: dedup
+    Object.defineProperty @ lstFns, sym_dedup, {value: dedup}
 
   const res = new Promise @ resolve => ::
     const resolveIf = e => undefined !== e ? resolve(e) : e
-    const tip = Promise.resolve(arg)
+    const tip = Promise.resolve(query)
     Promise.all @
       Array.from @ lstFns, fn =>
         tip.then(fn).then(resolveIf, on_error)

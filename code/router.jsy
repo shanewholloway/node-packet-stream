@@ -68,13 +68,18 @@ export class FabricRouter extends FabricBase ::
 
   async discoverRoute(id_route, pktctx) ::
     const route = await this._discoverFirst @
-      id_route, {id_route, pktctx}, this.routeDiscovery,
+      this.routeDiscovery
+      @{} key: id_route, id_route, pktctx
       err => this._on_error @ 'router.discovery', err
 
-    if null != route ::
-      if ! route.ephemeral ::
+    if null == route :: return
+
+    if ! route.ephemeral ::
+      if 'function' === typeof route.send ::
+        this.registerPeerRoute(id_route, route)
+      else if 'function' === typeof route ::
         this.registerRoute(id_route, route)
-      return route
+    return route
 
 
 export default FabricRouter
