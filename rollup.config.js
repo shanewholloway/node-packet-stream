@@ -11,9 +11,9 @@ const prod_plugins = plugins.concat([rpi_uglify(ugly, minify)])
 
 export default [].concat(
   package_core(),
+  package_plugin_platform(),
   package_plugin_pkt(),
   package_plugin_net(),
-  package_plugin_router(),
 )
 
 
@@ -63,16 +63,15 @@ function package_plugin_net() {
   return Object.entries(bundles).map(bundleForPlugin('net')) }
 
 
-function package_plugin_router() {
+function package_plugin_platform() {
   const external=[], external_node=['crypto', 'url']
   const bundles = {
-    'index': ['plugin-router', external_node],
-    'basic': ['plugin-router-basic', external],
-    'node': ['plugin-router-node', external_node],
-    'browser': ['plugin-router-browser', external],
+    'index': ['plugin-platform-all', external_node],
+    'node': ['plugin-platform-node', external_node],
+    'browser': ['plugin-platform-browser', external],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('router')) }
+  return Object.entries(bundles).map(bundleForPlugin('platform')) }
 
 
 

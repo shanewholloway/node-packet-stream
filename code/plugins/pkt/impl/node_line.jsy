@@ -1,23 +1,32 @@
 import { PktJsonBase, PktDataBase, bind_linePacket } from './common.jsy'
 import { asBuffer as packBody } from './node_util.jsy'
 
-const PktJson = @{} __proto__: PktJsonBase
-  text() :: return this._body_
+export default function({}) ::
 
-const PktData = @{} __proto__: PktDataBase
-  text() :: return this.buffer().toString('utf-8')
-  base64() :: return this._body_
-  buffer() ::
-    let buf = this._body_buf_
-    if undefined === buf ::
-      buf = Buffer.from(this._body_, 'base64')
-      Object.defineProperty @ this, '_body_buf_', {value: buf}
-    return buf
+  const PktJson = @{} __proto__: PktJsonBase
+    text() :: return this._body_
 
-export const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
-  bind_linePacket @:
-    packBody, packBody64
-    PktData, PktJson
+  const PktData = @{} __proto__: PktDataBase
+    text() :: return this.buffer().toString('utf-8')
+    base64() :: return this._body_
+    buffer() ::
+      let buf = this._body_buf_
+      if undefined === buf ::
+        buf = Buffer.from(this._body_, 'base64')
+        Object.defineProperty @ this, '_body_buf_', {value: buf}
+      return buf
+
+
+  const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
+    bind_linePacket @:
+      packBody, packBody64
+      PktData, PktJson
+
+  return @{}
+    fromObjLinePacket
+    unpackLinePacket
+    packLinePacket
+
 
 function packBody64(body) ::
   return asBuffer(body).toString('base64')

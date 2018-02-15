@@ -41,11 +41,24 @@ export class FabricHub ::
     return new klass.P2PRouter @ router
 
   createLocalRoute(router=this.router, id_route) ::
-    if null == id_route :: id_route = this._newRouteId()
+    if null == id_route :: id_route = this.newRouteId()
     const klass = this.constructor
     return new klass.TargetRouter @
       id_route, router
-  //_newRouteId() :: throw new Error @ `subclass responsiblity`
+
+  newRouteId() :: return this.data_utils.random(5, true).slice(0, 6)
+
+  /* data_utils is provided by router plugins
+
+  data_utils = @{}
+    parse_url(str) ::
+    random(n, asBase64) ::
+    pack_base64(data) ::
+    unpack_base64(str_b64) ::
+    decode_utf8(u8) ::
+    encode_utf8(str) ::
+
+  */
 
   newLocalRoute(privateRoute, id_route) ::
     const route = this.createLocalRoute(this.router, id_route)
@@ -55,14 +68,13 @@ export class FabricHub ::
 
   connect(conn_url) ::
     if 'string' === typeof conn_url ::
-      conn_url = this._parseConnectURL(conn_url)
+      conn_url = this.data_utils.parse_url(conn_url)
 
     const connect = this._connectByProtocol[conn_url.protocol]
     if ! connect ::
       throw new Error @ `Connection protocol "${conn_url.protocol}" not registered`
     return connect(conn_url)
 
-  _parseConnectURL(conn_url) :: return new URL(conn_url)
   registerProtocols(protocolList, cb_connect) ::
     if 'function' !== typeof cb_connect ::
       throw new TypeError @ `Expected 'cb_connect' function`
@@ -87,18 +99,18 @@ export class FabricHub ::
         .concat @ pluginFunctions
         .sort @ (a, b) => (0 | a.order) - (0 | b.order)
 
-    class FabricHub_PI extends this ::
-    Object.defineProperties @ FabricHub_PI.prototype, @{}
+    class FabricHub extends this ::
+    Object.defineProperties @ FabricHub.prototype, @{}
       pluginList: @{} value: pluginList
 
     class FabricRouter extends this.FabricRouter ::
     class TargetRouter extends this.TargetRouter ::
     class P2PRouter extends this.P2PRouter ::
-    Object.assign @ FabricHub_PI, @{}
+    Object.assign @ FabricHub, @{}
       FabricRouter, TargetRouter, P2PRouter
 
-    applyPlugins @ 'subclass', pluginList, FabricHub_PI
-    return FabricHub_PI
+    applyPlugins @ 'subclass', pluginList, FabricHub
+    return FabricHub
 
 
 const _hub_channel_ = @{}

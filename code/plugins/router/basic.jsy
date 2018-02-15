@@ -1,9 +1,0 @@
-export default function basic_router_plugin(plugin_options={}) ::
-  const _newRouteId = plugin_options.newRouteId || newRouteId
-  return @: order: -2, subclass(FabricHub_PI) ::
-    Object.assign @ FabricHub_PI.prototype, @{}
-      _newRouteId
-
-const max_id = parseInt('zzzzzz', 36)
-function newRouteId() ::
-  return (0 | Math.random() * max_id).toString(36)

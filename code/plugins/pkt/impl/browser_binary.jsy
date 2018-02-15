@@ -1,39 +1,46 @@
 import { PktJsonBase, PktDataBase, bind_binaryPacket } from './common.jsy'
-import { decode_utf8, encode_utf8, pack_base64, asArrayBuffer as packBody } from './browser_util.jsy'
+import { asArrayBuffer as packBody } from './browser_util.jsy'
 
-const PktJson = @{} __proto__: PktJsonBase
-  text() :: return decode_utf8 @ this._body_
+export default function({ decode_utf8, encode_utf8, pack_base64 }) ::
 
-const PktData = @{} __proto__: PktDataBase
-  text() :: return decode_utf8 @ this._body_
-  base64() :: return pack_base64 @ this._body_
-  buffer() :: return this._body_
+  const PktJson = @{} __proto__: PktJsonBase
+    text() :: return decode_utf8 @ this._body_
 
-
-export const {fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket} =
-  bind_binaryPacket @:
-    decode_utf8, packBody, packParts
-    PktData, PktJson
+  const PktData = @{} __proto__: PktDataBase
+    text() :: return decode_utf8 @ this._body_
+    base64() :: return pack_base64 @ this._body_
+    buffer() :: return this._body_
 
 
-function packParts(hdr, body) ::
-  return packLenPrefixU8 @ hdr, packBody(body)
+  const {fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket} =
+    bind_binaryPacket @:
+      decode_utf8, packBody, packParts
+      PktData, PktJson
 
-export function packLenPrefixU8(hdr, body) ::
-  hdr = encode_utf8(hdr)
-  const len0 = (2 + hdr.byteLength) | 0
-  const len = (len0 + body.byteLength) | 0
+  return @{}
+    fromObjBinaryPacket
+    unpackBinaryPacket
+    packBinaryPacket
 
-  if len > 0xffff || len < 4 ::
-    throw new Error @ `Packet malformed (${len} b)`
 
-  const u8 = new Uint8Array(len)
-  u8[0] = 0xff & len
-  u8[1] = 0xff & (len >>> 8)
+  function packParts(hdr, body) ::
+    return packLenPrefixU8 @ hdr, packBody(body)
 
-  u8.set @ hdr, 2
+  function packLenPrefixU8(hdr, body) ::
+    hdr = encode_utf8(hdr)
+    const len0 = (2 + hdr.byteLength) | 0
+    const len = (len0 + body.byteLength) | 0
 
-  if len0 !== len ::
-    u8.set @ new Uint8Array(body.buffer || body), len0
-  return u8
+    if len > 0xffff || len < 4 ::
+      throw new Error @ `Packet malformed (${len} b)`
+
+    const u8 = new Uint8Array(len)
+    u8[0] = 0xff & len
+    u8[1] = 0xff & (len >>> 8)
+
+    u8.set @ hdr, 2
+
+    if len0 !== len ::
+      u8.set @ new Uint8Array(body.buffer || body), len0
+    return u8
 

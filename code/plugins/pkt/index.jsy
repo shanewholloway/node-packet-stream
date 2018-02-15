@@ -1,29 +1,6 @@
 export * from './impl/common.jsy'
-export * from './impl/browser_util.jsy'
-export * from './impl/node_util.jsy'
 
-export @{}
-  unpackBinaryPacket as unpackBinaryPacket_browser
-  packBinaryPacket as packBinaryPacket_browser
-  fromObjBinaryPacket as fromObjBinaryPacket_browser
-from './impl/browser_binary.jsy'
-
-export @{}
-  unpackLinePacket as unpackLinePacket_browser
-  packLinePacket as packLinePacket_browser
-  fromObjLinePacket as fromObjLinePacket_browser
-from './impl/browser_line.jsy'
-
-
-export @{}
-  unpackBinaryPacket as unpackBinaryPacket_node
-  packBinaryPacket as packBinaryPacket_node
-  fromObjBinaryPacket as fromObjBinaryPacket_node
-from './impl/node_binary.jsy'
-
-export @{}
-  unpackLinePacket as unpackLinePacket_node
-  packLinePacket as packLinePacket_node
-  fromObjLinePacket as fromObjLinePacket_node
-from './impl/node_line.jsy'
-
+export {default as browser_binary} from './impl/browser_binary.jsy'
+export {default as browser_line} from './impl/browser_binary.jsy'
+export {default as node_binary} from './impl/node_binary.jsy'
+export {default as node_line} from './impl/node_binary.jsy'

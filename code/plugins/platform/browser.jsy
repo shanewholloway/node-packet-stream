@@ -1,0 +1,47 @@
+const _fromCharCode = String.fromCharCode
+const _charCodeAt = ''.charCodeAt
+
+export default function browser_platform_plugin(plugin_options={}) ::
+  return @: order: -9, subclass(FabricHub) ::
+
+    Object.assign @ FabricHub.prototype, @{}
+      data_utils
+
+    Object.assign @ FabricHub.TargetRouter.prototype, @{}
+      data_utils
+
+const data_utils = @{}
+  random, parse_url
+  pack_base64, unpack_base64
+  decode_utf8, encode_utf8
+
+function random(n, asBase64) ::
+  const ua = new Uint8Array(n)
+  window.crypto.getRandomValues(ua)
+  return asBase64 ? pack_base64(bytes.toString('base64')) : ua
+
+function parse_url(url) ::
+  return new URL(url)
+
+function pack_base64(data) ::
+  const u8 = new Uint8Array(data.buffer || data), len = u8.byteLength
+
+  let res=''
+  for (let i=0; i<len; i++)
+    res += _fromCharCode(u8[i])
+  return window.btoa(res)
+
+function unpack_base64(str_b64) ::
+  const sz = window.atob(str_b64), len = sz.length
+
+  const res = new Uint8Array(len)
+  for (let i=0; i<len; i++)
+    res[i] += _charCodeAt.call(sz, i)
+  return res
+
+function decode_utf8(u8) ::
+  return new TextDecoder().decode(u8)
+
+function encode_utf8(str) ::
+  return new TextEncoder().encode(str)
+

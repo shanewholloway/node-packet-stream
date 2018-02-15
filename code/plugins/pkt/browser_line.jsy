@@ -1,12 +1,18 @@
-import { fromObjLinePacket, unpackLinePacket, packLinePacket } from './impl/browser_line.jsy'
+import pkt_line from './impl/browser_line.jsy'
 
 const _pkts_ = @{}
   fromObjPacket: fromObjLinePacket
   fromObjLinePacket, unpackLinePacket, packLinePacket
 
 export default function browser_line_pkt_plugin() ::
-  return @: order: -3, post(hub) ::
-    Object.assign @ FabricHub_PI.prototype, @{}
-      _fromObjPacket: packets.fromObjPacket
-      _pkts_: packets
+  return @: order: -1, subclass(FabricHub) ::
+    const data_utils = FabricHub.prototype.data_utils
+
+    const _pkts_ = pkt_line(data_utils)
+    const _fromObjPacket =
+      _pkts_.fromObjPacket =
+        _pkts_.fromObjLinePacket
+
+    Object.assign @ FabricHub.prototype, @{}
+      _pkts_, _fromObjPacket
 

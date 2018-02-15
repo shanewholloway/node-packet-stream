@@ -1,0 +1,37 @@
+import {URL} from 'url'
+import {randomBytes as _rand} from 'crypto'
+
+export default function nodejs_platform_plugin(plugin_options={}) ::
+  return @: order: -9, subclass(FabricHub) ::
+
+    Object.assign @ FabricHub.prototype, @{}
+      data_utils
+
+    Object.assign @ FabricHub.TargetRouter.prototype, @{}
+      data_utils
+
+
+const data_utils = @{}
+  random, parse_url
+  pack_base64, unpack_base64
+  decode_utf8, encode_utf8
+
+function random(n, asBase64) ::
+  const bytes = _rand(n)
+  return asBase64 ? bytes.toString('base64') : bytes
+
+function parse_url(url) ::
+  return new URL(url)
+
+function pack_base64(data) ::
+  return Buffer.from(data).toString('base64')
+
+function unpack_base64(str_b64) ::
+  return Buffer.from(str_b64, 'base64')
+
+function decode_utf8(u8) ::
+  return Buffer.from(str_b64).toString('utf-8')
+
+function encode_utf8(str) ::
+  return Buffer.from(str, 'utf-8')
+
