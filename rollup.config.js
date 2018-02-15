@@ -22,7 +22,10 @@ function package_core() {
 
   return [
     { input: 'code/index.jsy',
-      output: { file: pkg.module, format: 'es', sourcemap },
+      output: [
+        { file: 'dist/esm/index.js', format: 'es', sourcemap },
+        { file: 'dist/cjs/index.js', format: 'cjs', sourcemap, exports: 'named' },
+      ],
       external, plugins },
 
     { input: 'code/index.nodejs.jsy',
@@ -30,112 +33,54 @@ function package_core() {
       external: ['crypto', 'url'], plugins },
 
     { input: 'code/index.browser.jsy',
-      output: { file: pkg.browser, name:'msg_fabric', format: 'umd', sourcemap },
+      output: { file: pkg.browser, name:'msg_fabric_core', format: 'umd', sourcemap },
       external, plugins: prod_plugins },
   ]}
 
 
 function package_plugin_pkt() {
-  return [
-    { input: 'code/plugins/pkt/index.jsy',
-      output: [
-        { file: `dist/plugin-pkt-all.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-pkt-all.mjs`, format: 'es', sourcemap },
-      ],
-      external:[], plugins },
+  const external = []
+  const bundles = {
+    'index': ['plugin-pkt-all', external],
+    'node': ['plugin-pkt-nodejs', external],
+    'browser': ['plugin-pkt-browser', external],
+    'browser_binary': ['plugin-pkt-browser-binary', external],
+    'browser_line': ['plugin-pkt-browser-line', external],
+  }
 
-    { input: 'code/plugins/pkt/node.jsy',
-      output: [
-        { file: `dist/plugin-pkt-nodejs.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-pkt-nodejs.mjs`, format: 'es', sourcemap },
-      ],
-      external:[], plugins },
-
-    { input: 'code/plugins/pkt/browser.jsy',
-      output: [
-        { file: `dist/plugin-pkt-browser.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-pkt-browser.mjs`, format: 'es', sourcemap },
-      ],
-      external:[], plugins },
-
-    { input: 'code/plugins/pkt/browser_binary.jsy',
-      output: [
-        { file: `dist/plugin-pkt-browser-binary.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-pkt-browser-binary.mjs`, format: 'es', sourcemap },
-      ],
-      external:[], plugins },
-
-    { input: 'code/plugins/pkt/browser_line.jsy',
-      output: [
-        { file: `dist/plugin-pkt-browser-line.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-pkt-browser-line.mjs`, format: 'es', sourcemap },
-      ],
-      external:[], plugins },
-  ]}
+  return Object.entries(bundles).map(bundleForPlugin('pkt')) }
 
 
 function package_plugin_net() {
-  return [
-    { input: 'code/plugins/net/index.jsy',
-      output: [
-        { file: `dist/plugin-net.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/plugin-net.mjs`, format: 'es', sourcemap },
-      ],
-      external:['net', 'tls', 'stream'], plugins },
+  const external=[], external_node=['crypto', 'url']
+  const bundles = {
+    'index': ['plugin-net-all', ['net', 'tls', 'stream']],
+    'tcp': ['plugin-tcp', ['net']],
+    'tls': ['plugin-tls', ['tls']],
+    'direct': ['plugin-direct', ['stream']],
+  }
 
-    { input: 'code/plugins/net/tcp.jsy',
-      output: [
-        { file: `dist/plugin-tcp.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-tcp.mjs`, format: 'es', sourcemap },
-      ],
-      external:['net'], plugins },
-
-    { input: 'code/plugins/net/tls.jsy',
-      output: [
-        { file: `dist/plugin-tls.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-tls.mjs`, format: 'es', sourcemap },
-      ],
-      external:['tls'], plugins },
-
-    { input: 'code/plugins/net/direct.jsy',
-      output: [
-        { file: `dist/plugin-direct.js`, format: 'cjs', sourcemap, exports: 'named'  },
-        { file: `dist/plugin-direct.mjs`, format: 'es', sourcemap },
-      ],
-      external:['stream'], plugins },
-  ]}
+  return Object.entries(bundles).map(bundleForPlugin('net')) }
 
 
 function package_plugin_router() {
-  const external = ['msg-fabric-packet-stream']
-  const external_node = external.concat(['crypto', 'url'])
-  return [
-    { input: 'code/plugins/router/index.jsy',
-      output: [
-        { file: `dist/plugin-router.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/plugin-router.mjs`, format: 'es', sourcemap },
-      ],
-      external: external_node, plugins },
+  const external=[], external_node=['crypto', 'url']
+  const bundles = {
+    'index': ['plugin-router', external_node],
+    'basic': ['plugin-router-basic', external],
+    'node': ['plugin-router-node', external_node],
+    'browser': ['plugin-router-browser', external],
+  }
 
-    { input: 'code/plugins/router/basic.jsy',
-      output: [
-        { file: `dist/plugin-router-basic.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/plugin-router-basic.mjs`, format: 'es', sourcemap },
-      ],
-      external, plugins },
+  return Object.entries(bundles).map(bundleForPlugin('router')) }
 
-    { input: 'code/plugins/router/node.jsy',
-      output: [
-        { file: `dist/plugin-router-node.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/plugin-router-node.mjs`, format: 'es', sourcemap },
-      ],
-      external: external_node, plugins },
 
-    { input: 'code/plugins/router/browser.jsy',
-      output: [
-        { file: `dist/plugin-router-browser.js`, format: 'cjs', sourcemap, exports: 'named' },
-        { file: `dist/plugin-router-browser.mjs`, format: 'es', sourcemap },
-      ],
-      external, plugins },
-  ]}
 
+function bundleForPlugin(plugin_name) {
+  return ([name, [out, external]]) => (
+    { input: `code/plugins/${plugin_name}/${name}.jsy`,
+      output: [
+        { file: `dist/cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `dist/esm/${out}.js`, format: 'es', sourcemap },
+      ],
+      external, plugins } )}

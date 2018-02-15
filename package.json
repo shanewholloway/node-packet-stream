@@ -30,16 +30,16 @@
     "test/"
   ],
   "main": "dist/index.js",
-  "module": "dist/msg-fabric-core.mjs",
-  "browser": "dist/msg-fabric-core.umd.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/umd/msg-fabric-core.js",
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-jsy": "^0.10.1",
-    "rollup": "^0.55.5",
+    "rollup": "^0.56.0",
     "rollup-plugin-jsy-babel": "^1.0.1",
     "rollup-plugin-uglify": "^3.0.0",
-    "uglify-es": "^3.3.9"
+    "uglify-es": "^3.3.10"
   },
   "babel": {
     "presets": "jsy/lean"
