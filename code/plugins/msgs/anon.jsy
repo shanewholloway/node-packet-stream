@@ -1,0 +1,30 @@
+import {as_source_id, as_reply_id, bind_msg_api} from './base.jsy'
+import {anon_source_ops_api, anon_reply_ops_api} from './framing.jsy'
+
+export default msg_anon_api
+export function msg_anon_api(hub, shared) ::
+  const { chan } = shared
+
+  shared.anon_api = anon_api
+  return anon_api
+
+
+  function anon_api(to_id, pkt_op) ::
+    const [id_route, id_target] = null !== to_id
+      ? as_source_id(to_id) : as_reply_id(pkt_op)
+
+    if null == id_target || null == id_route ::
+      throw new Error @ `Invalid id`
+
+    const op_api = null == pkt_op
+      ? anon_source_ops_api({})
+      : anon_reply_ops_api({})
+
+    if null == pkt_op ::
+      console.dir @ {anon_src: op_api}, @{} colors: true
+    else console.dir @ {anon_reply: op_api}, @{} colors: true
+
+    return bind_msg_api @:
+      chan, op_api
+      id_route, id_target
+      anon() :: return this

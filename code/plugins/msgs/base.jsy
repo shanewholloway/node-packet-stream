@@ -1,0 +1,69 @@
+export const sym_sampi = '\u03E0' // 'Ϡ'
+
+
+export function as_source_id(id) ::
+  return 'string' === typeof id ? id.split(' ', 2)
+    : 'string' === typeof id[sym_sampi] ? id[sym_sampi].split(' ', 2)
+    : @[] id.id_route, id.id_target
+
+export function as_reply_id(id) ::
+  return 'string' === typeof id ? id.split(' ', 2)
+    : 'string' === typeof id[sym_sampi] ? id[sym_sampi].split(' ', 2)
+    : @[] id.from_route, id.from_target
+
+
+const anon_ctx = @{}
+  newToken() :: return 'todo'
+  responseFor() :: return null
+
+export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
+  const {p_datagram, p_direct, p_multipart, p_stream} = op_api
+  ctx = anon_ctx
+  return Object.assign @ send
+    @{} send, post, stream, anon, toJSON
+
+  function toJSON() ::
+    return @{} [sym_sampi]: `${id_route} ${id_target}`
+
+  function post(body) ::
+    const obj = @{} id_route, id_target, body
+    const pkt = p_datagram @ obj
+    chan.send(pkt)
+
+  function send(body) ::
+    return post(body)
+    throw new Error @ "TODO"
+    const token = ctx.newToken()
+    const response = ctx.responseFor(token)
+
+    // TODO: choose between p_direct and p_multipart
+    const obj = @{} id_route, id_target, body
+    try ::
+      const pkt = p_direct @ obj, {token}
+      chan.send(pkt)
+    catch err ::
+      console.error @ err
+      console.dir @ p_direct, @{} colors: true
+
+    return response
+
+  function stream() ::
+    throw new Error @ "TODO"
+    let seq = 1
+    const token = ctx.newToken()
+    const self = @{} write, end
+      response: ctx.responseFor(token)
+    return self
+
+    function write(body) ::
+      const obj = @{} id_route, id_target, body
+      const pkt = p_stream @ obj, {seq: seq++}
+      chan.send(pkt)
+      return self
+
+    function end(body) ::
+      seq = -seq
+      write(body)
+      seq = null
+      return self
+

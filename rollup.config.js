@@ -14,6 +14,7 @@ export default [].concat(
   package_plugin_platform(),
   package_plugin_pkt(),
   package_plugin_net(),
+  package_plugin_msgs()
 )
 
 
@@ -51,6 +52,17 @@ function package_plugin_pkt() {
   return Object.entries(bundles).map(bundleForPlugin('pkt')) }
 
 
+function package_plugin_platform() {
+  const external=[], external_node=['crypto', 'url']
+  const bundles = {
+    'index': ['plugin-platform-all', external_node],
+    'node': ['plugin-platform-node', external_node],
+    'browser': ['plugin-platform-browser', external],
+  }
+
+  return Object.entries(bundles).map(bundleForPlugin('platform')) }
+
+
 function package_plugin_net() {
   const external=[], external_node=['crypto', 'url']
   const bundles = {
@@ -63,15 +75,13 @@ function package_plugin_net() {
   return Object.entries(bundles).map(bundleForPlugin('net')) }
 
 
-function package_plugin_platform() {
-  const external=[], external_node=['crypto', 'url']
+function package_plugin_msgs() {
+  const external=[]
   const bundles = {
-    'index': ['plugin-platform-all', external_node],
-    'node': ['plugin-platform-node', external_node],
-    'browser': ['plugin-platform-browser', external],
+    'index': ['plugin-msgs', external],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('platform')) }
+  return Object.entries(bundles).map(bundleForPlugin('msgs')) }
 
 
 

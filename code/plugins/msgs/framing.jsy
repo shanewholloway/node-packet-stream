@@ -1,0 +1,153 @@
+const b16_unpack = v => parseInt(v, 16)|0
+const b16_pack = v => (v|0).toString(16)
+const is_defined = (attr, v) => ::
+  if undefined === v :: throw new Error(attr)
+  return v
+
+
+const f_msgid = @{} attr: 'msgid'
+  unpack: (v, opo) => :: opo.msgid = v
+  pack: opo => is_defined @ 'msgid', opo.msgid
+
+const f_token = @{} attr: 'token'
+  unpack: (v, opo) => :: opo.token = v
+  pack: opo => is_defined @ 'token', opo.token
+
+const f_from_route = @{} attr: 'from_route'
+  unpack: (v, opo) => :: opo.from_route = v
+  pack: opo => is_defined @ 'from_route', opo.from_route
+
+const f_from_target = @{} attr: 'from_target'
+  unpack: (v, opo) => :: opo.from_target = v
+  pack: opo => is_defined @ 'from_target', opo.from_target
+
+const f_seq = @{} attr: 'seq'
+  unpack: (v, opo) => :: opo.seq = b16_unpack @ v
+  pack: opo => b16_pack @ is_defined @ 'seq', opo.seq
+
+const f_ackseq = @{} attr: 'ackseq'
+  unpack: (v, opo) => :: opo.ackseq = b16_unpack @ v
+  pack: opo => b16_pack @ is_defined @ 'ackseq', opo.ackseq
+
+
+function as_op(transport, op_key, frames) ::
+  frames.unshift @: attr: 'op_key'
+    unpack: (v, opo) => :: opo.transport = transport
+    pack: opo => op_key
+
+  const f_pack = frames.map @ f => f.pack.bind(f)
+  const pack = _as_pack_fn[frames.length] @ ... f_pack
+
+  const f_unpack = frames.map @ f => f.unpack.bind(f)
+  const unpack = _as_unpack_fn[frames.length] @ ... f_unpack
+
+  return @{} transport, op_key
+    attrs: frames.map @ f => f.attr
+    pack, unpack, bind
+
+  function bind(opo0) ::
+    return (obj, opo) => ::
+      obj.op = pack @ Object.assign @ {}, opo0, opo
+      //console.log @ 'PACK', obj.op
+      return obj
+
+
+// unroll looping over the functions
+const _as_pack_fn = @[]
+  () => opo => @#
+  (f0) => opo => @# f0(opo)
+  (f0, f1) => opo => @# f0(opo), f1(opo)
+  (f0, f1, f2) => opo => @# f0(opo), f1(opo), f2(opo)
+  (f0, f1, f2, f3) => opo => @# f0(opo), f1(opo), f2(opo), f3(opo)
+  (f0, f1, f2, f3, f4) => opo => @# f0(opo), f1(opo), f2(opo), f3(opo), f4(opo)
+
+// unroll looping over the functions
+const _as_unpack_fn = @[]
+  () => op => @ op
+  (f0) => op => @ f0(op[0], op), op
+  (f0, f1) => op => @ f0(op[0], op), f1(op[1], op), op
+  (f0, f1, f2) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), op
+  (f0, f1, f2, f3) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), f3(op[3], op), op
+  (f0, f1, f2, f3, f4) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), f3(op[3], op), f4(op[4], op), op
+
+
+
+const p_datagram = 'p_datagram'
+const p_direct = 'p_direct'
+const p_multipart = 'p_multipart'
+const p_stream ='p_stream'
+export const all_ops = @[]
+  // datagram:
+  as_op @ p_datagram, '-', @#
+  as_op @ p_datagram, '@', @# f_from_route, f_from_target
+
+  // direct: 
+  as_op @ p_direct, 'E', @# f_token
+  as_op @ p_direct, 'e', @# f_msgid
+  //as_op @ p_direct, 'f', @# f_msgid, f_ackseq
+  as_op @ p_direct, 'D', @# f_from_route, f_from_target, f_token
+  as_op @ p_direct, 'd', @# f_from_route, f_from_target, f_msgid
+
+  // multipart:
+  as_op @ p_multipart, 'U', @# f_token, f_seq
+  //as_op @ p_multipart, 'u', @# f_msgid, f_seq, f_ackseq
+  as_op @ p_multipart, 'T', @# f_from_route, f_from_target, f_token, f_seq
+  //as_op @ p_multipart, 't', @# f_from_route, f_from_target, f_msgid, f_ackseq
+
+  // streaming:
+  as_op @ p_stream, 'R', @# f_token, f_seq
+  //as_op @ p_stream, 'r', @# f_msgid, f_seq, f_ackseq
+  as_op @ p_stream, 'S', @# f_from_route, f_from_target, f_token, f_seq
+  //as_op @ p_stream, 's', @# f_from_route, f_from_target, f_msgid, f_ackseq
+
+
+const op_unpack_table = @{} '': ident, ' ': ident
+all_ops.forEach @ op => :: op_unpack_table[op.op_key] = op.unpack
+
+
+function ident(op) :: return op
+export function op_unpack(pkt) ::
+  const op = pkt.op()
+  const unpack = op_unpack_table[op[0]] || ident
+  return unpack(op)
+
+
+
+function as_bindable(...ops_list) ::
+  ops_list = [].concat @ ...ops_list
+  return opo0 => ::
+    const api = {}
+    for const op of ops_list ::
+      const fn = op.bind(opo0)
+      fn.op = op.op_key
+      api[op.transport] = fn
+    return api
+
+const find_ops = ({has, sans}) => all_ops.filter @ op => @
+     @ !has  || has .split(' ').every @ a => op.attrs.includes @ a
+  && @ !sans || sans.split(' ').every @ a => ! op.attrs.includes @ a
+
+
+
+const basic_from_ops = find_ops @: has: 'from_route', sans: 'token msgid'
+
+export const source_ops_api = as_bindable @
+  basic_from_ops
+  find_ops @: has: 'from_route', sans: 'msgid'
+
+export const reply_ops_api = as_bindable @
+  basic_from_ops
+  find_ops @: has: 'from_route msgid'
+
+
+
+const basic_anon_ops = find_ops @: sans: 'from_route token msgid'
+
+export const anon_source_ops_api = as_bindable @
+  basic_anon_ops
+  find_ops @: sans: 'from_route msgid'
+
+export const anon_reply_ops_api = as_bindable @
+  basic_anon_ops
+  find_ops @: has: 'msgid', sans: 'from_route'
+

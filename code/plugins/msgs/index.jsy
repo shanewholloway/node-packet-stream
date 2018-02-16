@@ -1,0 +1,15 @@
+import anon_api from './anon.jsy'
+import source_api from './source.jsy'
+import sendFrom_api from './reply.jsy'
+
+export default function msgs_plugin() ::
+  return function (hub) ::
+    const shared = @{} chan: hub
+
+    const anon = anon_api(hub, shared)
+    sendFrom_api(hub, shared)
+    const src = source_api(hub, shared)
+
+    return hub.msgs = @{}
+      to(id) :: return anon(id, null)
+      as(id) :: return src(id)

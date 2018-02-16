@@ -1,0 +1,60 @@
+import {TestDirectHub as Hub} from './_setup.jsy'
+
+function addTarget(hub, id_target, api) ::
+  const {id_route} = hub.local
+  console.log()
+  console.log @ 'create', @{} id_route, id_target
+  const tgt = hub.msgs.as({id_route, id_target})
+
+  hub.local.registerTarget(id_target, on_msg)
+  if api.on_init ::
+    Promise.resolve().then @=> api.on_init(tgt)
+
+  return tgt.toJSON()
+
+  function on_msg(pkt) ::
+    console.log()
+    console.log @ `"${id_target}" recieved packet`, pkt
+    console.dir @ pkt.json(), {colors:true}
+
+    tgt._recv_(pkt)
+    console.log()
+
+    if null != api.on_msg ::
+      api.on_msg(pkt)
+
+
+
+const hub = Hub.create('hub')
+
+
+const apple = addTarget @ hub, 'apple', @{}
+  on_init(tgt) ::
+    console.log @ 'init apple' //, tgt, orange
+    tgt.to(orange).send @:
+      msg: 'hello from Apple'
+
+  on_msg(pkt) ::
+    console.log()
+    console.log @ 'apple got', pkt, pkt.json()
+
+    if pkt.anon ::
+      pkt.anon.send @:
+        msg: 'zoiks!'
+    else ::
+      console.log @ 'no reply available', pkt, pkt.op()
+
+
+const orange = addTarget @ hub, 'orange', @{}
+  on_init(tgt) ::
+    console.log @ 'init orange' //, tgt, apple
+
+  on_msg(pkt) ::
+    console.log @ 'orange got', pkt, pkt.json()
+
+    if pkt.anon ::
+      pkt.anon.send @:
+        msg: 'back at ya!'
+    else ::
+      console.log @ 'no reply available', pkt, pkt.op()
+

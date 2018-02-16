@@ -23,6 +23,7 @@
     "passing"
   ],
   "files": [
+    "dist/",
     "cjs/",
     "esm/",
     "umd/"

@@ -7,9 +7,9 @@ Object.assign @ global, @:
 
 import BasicHub from '../dist/index.js'
 
-import tcp from '../cjs/plugin-tcp'
-import tls from '../cjs/plugin-tls'
-import direct from '../cjs/plugin-direct'
+import tcp from '../esm/plugin-tcp'
+import tls from '../esm/plugin-tls'
+import direct from '../esm/plugin-direct'
 
 
 export const TestDirectHub = BasicHub.plugin @ direct()
