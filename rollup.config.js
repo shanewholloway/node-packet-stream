@@ -78,7 +78,8 @@ function package_plugin_net() {
 function package_plugin_msgs() {
   const external=[]
   const bundles = {
-    'index': ['plugin-msgs', external],
+    'index': ['plugin-msgs-all', external],
+    'plugin': ['plugin-msgs', external],
   }
 
   return Object.entries(bundles).map(bundleForPlugin('msgs')) }
