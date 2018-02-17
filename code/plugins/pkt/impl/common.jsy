@@ -3,7 +3,6 @@ export const PktBase = @{}
   is_pkt: true
   get id_route() :: return this._hdr_[0]
   get id_target() :: return this._hdr_[1]
-  op() :: return this._hdr_.slice(2)
 
   inspect() :: return `«pkt ${this.pkt_kind} ${JSON.stringify(this._hdr_.join(' '))}»`
   json(reviver) :: return JSON.parse @ this.text(), reviver
@@ -33,7 +32,7 @@ export function as_hdr({id_route, id_target, op}) ::
 
 export function as_pkt0(hdr, body, aPktBase) ::
   return Object.create @ aPktBase, @{}
-    _hdr_: @{} value: Object.freeze @ hdr.replace('\f','').split(/\s/)
+    _hdr_: @{} value: hdr.replace('\f','').split(/\s/)
     _body_: @{} value: body
 
 export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::

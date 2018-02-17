@@ -1,15 +1,54 @@
+import {deferred, timeoutReaper} from './util.jsy'
+
 import anon_api from './anon.jsy'
 import source_api from './source.jsy'
 import sendFrom_api from './reply.jsy'
 
+
 export default function msgs_plugin() ::
   return function (hub) ::
-    const shared = @{} chan: hub
+    const { random } = hub.data_utils
+    return hub.msgs = Object.assign @ msgs, msgs({})
 
-    const anon = anon_api(hub, shared)
-    sendFrom_api(hub, shared)
-    const src = source_api(hub, shared)
+    function msgs(options) ::
+      const tokenLen = Math.max @ 1, 0 | options.tokenLen
+      const expire = timeoutReaper @ options.timeout || 5000
+      const newToken = () => random(tokenLen, true)
+      const createContext = bindCreateContext(newToken, expire)
 
-    return hub.msgs = @{}
-      to(id) :: return anon(id, null)
-      as(id) :: return src(id)
+      const shared = @{}
+        chan: hub, newToken, createContext
+
+      const anon = anon_api(hub, shared)
+      sendFrom_api(hub, shared)
+      const src = source_api(hub, shared)
+
+      return @{}
+        to(id) :: return anon(id, null)
+        as(id) :: return src(id)
+
+
+function bindCreateContext(newToken, expire) ::
+  return () => ::
+    let db = new Map()
+    return @{} newToken
+      responseFor(token) ::
+        const d = deferred()
+        db.set @ token, d
+
+        expire @ d.reject
+        const remove = @=> db.delete(token)
+        d.promise.then @ remove, remove
+        return d.promise
+
+      on_response(token, response) ::
+        let d = db.get(token)
+        if undefined === d ::
+          d = db0.get(token)
+          if undefined === d ::
+            return
+          db0.delete(token)
+        else db.delete(token)
+
+        d.resolve(response)
+

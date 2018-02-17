@@ -1,5 +1,5 @@
 import {URL} from 'url'
-import {randomBytes as _rand} from 'crypto'
+import {randomBytes} from 'crypto'
 
 export default function nodejs_platform_plugin(plugin_options={}) ::
   return @: order: -9, subclass(FabricHub) ::
@@ -17,7 +17,7 @@ const data_utils = @{}
   decode_utf8, encode_utf8
 
 function random(n, asBase64) ::
-  const bytes = _rand(n)
+  const bytes = randomBytes(n)
   return asBase64 ? bytes.toString('base64') : bytes
 
 function parse_url(url) ::

@@ -3,18 +3,20 @@ import {op_unpack} from './framing.jsy'
 
 export default msg_source_api
 export function msg_source_api(hub, shared) ::
-  const { sendFrom_api, anon_api } = shared
+  const { createContext, sendFrom_api, anon_api } = shared
 
   shared.source_api = source_api
   return source_api
 
-
-  function source_api(src_id) ::
+  function source_api(src_id, ctx) ::
     const [from_route, from_target] = as_source_id(src_id)
     if null == from_route || null == from_target ::
       throw new Error @ 'Valid target and route required'
 
-    let ctx = null // TODO: setup token/msgid store
+    if null == ctx ::
+      ctx = createContext()
+    else if 'function' === typeof ctx ::
+      ctx = ctx(createContext)
 
     return @{} _recv_
       toJSON() :: return @{} [sym_sampi]: `${from_route} ${from_target}`
@@ -34,7 +36,14 @@ export function msg_source_api(hub, shared) ::
           anon_api @ null, pkt_op
 
         Object.defineProperties @ pkt, @{}
+          has_reply: {value: true}
           reply: {get: reply}
           anon: {get: anon}
+
+      if undefined !== pkt_op.msgid ::
+        Object.defineProperties @ pkt, @{}
+          resolveWith: @{} value(ans)::
+            ctx.on_response @ pkt_op.msgid, ans
+
       return pkt
 

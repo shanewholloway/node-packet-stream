@@ -6,34 +6,34 @@ const is_defined = (attr, v) => ::
 
 
 const f_msgid = @{} attr: 'msgid'
-  unpack: (v, opo) => :: opo.msgid = v
-  pack: opo => is_defined @ 'msgid', opo.msgid
+  unpack: (v, hdr) => :: hdr.msgid = v
+  pack: hdr => is_defined @ 'msgid', hdr.msgid
 
 const f_token = @{} attr: 'token'
-  unpack: (v, opo) => :: opo.token = v
-  pack: opo => is_defined @ 'token', opo.token
+  unpack: (v, hdr) => :: hdr.token = v
+  pack: hdr => is_defined @ 'token', hdr.token
 
 const f_from_route = @{} attr: 'from_route'
-  unpack: (v, opo) => :: opo.from_route = v
-  pack: opo => is_defined @ 'from_route', opo.from_route
+  unpack: (v, hdr) => :: hdr.from_route = v
+  pack: hdr => is_defined @ 'from_route', hdr.from_route
 
 const f_from_target = @{} attr: 'from_target'
-  unpack: (v, opo) => :: opo.from_target = v
-  pack: opo => is_defined @ 'from_target', opo.from_target
+  unpack: (v, hdr) => :: hdr.from_target = v
+  pack: hdr => is_defined @ 'from_target', hdr.from_target
 
 const f_seq = @{} attr: 'seq'
-  unpack: (v, opo) => :: opo.seq = b16_unpack @ v
-  pack: opo => b16_pack @ is_defined @ 'seq', opo.seq
+  unpack: (v, hdr) => :: hdr.seq = b16_unpack @ v
+  pack: hdr => b16_pack @ is_defined @ 'seq', hdr.seq
 
 const f_ackseq = @{} attr: 'ackseq'
-  unpack: (v, opo) => :: opo.ackseq = b16_unpack @ v
-  pack: opo => b16_pack @ is_defined @ 'ackseq', opo.ackseq
+  unpack: (v, hdr) => :: hdr.ackseq = b16_unpack @ v
+  pack: hdr => b16_pack @ is_defined @ 'ackseq', hdr.ackseq
 
 
 function as_op(transport, op_key, frames) ::
   frames.unshift @: attr: 'op_key'
-    unpack: (v, opo) => :: opo.transport = transport
-    pack: opo => op_key
+    unpack: (v, hdr) => :: hdr.transport = transport
+    pack: hdr => op_key
 
   const f_pack = frames.map @ f => f.pack.bind(f)
   const pack = _as_pack_fn[frames.length] @ ... f_pack
@@ -46,29 +46,28 @@ function as_op(transport, op_key, frames) ::
     pack, unpack, bind
 
   function bind(opo0) ::
-    return (obj, opo) => ::
-      obj.op = pack @ Object.assign @ {}, opo0, opo
-      //console.log @ 'PACK', obj.op
+    return (obj, hdr) => ::
+      obj.op = pack @ Object.assign @ {}, opo0, hdr
       return obj
 
 
 // unroll looping over the functions
 const _as_pack_fn = @[]
-  () => opo => @#
-  (f0) => opo => @# f0(opo)
-  (f0, f1) => opo => @# f0(opo), f1(opo)
-  (f0, f1, f2) => opo => @# f0(opo), f1(opo), f2(opo)
-  (f0, f1, f2, f3) => opo => @# f0(opo), f1(opo), f2(opo), f3(opo)
-  (f0, f1, f2, f3, f4) => opo => @# f0(opo), f1(opo), f2(opo), f3(opo), f4(opo)
+  () => hdr => @#
+  (f0) => hdr => @# f0(hdr)
+  (f0, f1) => hdr => @# f0(hdr), f1(hdr)
+  (f0, f1, f2) => hdr => @# f0(hdr), f1(hdr), f2(hdr)
+  (f0, f1, f2, f3) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr)
+  (f0, f1, f2, f3, f4) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr), f4(hdr)
 
 // unroll looping over the functions
 const _as_unpack_fn = @[]
-  () => op => @ op
-  (f0) => op => @ f0(op[0], op), op
-  (f0, f1) => op => @ f0(op[0], op), f1(op[1], op), op
-  (f0, f1, f2) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), op
-  (f0, f1, f2, f3) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), f3(op[3], op), op
-  (f0, f1, f2, f3, f4) => op => @ f0(op[0], op), f1(op[1], op), f2(op[2], op), f3(op[3], op), f4(op[4], op), op
+  () => (hdr, op) => @ op
+  (f0) => (hdr, op) => @ f0(hdr[2], op), op
+  (f0, f1) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), op
+  (f0, f1, f2) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), op
+  (f0, f1, f2, f3) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), op
+  (f0, f1, f2, f3, f4) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), f4(hdr[6], op), op
 
 
 
@@ -107,9 +106,10 @@ all_ops.forEach @ op => :: op_unpack_table[op.op_key] = op.unpack
 
 function ident(op) :: return op
 export function op_unpack(pkt) ::
-  const op = pkt.op()
-  const unpack = op_unpack_table[op[0]] || ident
-  return unpack(op)
+  const hdr = pkt._hdr_, op = hdr.op = {}
+  const unpack = op_unpack_table[hdr[2]] || ident
+  unpack(hdr, op)
+  return op
 
 
 

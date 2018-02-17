@@ -12,13 +12,8 @@ export function as_reply_id(id) ::
     : @[] id.from_route, id.from_target
 
 
-const anon_ctx = @{}
-  newToken() :: return 'todo'
-  responseFor() :: return null
-
 export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
   const {p_datagram, p_direct, p_multipart, p_stream} = op_api
-  ctx = anon_ctx
   return Object.assign @ send
     @{} send, post, stream, anon, toJSON
 
@@ -31,19 +26,13 @@ export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
     chan.send(pkt)
 
   function send(body) ::
-    return post(body)
-    throw new Error @ "TODO"
     const token = ctx.newToken()
     const response = ctx.responseFor(token)
 
     // TODO: choose between p_direct and p_multipart
     const obj = @{} id_route, id_target, body
-    try ::
-      const pkt = p_direct @ obj, {token}
-      chan.send(pkt)
-    catch err ::
-      console.error @ err
-      console.dir @ p_direct, @{} colors: true
+    const pkt = p_direct @ obj, {token}
+    chan.send(pkt)
 
     return response
 

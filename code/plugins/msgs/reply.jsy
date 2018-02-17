@@ -16,9 +16,9 @@ export function msg_sendFrom_api(hub, shared) ::
     if null == id_route || null == id_target ::
       throw new Error @ `Invalid id`
 
-    const op_api = null == pkt_op
-      ? source_ops_api @: from_route, from_target
-      : reply_ops_api @: from_route, from_target
+    const op_api = null != pkt_op && pkt_op.token
+      ? reply_ops_api @: from_route, from_target, msgid: pkt_op.token
+      : source_ops_api @: from_route, from_target
 
     return bind_msg_api @:
       chan, op_api, ctx

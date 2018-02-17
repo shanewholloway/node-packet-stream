@@ -8,20 +8,18 @@ function addTarget(hub, id_target, api) ::
 
   hub.local.registerTarget(id_target, on_msg)
   if api.on_init ::
-    Promise.resolve().then @=> api.on_init(tgt)
+    Promise.resolve()
+      .then @=> api.on_init(tgt)
+      .catch @ console.error
 
   return tgt.toJSON()
 
   function on_msg(pkt) ::
-    console.log()
-    console.log @ `"${id_target}" recieved packet`, pkt
-    console.dir @ pkt.json(), {colors:true}
-
     tgt._recv_(pkt)
-    console.log()
 
     if null != api.on_msg ::
       api.on_msg(pkt)
+        .catch @ console.error
 
 
 
@@ -29,32 +27,37 @@ const hub = Hub.create('hub')
 
 
 const apple = addTarget @ hub, 'apple', @{}
-  on_init(tgt) ::
+  async on_init(tgt) ::
     console.log @ 'init apple' //, tgt, orange
-    tgt.to(orange).send @:
+    const res = tgt.to(orange).send @:
       msg: 'hello from Apple'
 
-  on_msg(pkt) ::
+    console.log @ 'res?', res
+    console.log @ 'await res:', await res
+
+  async on_msg(pkt) ::
     console.log()
     console.log @ 'apple got', pkt, pkt.json()
 
-    if pkt.anon ::
+    if pkt.has_reply ::
       pkt.anon.send @:
         msg: 'zoiks!'
     else ::
-      console.log @ 'no reply available', pkt, pkt.op()
+      console.log @ 'no reply available', pkt, pkt._hdr_.op
 
 
 const orange = addTarget @ hub, 'orange', @{}
-  on_init(tgt) ::
+  async on_init(tgt) ::
     console.log @ 'init orange' //, tgt, apple
 
-  on_msg(pkt) ::
+  async on_msg(pkt) ::
     console.log @ 'orange got', pkt, pkt.json()
 
-    if pkt.anon ::
-      pkt.anon.send @:
+    if pkt.has_reply ::
+      const res = pkt.reply.send @:
         msg: 'back at ya!'
+      console.log @ 'orange replyed', res
+      console.log @ 'orange replyed:', await res
     else ::
-      console.log @ 'no reply available', pkt, pkt.op()
+      console.log @ 'no reply available', pkt, pkt._hdr_.op
 
