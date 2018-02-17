@@ -14,6 +14,7 @@ const data_utils = @{}
   random, parse_url
   pack_base64, unpack_base64
   decode_utf8, encode_utf8
+  as_data, concat_data
 
 function random(n, asBase64) ::
   const ua = new Uint8Array(n)
@@ -44,4 +45,22 @@ function decode_utf8(u8) ::
 
 function encode_utf8(str) ::
   return new TextEncoder().encode(str)
+
+function as_data(data) ::
+  if null === data ::
+    return new ArrayBuffer(0)
+  return 'string' === typeof data
+    ? encode_utf8(data)
+    : new ArrayBuffer(data)
+
+function concat_data(parts) ::
+  let i=0, len=0
+  for const b of parts ::
+    len += b.byteLength
+
+  const ua = new Uint8Array(len)
+  for const b of parts ::
+    ua.set @ new Uint8Array(b.buffer || b), i
+    i += b.byteLength
+  return ua
 

@@ -15,6 +15,7 @@ const data_utils = @{}
   random, parse_url
   pack_base64, unpack_base64
   decode_utf8, encode_utf8
+  as_data, concat_data
 
 function random(n, asBase64) ::
   const bytes = randomBytes(n)
@@ -34,4 +35,12 @@ function decode_utf8(u8) ::
 
 function encode_utf8(str) ::
   return Buffer.from(str, 'utf-8')
+
+function as_data(data) ::
+  if null === data ::
+    return Buffer([])
+  return Buffer.from(data)
+
+function concat_data(parts) ::
+  return Buffer.concat(parts)
 
