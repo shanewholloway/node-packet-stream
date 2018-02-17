@@ -40,12 +40,7 @@ export function bind_createContext(newToken, expire) ::
 
 
 export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
-  return @{} __proto__: null
-
-    toJSON(obj={}) ::
-      obj[sym_sampi] = `${id_route} ${id_target}`
-      return obj
-
+  return @{} __proto__: null, anon
     post(body) ::
       const obj = @{} id_route, id_target, body
 
@@ -64,23 +59,29 @@ export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
 
       return response
 
-    stream() ::
-      throw new Error @ "TODO"
-      let seq = 1
-      const token = ctx.newToken()
-      const self = @{} write, end
-        response: ctx.responseFor(token)
+    multipart() :: return wstreamop_api.multipart
+    stream() :: return wstreamop_api.stream
+
+    toJSON(obj={}) ::
+      obj[sym_sampi] = `${id_route} ${id_target}`
+      return obj
+
+  function wstream(op_method) ::
+    let seq = 1
+    const token = ctx.newToken()
+    const self = @{} write, end
+      response: ctx.responseFor(token)
+    return self
+
+    function write(body) ::
+      const obj = @{} id_route, id_target, body
+      const pkt = op_method @ obj, {seq: seq++}
+      chan.send(pkt)
       return self
 
-      function write(body) ::
-        const obj = @{} id_route, id_target, body
-        const pkt = op_api.stream @ obj, {seq: seq++}
-        chan.send(pkt)
-        return self
-
-      function end(body) ::
-        seq = -seq
-        write(body)
-        seq = null
-        return self
+    function end(body) ::
+      seq = -seq
+      write(body)
+      seq = null
+      return self
 

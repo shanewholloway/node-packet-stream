@@ -1,13 +1,11 @@
-import {sym_sampi, as_source_id, as_reply_id} from './base.jsy'
+import {sym_sampi, as_source_id} from './base.jsy'
 
 export default msg_source_api
 export function msg_source_api(shared) ::
   const { op_unpack, createContext, sendFrom_api, anon_api } = shared
 
-  shared.source_api = source_api
-  return source_api
+  return shared.source_api = (src_id, ctx) => ::
 
-  function source_api(src_id, ctx) ::
     const [from_route, from_target] = as_source_id(src_id)
     if null == from_route || null == from_target ::
       throw new Error @ 'Valid target and route required'

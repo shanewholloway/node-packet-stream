@@ -1,17 +1,14 @@
-import {as_source_id, as_reply_id, bind_msg_api} from './base.jsy'
+import {as_source_id, as_reply_id} from './base.jsy'
 
 export default msg_anon_api
 export function msg_anon_api(shared) ::
-  const { chan, newToken } = shared
+  const { chan, newToken, bind_msg_api } = shared
   const { source_ops, reply_ops } = shared.ops_api.anon
 
-  const anon_ctx = @{} newToken, responseFor(){}
+  const anon_ctx = @{} newToken, responseFor() {}, on_response() {}
 
-  shared.anon_api = anon_api
-  return anon_api
+  return shared.anon_api = (to_id, pkt_op) => ::
 
-
-  function anon_api(to_id, pkt_op) ::
     const [id_route, id_target] = null !== to_id
       ? as_source_id(to_id) : as_reply_id(pkt_op)
 
@@ -26,3 +23,4 @@ export function msg_anon_api(shared) ::
       chan, op_api, ctx: anon_ctx
       id_route, id_target
       anon() :: return this
+

@@ -1,5 +1,5 @@
 import {timeoutReaper} from './util.jsy'
-import {bind_createContext} from './base.jsy'
+import {bind_createContext, bind_msg_api} from './base.jsy'
 
 import framing_api from './framing.jsy'
 import anon_api from './anon.jsy'
@@ -16,10 +16,11 @@ export default function msgs_plugin() ::
       const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
       const expire = timeoutReaper @ options.timeout || 5000
       const newToken = () => random(tokenLen, true)
-      const createContext = bind_createContext(newToken, expire)
 
       const shared = @{}
-        chan: hub, newToken, createContext
+        chan: hub, newToken, expire
+        createContext: bind_createContext(newToken, expire)
+        bind_msg_api
 
       framing_api(shared)
       const anon = anon_api(shared)
