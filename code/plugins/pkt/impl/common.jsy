@@ -9,15 +9,17 @@ export const PktBase = @{}
   repack_pkt(repack) :: return repack(this, this.pkt_kind)
 
 
+function json(reviver) ::
+  const src = this.text()
+  if src :: return JSON.parse(src, reviver)
+
 export const PktJsonBase = @{} __proto__: PktBase
   pkt_kind: 'json', is_pkt_json: true
-  json(reviver) :: return JSON.parse @ this.text(), reviver
-  // text(){}
+  json // and... text(){}
 
 export const PktDataBase = @{} __proto__: PktBase
   pkt_kind: 'data', is_pkt_data: true
-  json(reviver) :: return JSON.parse @ this.text(), reviver
-  // text(){}  buffer(){}  base64(){}
+  json // and... text(){}  buffer(){}  base64(){}
 
 
 export const maxlen = 1<<16 - 1<<10, maxlen_m1=maxlen - 1
@@ -40,8 +42,7 @@ export const MultiPktBase = @{}
   get id_route() :: return this.pkt0.id_route
   get id_target() :: return this.pkt0.id_target
 
-  json(reviver) :: return JSON.parse @ this.text(), reviver
-  // text(){}  buffer(){}  base64(){}
+  json // and... text(){}  buffer(){}  base64(){}
 
 
 
@@ -79,7 +80,7 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
           ? as_pkt0 @ hdr, body.src, pktByKind[k_token]
           : as_pkt0 @ hdr, body.buf, pktByKind[k_token]
       : @ is_json_body(body)
-          ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
+          ? as_pkt0 @ hdr, JSON.stringify(body)||'', PktJson
           : as_pkt0 @ hdr, packBody(body), PktData
 
 
@@ -129,7 +130,7 @@ export function bind_binaryPacket(options) ::
             : packParts @ `${hdr}\t${k_token}`, body.buf
 
         : @ is_json_body(body)
-            ? packParts @ `${hdr}\t${k_json}${JSON.stringify(body)}`
+            ? packParts @ `${hdr}\t${k_json}${JSON.stringify(body)||''}`
             : packParts @ `${hdr}\t${k_data}`, body
 
     fromObjBinaryPacket: bind_packObjPacket(options, repack_binary)
@@ -175,7 +176,7 @@ export function bind_linePacket(options) ::
             : `${hdr}\t${k_token}${packBody64(body.buf)}`
 
         : @ is_json_body(body)
-            ? `${hdr}\t${k_json}${JSON.stringify(body)}`
+            ? `${hdr}\t${k_json}${JSON.stringify(body)||''}`
             : `${hdr}\t${k_data}${packBody64(body)}`
 
     fromObjLinePacket: bind_packObjPacket(options, repack_line)
@@ -191,7 +192,7 @@ export function is_json_body(body) ::
 export function bind_splitBody({packBody}) ::
   return (body) => ::
     if is_json_body(body) ::
-      const src = JSON.stringify(body)
+      const src = JSON.stringify(body)||''
       if src.length <= maxlen ::
         return [{[sym_split]: k_json, src}]
 
