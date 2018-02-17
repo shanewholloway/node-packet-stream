@@ -1,10 +1,13 @@
-import {as_source_id, as_reply_id} from './base.jsy'
+import {as_source_id, as_reply_id, bind_mx_api} from './base.jsy'
 
 export default msg_anon_api
 export function msg_anon_api(shared) ::
-  const { chan, newToken, bind_msg_api } = shared
-  const { source_ops, reply_ops } = shared.ops_api.anon
+  const { chan, newToken, bind_sendmsg_api, bind_replymsg_api } = shared
 
+  const source_api = bind_sendmsg_api @: chan, anon, op_api: shared.ops_api.anon_source
+  const reply_api = bind_replymsg_api @: chan, anon, op_api: shared.ops_api.anon_reply
+
+  const mx_api = bind_mx_api(source_api, reply_api)
   const anon_ctx = @{} newToken, responseFor() {}, on_response() {}
 
   return shared.anon_api = (to_id, pkt_op) => ::
@@ -15,12 +18,8 @@ export function msg_anon_api(shared) ::
     if null == id_target || null == id_route ::
       throw new Error @ `Invalid id`
 
-    const op_api = null != pkt_op && pkt_op.token
-      ? reply_ops @: msgid: pkt_op.token
-      : source_ops()
+    return mx_api @ pkt_op, @{}
+      id_route, id_target, ctx: anon_ctx, opo0: {}
 
-    return bind_msg_api @:
-      chan, op_api, ctx: anon_ctx
-      id_route, id_target
-      anon() :: return this
 
+function anon() :: return this

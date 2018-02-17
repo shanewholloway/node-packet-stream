@@ -39,49 +39,67 @@ export function bind_createContext(newToken, expire) ::
         d.resolve(response)
 
 
-export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
+export function bind_mx_api(source_api, reply_api) ::
+  return (pkt_op, _mx_) => ::
+    const props = @{} _mx_: {value: _mx_}
+    if null != pkt_op && pkt_op.token ::
+      _mx_.opo0.msgid = pkt_op.token
+      return Object.create @ reply_api, props
+    return Object.create @ source_api, props
+
+
+export function bind_msg_api({chan, anon, op_api}) ::
   return @{} __proto__: null, anon
+    toJSON(obj={}) ::
+      const {id_route, id_target} = this._mx_
+      obj[sym_sampi] = `${id_route} ${id_target}`
+      return obj
+
     post(body) ::
+      const {ctx, id_route, id_target, opo0} = this._mx_
       const obj = @{} id_route, id_target, body
 
       // TODO: choose between op_api.datagram and op_api.multipart
-      const pkt = op_api.datagram @ obj
-      chan.send(pkt)
+      const pkt = op_api.datagram @ obj, opo0
+      this._send_pkt(pkt)
 
     send(body) ::
+      const {ctx, id_route, id_target, opo0} = this._mx_
       const token = ctx.newToken()
       const response = ctx.responseFor(token)
 
       // TODO: choose between op_api.direct and op_api.multipart
       const obj = @{} id_route, id_target, body
-      const pkt = op_api.direct @ obj, {token}
-      chan.send(pkt)
+      const pkt = op_api.direct @ obj, Object.assign({token}, opo0)
+      this._send_pkt(pkt)
 
       return response
 
-    multipart() :: return wstreamop_api.multipart
-    stream() :: return wstreamop_api.stream
+    multipart() :: return this._wstream @ op_api.multipart
 
-    toJSON(obj={}) ::
-      obj[sym_sampi] = `${id_route} ${id_target}`
-      return obj
+    stream() :: return this._wstream @ op_api.stream
 
-  function wstream(op_method) ::
-    let seq = 1
-    const token = ctx.newToken()
-    const self = @{} write, end
-      response: ctx.responseFor(token)
-    return self
 
-    function write(body) ::
-      const obj = @{} id_route, id_target, body
-      const pkt = op_method @ obj, {seq: seq++}
-      chan.send(pkt)
-      return self
+    _send_pkt(pkt) :: chan.send(pkt)
+    _wstream(op_method) ::
+      const {ctx, id_route, id_target, opo0} = this._mx_
+      const opo = opo0.msgid ? opo0
+        : Object.assign @ {token: ctx.newToken()}, opo0
 
-    function end(body) ::
-      seq = -seq
-      write(body)
-      seq = null
-      return self
+      let seq=0, self
+      return self = @{}
+        write: body => ::
+          const obj = @{} id_route, id_target, body
+          const pkt = op_method @ obj,
+            Object.assign({seq: seq++}, opo)
+          this._send_pkt(pkt)
+          return self
+
+        end: body => ::
+          seq = -seq
+          self.write(body)
+          seq = null
+          return self
+
+        response: opo.token ? ctx.responseFor(opo.token) : undefined
 

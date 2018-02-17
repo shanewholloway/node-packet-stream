@@ -54,12 +54,7 @@ function as_op_frame(op_frame) ::
 
   return Object.assign @ op_frame, @{}
     attrs: frames.map @ f => f.attr
-    frames, pack, unpack, bind
-
-  function bind(opo0) ::
-    return (obj, hdr) => ::
-      obj.op = pack @ Object.assign @ {}, opo0, hdr
-      return obj
+    frames, pack, unpack
 
 
 // unroll looping over the functions
@@ -130,23 +125,28 @@ export function bind_op_unpack(ops_list) ::
     return pkt.op = hdr.op = op
 
 
-function as_bindable(...ops_list) ::
+function as_ops_api(...ops_list) ::
   ops_list = [].concat @ ...ops_list
-  return opo0 => ::
-    const api = {}
-    if null == opo0 :: opo0 = {}
-    for const op of ops_list ::
-      const fn = op.bind(opo0)
-      fn.op = op.action
-      api[op.kind] = fn
-    return api
+  const api = {}
+  for const {kind, action, pack} of ops_list ::
+    // trick to get the proper function displayName
+    const name = `op ${action}`, tmp = @{}
+      [name](obj, hdr) ::
+        obj.op = pack(hdr)
+        return obj
+
+    api[kind] = tmp[name]
+  return api
+
 
 
 export default msg_framing_api
-export function msg_framing_api(shared) ::
-  const all_ops = standard_frames()
-  shared.op_unpack = bind_op_unpack @ all_ops
+export function msg_framing_api(shared, plugin_frames) ::
+  let all_ops = standard_frames()
+  if plugin_frames ::
+    all_ops = plugin_frames({frm, as_op_frame}, all_ops)
 
+  shared.op_unpack = bind_op_unpack @ all_ops
 
   const find_ops = ({has, sans}) => all_ops.filter @ op => @
        @ !has  || has .split(' ').every @ a => op.attrs.includes @ a
@@ -156,21 +156,19 @@ export function msg_framing_api(shared) ::
   const basic_anon_ops = find_ops @: sans: 'from_route token msgid'
 
   shared.ops_api = @{}
-    from: @{}
-      source_ops: as_bindable @
-        basic_from_ops
-        find_ops @: has: 'from_route', sans: 'msgid'
+    from_source: as_ops_api @
+      basic_from_ops
+      find_ops @: has: 'from_route', sans: 'msgid'
 
-      reply_ops: as_bindable @
-        basic_from_ops
-        find_ops @: has: 'from_route msgid'
+    from_reply: as_ops_api @
+      basic_from_ops
+      find_ops @: has: 'from_route msgid'
 
-    anon: @{}
-      source_ops: as_bindable @
-        basic_anon_ops
-        find_ops @: sans: 'from_route msgid'
+    anon_source: as_ops_api @
+      basic_anon_ops
+      find_ops @: sans: 'from_route msgid'
 
-      reply_ops: as_bindable @
-        basic_anon_ops
-        find_ops @: has: 'msgid', sans: 'from_route'
+    anon_reply: as_ops_api @
+      basic_anon_ops
+      find_ops @: has: 'msgid', sans: 'from_route'
 

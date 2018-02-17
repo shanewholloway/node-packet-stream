@@ -7,12 +7,14 @@ import source_api from './source.jsy'
 import sendFrom_api from './reply.jsy'
 
 
-export default function msgs_plugin() ::
+export default function msgs_plugin(plugin_options) ::
   return function (hub) ::
     const { random } = hub.data_utils
-    return hub.msgs = Object.assign @ msgs, msgs({})
+    const msgs = createMsgsPlugin(plugin_options)
+    msgs.createMsgsPlugin = createMsgsPlugin
+    return hub.msgs = msgs
 
-    function msgs(options) ::
+    function createMsgsPlugin(options={}) ::
       const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
       const expire = timeoutReaper @ options.timeout || 5000
       const newToken = () => random(tokenLen, true)
@@ -20,9 +22,14 @@ export default function msgs_plugin() ::
       const shared = @{}
         chan: hub, newToken, expire
         createContext: bind_createContext(newToken, expire)
-        bind_msg_api
+        bind_sendmsg_api: options.bind_sendmsg
+          ? ns => options.bind_sendmsg(ns, bind_msg_api)
+          : bind_msg_api
+        bind_replymsg_api: options.bind_replymsg
+          ? ns => options.bind_replymsg(ns, bind_msg_api)
+          : bind_msg_api
 
-      framing_api(shared)
+      framing_api(shared, options.bind_framings)
       const anon = anon_api(shared)
       sendFrom_api(shared)
       const src = source_api(shared)
