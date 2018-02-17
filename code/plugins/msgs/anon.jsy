@@ -1,9 +1,9 @@
 import {as_source_id, as_reply_id, bind_msg_api} from './base.jsy'
-import {anon_source_ops_api, anon_reply_ops_api} from './framing.jsy'
 
 export default msg_anon_api
-export function msg_anon_api(hub, shared) ::
+export function msg_anon_api(shared) ::
   const { chan, newToken } = shared
+  const { source_ops, reply_ops } = shared.ops_api.anon
 
   const anon_ctx = @{} newToken, responseFor(){}
 
@@ -19,8 +19,8 @@ export function msg_anon_api(hub, shared) ::
       throw new Error @ `Invalid id`
 
     const op_api = null != pkt_op && pkt_op.token
-      ? anon_reply_ops_api @: msgid: pkt_op.token
-      : anon_source_ops_api @:
+      ? reply_ops @: msgid: pkt_op.token
+      : source_ops()
 
     return bind_msg_api @:
       chan, op_api, ctx: anon_ctx

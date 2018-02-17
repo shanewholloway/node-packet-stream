@@ -1,6 +1,7 @@
 import {timeoutReaper} from './util.jsy'
 import {bind_createContext} from './base.jsy'
 
+import framing_api from './framing.jsy'
 import anon_api from './anon.jsy'
 import source_api from './source.jsy'
 import sendFrom_api from './reply.jsy'
@@ -20,9 +21,10 @@ export default function msgs_plugin() ::
       const shared = @{}
         chan: hub, newToken, createContext
 
-      const anon = anon_api(hub, shared)
-      sendFrom_api(hub, shared)
-      const src = source_api(hub, shared)
+      framing_api(shared)
+      const anon = anon_api(shared)
+      sendFrom_api(shared)
+      const src = source_api(shared)
 
       return @{}
         to(id) :: return anon(id, null)

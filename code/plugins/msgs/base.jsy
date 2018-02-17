@@ -14,52 +14,6 @@ export function as_reply_id(id) ::
     : @[] id.from_route, id.from_target
 
 
-export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
-  const {p_datagram, p_direct, p_multipart, p_stream} = op_api
-  return Object.assign @ send
-    @{} send, post, stream, anon, toJSON
-
-  function toJSON(obj={}) ::
-    obj[sym_sampi] = `${id_route} ${id_target}`
-    return obj
-
-  function post(body) ::
-    const obj = @{} id_route, id_target, body
-    const pkt = p_datagram @ obj
-    chan.send(pkt)
-
-  function send(body) ::
-    const token = ctx.newToken()
-    const response = ctx.responseFor(token)
-
-    // TODO: choose between p_direct and p_multipart
-    const obj = @{} id_route, id_target, body
-    const pkt = p_direct @ obj, {token}
-    chan.send(pkt)
-
-    return response
-
-  function stream() ::
-    throw new Error @ "TODO"
-    let seq = 1
-    const token = ctx.newToken()
-    const self = @{} write, end
-      response: ctx.responseFor(token)
-    return self
-
-    function write(body) ::
-      const obj = @{} id_route, id_target, body
-      const pkt = p_stream @ obj, {seq: seq++}
-      chan.send(pkt)
-      return self
-
-    function end(body) ::
-      seq = -seq
-      write(body)
-      seq = null
-      return self
-
-
 export function bind_createContext(newToken, expire) ::
   return () => ::
     let db = new Map()
@@ -83,4 +37,50 @@ export function bind_createContext(newToken, expire) ::
         else db.delete(token)
 
         d.resolve(response)
+
+
+export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
+  return @{} __proto__: null
+
+    toJSON(obj={}) ::
+      obj[sym_sampi] = `${id_route} ${id_target}`
+      return obj
+
+    post(body) ::
+      const obj = @{} id_route, id_target, body
+
+      // TODO: choose between op_api.datagram and op_api.multipart
+      const pkt = op_api.datagram @ obj
+      chan.send(pkt)
+
+    send(body) ::
+      const token = ctx.newToken()
+      const response = ctx.responseFor(token)
+
+      // TODO: choose between op_api.direct and op_api.multipart
+      const obj = @{} id_route, id_target, body
+      const pkt = op_api.direct @ obj, {token}
+      chan.send(pkt)
+
+      return response
+
+    stream() ::
+      throw new Error @ "TODO"
+      let seq = 1
+      const token = ctx.newToken()
+      const self = @{} write, end
+        response: ctx.responseFor(token)
+      return self
+
+      function write(body) ::
+        const obj = @{} id_route, id_target, body
+        const pkt = op_api.stream @ obj, {seq: seq++}
+        chan.send(pkt)
+        return self
+
+      function end(body) ::
+        seq = -seq
+        write(body)
+        seq = null
+        return self
 

@@ -1,9 +1,9 @@
 import {as_source_id, as_reply_id, bind_msg_api} from './base.jsy'
-import {source_ops_api, reply_ops_api} from './framing.jsy'
 
 export default msg_sendFrom_api
-export function msg_sendFrom_api(hub, shared) ::
+export function msg_sendFrom_api(shared) ::
   const { chan, anon_api } = shared
+  const { source_ops, reply_ops } = shared.ops_api.anon
 
   shared.sendFrom_api = sendFrom_api
   return sendFrom_api
@@ -17,8 +17,8 @@ export function msg_sendFrom_api(hub, shared) ::
       throw new Error @ `Invalid id`
 
     const op_api = null != pkt_op && pkt_op.token
-      ? reply_ops_api @: from_route, from_target, msgid: pkt_op.token
-      : source_ops_api @: from_route, from_target
+      ? reply_ops @: from_route, from_target, msgid: pkt_op.token
+      : source_ops @: from_route, from_target
 
     return bind_msg_api @:
       chan, op_api, ctx

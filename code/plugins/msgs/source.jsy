@@ -1,9 +1,8 @@
 import {sym_sampi, as_source_id, as_reply_id} from './base.jsy'
-import {op_unpack} from './framing.jsy'
 
 export default msg_source_api
-export function msg_source_api(hub, shared) ::
-  const { createContext, sendFrom_api, anon_api } = shared
+export function msg_source_api(shared) ::
+  const { op_unpack, createContext, sendFrom_api, anon_api } = shared
 
   shared.source_api = source_api
   return source_api
