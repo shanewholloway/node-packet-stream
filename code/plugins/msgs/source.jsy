@@ -23,7 +23,7 @@ export function msg_source_api(hub, shared) ::
       reply() :: return sendFrom_api @ null, this, from_route, from_target, ctx
       resolve(ans) ::
         const {msgid} = this
-        if msgid :: return ctx.on_response(msgid, ans)
+        if msgid :: return ctx.on_response(msgid, ans), true
 
     return @{} _recv_
       toJSON(obj={}) ::
