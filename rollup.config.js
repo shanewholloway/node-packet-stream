@@ -15,7 +15,7 @@ export default [].concat(
   package_plugin_pkt(),
   package_plugin_net(),
   package_plugin_msgs()
-)
+).filter(e => e)
 
 
 function package_core() {
@@ -33,9 +33,10 @@ function package_core() {
       output: { file: pkg.main, format: 'cjs', sourcemap },
       external: ['crypto', 'url'], plugins },
 
-    { input: 'code/index.browser.jsy',
-      output: { file: pkg.browser, name:'msg_fabric_core', format: 'umd', sourcemap },
-      external, plugins: prod_plugins },
+    prod_plugins &&
+      { input: 'code/index.browser.jsy',
+        output: { file: pkg.browser, name:'msg_fabric_core', format: 'umd', sourcemap },
+        external, plugins: prod_plugins },
   ]}
 
 
