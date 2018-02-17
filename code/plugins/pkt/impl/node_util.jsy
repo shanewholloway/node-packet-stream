@@ -1,2 +1,14 @@
-export function asBuffer(body) ::
+export function decode_utf8(buf) ::
+  return buf.toString('utf-8')
+
+export function unpack_base64(sz) ::
+  return Buffer.from(sz, 'base64')
+
+export function packBody(body) ::
   return Buffer.from @ null!=body ? body : ''
+
+export function packBody64(body) ::
+  return packBody(body).toString('base64')
+
+export function concatBody(parts) ::
+  return Buffer.concat(parts)

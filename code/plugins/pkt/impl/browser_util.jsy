@@ -1,6 +1,0 @@
-export function asArrayBuffer(body) ::
-  if null === body :: return new ArrayBuffer(0)
-  return 'string' === typeof body
-    ? encode_utf8(body)
-    : new ArrayBuffer(body)
-

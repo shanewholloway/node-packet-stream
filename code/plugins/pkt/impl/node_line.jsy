@@ -1,5 +1,5 @@
 import { PktJsonBase, PktDataBase, bind_linePacket } from './common.jsy'
-import { asBuffer as packBody } from './node_util.jsy'
+import { packBody, packBody64, concatBody } from './node_util.jsy'
 
 export default function({}) ::
 
@@ -19,7 +19,7 @@ export default function({}) ::
 
   const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
     bind_linePacket @:
-      packBody, packBody64
+      packBody, packBody64, concatBody
       PktData, PktJson
 
   return @{}
@@ -27,6 +27,3 @@ export default function({}) ::
     unpackLinePacket
     packLinePacket
 
-
-function packBody64(body) ::
-  return asBuffer(body).toString('base64')

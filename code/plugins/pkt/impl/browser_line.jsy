@@ -1,7 +1,7 @@
 import { PktJsonBase, PktDataBase, bind_linePacket } from './common.jsy'
-import { asArrayBuffer } from './browser_util.jsy'
 
-export default function({ decode_utf8, unpack_base64, pack_base64 }) ::
+export default function({ decode_utf8, unpack_base64, pack_base64, as_data, concat_data }) ::
+  const packBody=as_data, concatBody=concat_data
 
   const PktJson = @{} __proto__: PktJsonBase
     text() :: return this._body_
@@ -19,7 +19,7 @@ export default function({ decode_utf8, unpack_base64, pack_base64 }) ::
 
   const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
     bind_linePacket @:
-      packBody, packBody64, packPart
+      packBody, packBody64, concatBody
       PktData, PktJson
 
   return @{}

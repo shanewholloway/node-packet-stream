@@ -1,5 +1,5 @@
 import { PktJsonBase, PktDataBase, bind_binaryPacket } from './common.jsy'
-import { asBuffer as packBody } from './node_util.jsy'
+import { decode_utf8, unpack_base64, packBody, concatBody } from './node_util.jsy'
 
 export default function({}) ::
 
@@ -14,8 +14,8 @@ export default function({}) ::
 
   const {fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket} =
     bind_binaryPacket @:
-      decode_utf8, packBody, packParts
-      PktData, PktJson
+      decode_utf8, unpack_base64, packBody, packParts, concatBody
+      PktJson, PktData
 
   return @{}
     fromObjBinaryPacket
@@ -43,4 +43,3 @@ function packLenPrefixBuffer(hdr, body) ::
     body.copy(buf, len0)
   return buf
 
-function decode_utf8(buf) :: return buf.toString('utf-8')
