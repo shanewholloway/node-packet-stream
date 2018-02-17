@@ -1,6 +1,4 @@
-import {timeoutReaper} from './util.jsy'
-import {bind_createContext, bind_msg_api} from './base.jsy'
-
+import base_api from './base.jsy'
 import framing_api from './framing.jsy'
 import anon_api from './anon.jsy'
 import source_api from './source.jsy'
@@ -9,32 +7,28 @@ import sendFrom_api from './reply.jsy'
 
 export default function msgs_plugin(plugin_options) ::
   return function (hub) ::
-    const { random } = hub.data_utils
     const msgs = createMsgsPlugin(plugin_options)
     msgs.createMsgsPlugin = createMsgsPlugin
     return hub.msgs = msgs
 
     function createMsgsPlugin(options={}) ::
-      const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
-      const expire = timeoutReaper @ options.timeout || 5000
-      const newToken = () => random(tokenLen, true)
-
-      const shared = @{}
-        chan: hub, newToken, expire
-        createContext: bind_createContext(newToken, expire)
-        bind_sendmsg_api: options.bind_sendmsg
-          ? ns => options.bind_sendmsg(ns, bind_msg_api)
-          : bind_msg_api
-        bind_replymsg_api: options.bind_replymsg
-          ? ns => options.bind_replymsg(ns, bind_msg_api)
-          : bind_msg_api
+      const shared = base_api(hub, options)
 
       framing_api(shared, options.bind_framings)
-      const anon = anon_api(shared)
+
+      const {bind_msg_api} = shared
+      shared.bind_sendmsg_api = options.bind_sendmsg
+        ? ns => options.bind_sendmsg(ns, bind_msg_api)
+        : bind_msg_api
+
+      shared.bind_replymsg_api = options.bind_replymsg
+        ? ns => options.bind_replymsg(ns, bind_msg_api)
+        : bind_msg_api
+
+      const as_anon = anon_api(shared)
       sendFrom_api(shared)
-      const src = source_api(shared)
+      const as_src = source_api(shared)
 
       return @{}
-        to(id) :: return anon(id, null)
-        as(id) :: return src(id)
-
+        to(id) :: return as_anon(id, null)
+        as(id) :: return as_src(id)

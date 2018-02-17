@@ -2,10 +2,10 @@ import {as_source_id, as_reply_id, bind_mx_api} from './base.jsy'
 
 export default msg_anon_api
 export function msg_anon_api(shared) ::
-  const { chan, newToken, bind_sendmsg_api, bind_replymsg_api } = shared
+  const { newToken, bind_sendmsg_api, bind_replymsg_api } = shared
 
-  const source_api = bind_sendmsg_api @: chan, anon, op_api: shared.ops_api.anon_source
-  const reply_api = bind_replymsg_api @: chan, anon, op_api: shared.ops_api.anon_reply
+  const source_api = bind_sendmsg_api @: anon, op_api: shared.ops_api.anon_source
+  const reply_api = bind_replymsg_api @: anon, op_api: shared.ops_api.anon_reply
 
   const mx_api = bind_mx_api(source_api, reply_api)
   const anon_ctx = @{} newToken, responseFor() {}, on_response() {}
