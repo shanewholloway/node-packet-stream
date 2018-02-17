@@ -1,25 +1,47 @@
 export const PktBase = @{}
-  __proto__: null
-  is_pkt: true
+  __proto__: null, is_pkt: true
   get id_route() :: return this._hdr_[0]
   get id_target() :: return this._hdr_[1]
 
-  inspect() :: return `«pkt ${this.pkt_kind} ${JSON.stringify(this._hdr_.join(' '))}»`
-  json(reviver) :: return JSON.parse @ this.text(), reviver
-  // repack_pkt(repack) :: return repack @ null, this._hdr_, this._body_
+  inspect() :: return this._hdr_
+    ? `«pkt ${this.pkt_kind} ${JSON.stringify(this._hdr_.join(' '))}»`
+    : `«{Pkt ${this.pkt_kind}}»`
+  repack_pkt(repack) :: return repack(this, this.pkt_kind)
 
 
 export const PktJsonBase = @{} __proto__: PktBase
-  pkt_kind: 'json', is_pkt_json: true,
-  repack_pkt(repack) :: return repack @ true, this._hdr_.join(' '), this
-  // text() ::
+  pkt_kind: 'json', is_pkt_json: true
+  json(reviver) :: return JSON.parse @ this.text(), reviver
+  // text(){}
 
 export const PktDataBase = @{} __proto__: PktBase
-  pkt_kind: 'data', is_pkt_data: true,
-  repack_pkt(repack) :: return repack @ false, this._hdr_.join(' '), this
-  // text() ::
-  // buffer() ::
-  // base64() ::
+  pkt_kind: 'data', is_pkt_data: true
+  json(reviver) :: return JSON.parse @ this.text(), reviver
+  // text(){}  buffer(){}  base64(){}
+
+
+export const maxlen = 1<<16 - 1<<10, maxlen_m1=maxlen - 1
+export const sym_split = Symbol('pkt split')
+export const k_data = '=', k_split_data = '?'
+export const k_json = '@', k_split_json = '#'
+
+export const PktSplitJson = @{} __proto__: PktBase
+  pkt_kind: 'split_json', is_pkt_split: true
+
+export const PktSplitData = @{} __proto__: PktBase
+  pkt_kind: 'split_data', is_pkt_split: true
+
+export const PktSplitData64 = @{} __proto__: PktBase
+  pkt_kind: 'split_b64', is_pkt_split: true
+
+
+export const MultiPktBase = @{}
+  __proto__: null, is_pkt: false, is_multi_pkt: true
+  get id_route() :: return this.pkt0.id_route
+  get id_target() :: return this.pkt0.id_target
+
+  json(reviver) :: return JSON.parse @ this.text(), reviver
+  // text(){}  buffer(){}  base64(){}
 
 
 
@@ -32,28 +54,54 @@ export function as_hdr({id_route, id_target, op}) ::
 
 export function as_pkt0(hdr, body, aPktBase) ::
   return Object.create @ aPktBase, @{}
-    _hdr_: @{} value: hdr.replace('\f','').split(/\s/)
+    _hdr_: @{} value: hdr.split(' ')
     _body_: @{} value: body
 
+export function bind_repack(repackByKind) ::
+  return (pkt, pkt_kind) =>
+    repackByKind[pkt_kind] @
+      pkt, pkt._hdr_.join(' ')
+
+
+
 export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
+  const pktByKind = @{}
+    [k_data]: PktData, [k_split_data]: PktSplitData
+    [k_json]: PktJson, [k_split_json]: PktSplitJson
+
   return function (obj) ::
     if 'function' === typeof obj.repack_pkt ::
       return obj.repack_pkt(repack)
 
-    const hdr = as_hdr(obj), {body, body_json} = obj
-    return undefined !== body_json
-      ? as_pkt0 @ hdr, body_json, PktJson
-      : is_json_body(body)
-        ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
-        : as_pkt0 @ hdr, packBody(body), PktData
+    const hdr=as_hdr(obj), {body}=obj, k_token=body[sym_split]
+    return undefined !== k_token
+      ? @ undefined !== body.src
+          ? as_pkt0 @ hdr, body.src, pktByKind[k_token]
+          : as_pkt0 @ hdr, body.buf, pktByKind[k_token]
+      : @ is_json_body(body)
+          ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
+          : as_pkt0 @ hdr, packBody(body), PktData
 
 
 
+const _fromCharCode = String.fromCharCode
 export function bind_binaryPacket(options) ::
   const @{}
-    decode_utf8, packBody, packParts
+    decode_utf8, unpack_base64, packBody, packParts
     PktData, PktJson
   = options
+
+  const pktByKind = @{}
+    [k_data]: PktData, [k_split_data]: PktSplitData
+    [k_json]: PktJson, [k_split_json]: PktSplitJson
+
+  const repack_binary = bind_repack @:
+    json: (pkt, hdr) => packParts @ `${hdr}\t${k_json}${pkt.text()}`
+    split_json: (pkt, hdr) => packParts @ `${hdr}\t${k_split_json}${pkt._body_}`
+
+    data: (pkt, hdr) => packParts @ `${hdr}\t${k_data}`, pkt.buffer()
+    split_data: (pkt, hdr) => packParts @ `${hdr}\t${k_split_data}`, pkt._body_
+    split_b64: (pkt, hdr) => packParts @ `${hdr}\t${k_split_data}`, unpack_base64(pkt._body_)
 
   return @{}
     unpackBinaryPacket(pkt_buf) ::
@@ -65,34 +113,45 @@ export function bind_binaryPacket(options) ::
       if -1 === idx :: throw new Error @ 'Invalid packet'
 
       const hdr = decode_utf8 @ pkt_buf.slice(2, idx)
-      const body = pkt_buf.slice(idx+1)
+      const kind = _fromCharCode @ pkt_buf[idx+1]
+      const body = pkt_buf.slice(idx+2)
 
-      // a formfeed indicates json payload
-      return as_pkt0 @ hdr, body,
-        hdr.endsWith('\f') ? PktJson : PktData
+      return as_pkt0 @ hdr, body, pktByKind[kind]
 
     packBinaryPacket(obj) ::
       if 'function' === typeof obj.repack_pkt ::
         return obj.repack_pkt(repack_binary)
 
-      const hdr = as_hdr(obj), {body, body_json} = obj
-      return undefined !== body_json
-        ? packParts @ `${hdr}\f\t${body_json}`
-        : is_json_body(body)
-          ? packParts @ `${hdr}\f\t${JSON.stringify(body)}`
-          : packParts @ `${hdr}\t`, body
+      const hdr=as_hdr(obj), {body}=obj, k_token=body[sym_split]
+      return undefined !== k_token
+        ? @ undefined !== body.src
+            ? packParts @ `${hdr}\t${k_token}${body.src}`
+            : packParts @ `${hdr}\t${k_token}`, body.buf
 
-    fromObjBinaryPacket:
-      bind_packObjPacket(options, repack_binary)
+        : @ is_json_body(body)
+            ? packParts @ `${hdr}\t${k_json}${JSON.stringify(body)}`
+            : packParts @ `${hdr}\t${k_data}`, body
 
-  function repack_binary(is_json, hdr, pkt) ::
-    return is_json
-      ? packParts @ `${hdr}\f\t${pkt.text()}`
-      : packParts @ `${hdr}\t`, pkt.buffer()
+    fromObjBinaryPacket: bind_packObjPacket(options, repack_binary)
+    splitBody: bind_splitBody(options)
+    joinPackets: bind_joinPackets(options)
+
 
 
 export function bind_linePacket(options) ::
   const { packBody, packBody64, PktData, PktJson } = options
+
+  const pktByKind = @{}
+    [k_data]: PktData, [k_split_data]: PktSplitData64
+    [k_json]: PktJson, [k_split_json]: PktSplitJson
+
+  const repack_line = bind_repack @:
+    json: (pkt, hdr) => `${hdr}\t${k_json}${pkt.text()}`
+    split_json: (pkt, hdr) => `${hdr}\t${k_split_json}${pkt._body_}`
+
+    data: (pkt, hdr) => `${hdr}\t${k_data}${pkt.base64()}`
+    split_data: (pkt, hdr) => `${hdr}\t${k_split_data}${packBody64(pkt._body_)}`
+    split_b64: (pkt, hdr) => `${hdr}\t${k_split_data}${pkt._body_}`
 
   return @{}
     unpackLinePacket(pkt_line) ::
@@ -100,27 +159,28 @@ export function bind_linePacket(options) ::
       if -1 === idx :: throw new Error @ 'Invalid packet'
 
       const hdr = pkt_line.slice(0, idx)
-      const body = pkt_line.slice(idx)
+      const kind = pkt_line[idx+1]
+      const body = pkt_line.slice(idx+2)
 
-      // a formfeed indicates json payload
-      return as_pkt0 @ hdr, body,
-        hdr.endsWith('\f') ? PktJson : PktData
+      return as_pkt0 @ hdr, body, pktByKind[kind]
 
     packLinePacket(obj) ::
-      const hdr = as_hdr(obj), {body, body_json} = obj
-      return undefined !== body_json
-        ? `${hdr}\f\t${body_json}`
-        : is_json_body(body)
-          ? `${hdr}\f\t${JSON.stringify(body)}`
-          : `${hdr}\t${packBody64(body)}`
+      if 'function' === typeof obj.repack_pkt ::
+        return obj.repack_pkt(repack_line)
 
-    fromObjLinePacket:
-      bind_packObjPacket(options, repack_line)
+      const hdr=as_hdr(obj), {body}=obj, k_token=body[sym_split]
+      return undefined !== k_token
+        ? @ undefined !== body.src
+            ? `${hdr}\t${k_token}${body.src}`
+            : `${hdr}\t${k_token}${packBody64(body.buf)}`
 
-  function repack_line(is_json, hdr, pkt) ::
-    return is_json
-      ? `${hdr}\f\t${pkt.text()}`
-      : `${hdr}\t${pkt.base64()}`
+        : @ is_json_body(body)
+            ? `${hdr}\t${k_json}${JSON.stringify(body)}`
+            : `${hdr}\t${k_data}${packBody64(body)}`
+
+    fromObjLinePacket: bind_packObjPacket(options, repack_line)
+    splitBody: bind_splitBody(options)
+    joinPackets: bind_joinPackets(options)
 
 
 export function is_json_body(body) ::
@@ -128,3 +188,64 @@ export function is_json_body(body) ::
   return undefined === body.byteLength
     && 'string' !== typeof body
 
+export function bind_splitBody({packBody}) ::
+  return (body) => ::
+    if is_json_body(body) ::
+      const src = JSON.stringify(body)
+      if src.length <= maxlen ::
+        return [{[sym_split]: k_json, src}]
+
+      return splitParts(src, src.length)
+        .map @ (src, idx) => @:
+          [sym_split]: k_split_json, src, idx
+
+    const buf = packBody(body)
+    if buf.byteLength <= maxlen ::
+      return [{[sym_split]: k_data, buf}]
+
+    return splitParts(buf, buf.byteLength)
+      .map @ (buf, idx) => @:
+        [sym_split]: k_split_data, buf, idx
+
+export function splitParts(buf, len) ::
+  const parts = []
+  for let i1=0,i0=0; i0<len; i0 = i1 ::
+    i1 = i0 + maxlen
+    parts.push @ buf.slice(i0, i1)
+  return parts
+
+export function bind_joinPackets({decode_utf8, unpack_base64, concatBody}) ::
+
+  const MultiPktJson = @{} __proto__: MultiPktBase
+    text() :: return this._body_
+
+  const MultiPktData = @{} __proto__: MultiPktBase
+    text() :: return decode_utf8 @ this.buffer()
+    buffer() :: return this._body_
+
+  const unpackByKind = @{}
+    split_b64: pkt => unpack_base64 @ pkt._body_
+    split_data: pkt => pkt._body_
+    split_json: pkt =>
+      'string' === typeof pkt._body_ ? pkt._body_
+        : decode_utf8(pkt._body_)
+
+
+  return pktList => ::
+    const pkt0=pktList[0], pkt_kind=pkt0.pkt_kind
+    if ! pktList.every(pkt => pkt_kind === pkt.pkt_kind) ::
+      throw new Error @ `Mismatched pkt_kind`
+
+    const unpack_split=unpackByKind[pkt_kind]
+    if ! unpack_split ::
+      throw new Error @ `Unknown pkt_kind: ${pkt_kind}`
+
+    const parts = pktList.map(unpack_split)
+    if 'split_json' === pkt_kind ::
+      return Object.create @ MultiPktJson, @{}
+        pkt0: {value: pkt0}
+        _body_: {value: parts.join('')}
+    else ::
+      return Object.create @ MultiPktData, @{}
+        pkt0: {value: pkt0}
+        _body_: {value: concatBody(parts)}
