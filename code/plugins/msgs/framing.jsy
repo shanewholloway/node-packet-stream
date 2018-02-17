@@ -25,9 +25,11 @@ const f_seq = @{} attr: 'seq'
   unpack: (v, hdr) => :: hdr.seq = b16_unpack @ v
   pack: hdr => b16_pack @ is_defined @ 'seq', hdr.seq
 
+/*
 const f_ackseq = @{} attr: 'ackseq'
   unpack: (v, hdr) => :: hdr.ackseq = b16_unpack @ v
   pack: hdr => b16_pack @ is_defined @ 'ackseq', hdr.ackseq
+*/
 
 
 function as_op(transport, op_key, frames) ::

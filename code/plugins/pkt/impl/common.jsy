@@ -40,10 +40,12 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
     if 'function' === typeof obj.repack_pkt ::
       return obj.repack_pkt(repack)
 
-    const hdr = as_hdr(obj), body = obj.body
-    return is_json_body(body)
-      ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
-      : as_pkt0 @ hdr, packBody(body), PktData
+    const hdr = as_hdr(obj), {body, body_json} = obj
+    return undefined !== body_json
+      ? as_pkt0 @ hdr, body_json, PktJson
+      : is_json_body(body)
+        ? as_pkt0 @ hdr, JSON.stringify(body), PktJson
+        : as_pkt0 @ hdr, packBody(body), PktData
 
 
 
@@ -73,10 +75,12 @@ export function bind_binaryPacket(options) ::
       if 'function' === typeof obj.repack_pkt ::
         return obj.repack_pkt(repack_binary)
 
-      const hdr = as_hdr(obj), body = obj.body
-      return is_json_body(body)
-        ? packParts @ `${hdr}\f\t${JSON.stringify(body)}`
-        : packParts @ `${hdr}\t`, body
+      const hdr = as_hdr(obj), {body, body_json} = obj
+      return undefined !== body_json
+        ? packParts @ `${hdr}\f\t${body_json}`
+        : is_json_body(body)
+          ? packParts @ `${hdr}\f\t${JSON.stringify(body)}`
+          : packParts @ `${hdr}\t`, body
 
     fromObjBinaryPacket:
       bind_packObjPacket(options, repack_binary)
@@ -103,10 +107,12 @@ export function bind_linePacket(options) ::
         hdr.endsWith('\f') ? PktJson : PktData
 
     packLinePacket(obj) ::
-      const hdr = as_hdr(obj), body = obj.body
-      return is_json_body(body)
-        ? `${hdr}\f\t${JSON.stringify(body)}`
-        : `${hdr}\t${packBody64(body)}`
+      const hdr = as_hdr(obj), {body, body_json} = obj
+      return undefined !== body_json
+        ? `${hdr}\f\t${body_json}`
+        : is_json_body(body)
+          ? `${hdr}\f\t${JSON.stringify(body)}`
+          : `${hdr}\t${packBody64(body)}`
 
     fromObjLinePacket:
       bind_packObjPacket(options, repack_line)
