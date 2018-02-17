@@ -17,16 +17,10 @@ export default function({ decode_utf8, unpack_base64, pack_base64, as_data, conc
           '_body_buf_', {value: buf}
       return buf
 
-  const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
-    bind_linePacket @:
-      packBody, packBody64, concatBody
-      PktData, PktJson
 
-  return @{}
-    fromObjLinePacket
-    unpackLinePacket
-    packLinePacket
-
+  return bind_linePacket @:
+    packBody, packBody64, concatBody
+    PktData, PktJson
 
   function packBody64(body) ::
     return pack_base64 @ packBody(body)

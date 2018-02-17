@@ -22,7 +22,7 @@ export const PktDataBase = @{} __proto__: PktBase
   json // and... text(){}  buffer(){}  base64(){}
 
 
-export const maxlen = 1<<16 - 1<<10, maxlen_m1=maxlen - 1
+export const maxlen = (1<<16) - (1<<10)
 export const sym_split = Symbol('pkt split')
 export const k_data = '=', k_split_data = '?'
 export const k_json = '@', k_split_json = '#'
@@ -134,8 +134,6 @@ export function bind_binaryPacket(options) ::
             : packParts @ `${hdr}\t${k_data}`, body
 
     fromObjBinaryPacket: bind_packObjPacket(options, repack_binary)
-    splitBody: bind_splitBody(options)
-    joinPackets: bind_joinPackets(options)
 
 
 
@@ -180,33 +178,12 @@ export function bind_linePacket(options) ::
             : `${hdr}\t${k_data}${packBody64(body)}`
 
     fromObjLinePacket: bind_packObjPacket(options, repack_line)
-    splitBody: bind_splitBody(options)
-    joinPackets: bind_joinPackets(options)
 
 
 export function is_json_body(body) ::
   if null == body :: return true
   return undefined === body.byteLength
     && 'string' !== typeof body
-
-export function bind_splitBody({packBody}) ::
-  return (body) => ::
-    if is_json_body(body) ::
-      const src = JSON.stringify(body)||''
-      if src.length <= maxlen ::
-        return [{[sym_split]: k_json, src}]
-
-      return splitParts(src, src.length)
-        .map @ (src, idx) => @:
-          [sym_split]: k_split_json, src, idx
-
-    const buf = packBody(body)
-    if buf.byteLength <= maxlen ::
-      return [{[sym_split]: k_data, buf}]
-
-    return splitParts(buf, buf.byteLength)
-      .map @ (buf, idx) => @:
-        [sym_split]: k_split_data, buf, idx
 
 export function splitParts(buf, len) ::
   const parts = []
@@ -215,7 +192,8 @@ export function splitParts(buf, len) ::
     parts.push @ buf.slice(i0, i1)
   return parts
 
-export function bind_joinPackets({decode_utf8, unpack_base64, concatBody}) ::
+
+export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBody}) ::
 
   const MultiPktJson = @{} __proto__: MultiPktBase
     text() :: return this._body_
@@ -231,22 +209,42 @@ export function bind_joinPackets({decode_utf8, unpack_base64, concatBody}) ::
       'string' === typeof pkt._body_ ? pkt._body_
         : decode_utf8(pkt._body_)
 
+  return @{}
+    splitBody(body) ::
+      if is_json_body(body) ::
+        const src = JSON.stringify(body)||''
+        if src.length <= maxlen ::
+          return [{[sym_split]: k_json, src}]
 
-  return pktList => ::
-    const pkt0=pktList[0], pkt_kind=pkt0.pkt_kind
-    if ! pktList.every(pkt => pkt_kind === pkt.pkt_kind) ::
-      throw new Error @ `Mismatched pkt_kind`
+        return splitParts(src, src.length)
+          .map @ (src, idx) => @:
+            [sym_split]: k_split_json, src, idx
 
-    const unpack_split=unpackByKind[pkt_kind]
-    if ! unpack_split ::
-      throw new Error @ `Unknown pkt_kind: ${pkt_kind}`
+      const buf = packBody(body)
+      if buf.byteLength <= maxlen ::
+        return [{[sym_split]: k_data, buf}]
 
-    const parts = pktList.map(unpack_split)
-    if 'split_json' === pkt_kind ::
-      return Object.create @ MultiPktJson, @{}
-        pkt0: {value: pkt0}
-        _body_: {value: parts.join('')}
-    else ::
-      return Object.create @ MultiPktData, @{}
-        pkt0: {value: pkt0}
-        _body_: {value: concatBody(parts)}
+      return splitParts(buf, buf.byteLength)
+        .map @ (buf, idx) => @:
+          [sym_split]: k_split_data, buf, idx
+
+
+    joinPackets(pktList) ::
+      const pkt0=pktList[0], pkt_kind=pkt0.pkt_kind
+      if ! pktList.every(pkt => pkt_kind === pkt.pkt_kind) ::
+        throw new Error @ `Mismatched pkt_kind`
+
+      const unpack_split=unpackByKind[pkt_kind]
+      if ! unpack_split ::
+        throw new Error @ `Unknown pkt_kind: ${pkt_kind}`
+
+      const parts = pktList.map(unpack_split)
+      if 'split_json' === pkt_kind ::
+        return Object.create @ MultiPktJson, @{}
+          pkt0: {value: pkt0}
+          _body_: {value: parts.join('')}
+      else ::
+        return Object.create @ MultiPktData, @{}
+          pkt0: {value: pkt0}
+          _body_: {value: concatBody(parts)}
+

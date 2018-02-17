@@ -17,10 +17,12 @@ export class FabricHub ::
     const local = this.createLocalRoute(router, id_local_route)
     p2p.publishRoute(local)
 
+    const channel = this._bindSendLocal(dispatch)
     Object.defineProperties @ this, @{}
       router: @{} value: router
       dispatch: @{} value: dispatch
-      send: @{} value: this._bindSendLocal(dispatch)
+      channel: @{} value: channel
+      send: @{} value: channel.send
 
       p2p: @{} value: p2p
       local: @{} value: local
@@ -85,7 +87,9 @@ export class FabricHub ::
 
   _bindSendLocal(dispatch) ::
     const {_fromObjPacket, _hub_channel_} = this
-    return function send(...objs) ::
+    return Object.create @ _hub_channel_, @{} send: {value: hub_send}
+
+    function hub_send(...objs) ::
       const pktList = objs.map @ _fromObjPacket
       return dispatch @ pktList, _hub_channel_
   _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity

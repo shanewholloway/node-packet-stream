@@ -17,13 +17,6 @@ export default function({}) ::
       return buf
 
 
-  const {fromObjLinePacket, unpackLinePacket, packLinePacket} =
-    bind_linePacket @:
-      packBody, packBody64, concatBody
-      PktData, PktJson
-
-  return @{}
-    fromObjLinePacket
-    unpackLinePacket
-    packLinePacket
-
+  return bind_linePacket @:
+    packBody, packBody64, concatBody
+    PktData, PktJson

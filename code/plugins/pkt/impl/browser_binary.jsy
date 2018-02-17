@@ -12,15 +12,9 @@ export default function({ decode_utf8, encode_utf8, pack_base64, unpack_base64, 
     buffer() :: return this._body_
 
 
-  const {fromObjBinaryPacket, unpackBinaryPacket, packBinaryPacket} =
-    bind_binaryPacket @:
-      decode_utf8, unpack_base64, packBody, packParts, concatBody
-      PktJson, PktData
-
-  return @{}
-    fromObjBinaryPacket
-    unpackBinaryPacket
-    packBinaryPacket
+  return bind_binaryPacket @:
+    decode_utf8, unpack_base64, packBody, packParts, concatBody
+    PktJson, PktData
 
 
   function packParts(hdr, body) ::

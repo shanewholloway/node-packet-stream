@@ -1,4 +1,5 @@
 import pkt_line from './impl/browser_line.jsy'
+import pkt_multi from './impl/browser_multi.jsy'
 
 const _pkts_ = @{}
   fromObjPacket: fromObjLinePacket
@@ -8,7 +9,10 @@ export default function browser_line_pkt_plugin() ::
   return @: order: -1, subclass(FabricHub) ::
     const data_utils = FabricHub.prototype.data_utils
 
-    const _pkts_ = pkt_line(data_utils)
+    const _pkts_ = Object.assign @ {}
+      pkt_line(data_utils)
+      pkt_multi(data_utils)
+
     const _fromObjPacket =
       _pkts_.fromObjPacket =
         _pkts_.fromObjLinePacket

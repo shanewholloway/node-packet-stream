@@ -1,0 +1,24 @@
+import {TestDirectHub as Hub} from './_setup.jsy'
+
+const hub = Hub.create('hub')
+const {id_route} = hub.local
+const apple = @{} id_route, id_target: 'apple'
+
+::
+  const {_recv_} = hub.msgs.as(apple)
+  hub.local.registerTarget @ apple.id_target, pkt => ::
+    _recv_(pkt)
+    if ! pkt.op.seq :: console.log()
+    console.log @ 'GOT:', pkt, pkt.pkt_kind, pkt.op
+    if pkt.op.seq < 0 :: console.log()
+
+const msg_apple = hub.msgs.to @: id_route, id_target: 'apple'
+
+const line = '0123456789abcde '.repeat(16)
+msg_apple.send @ Array(128).fill(line)
+msg_apple.send @ Array(256).fill(line)
+msg_apple.send @ Array(384).fill(line)
+msg_apple.send @ Array(512).fill(line)
+msg_apple.send @ Array(768).fill(line)
+msg_apple.send @ Array(1024).fill(line)
+
