@@ -14,12 +14,17 @@ function addTarget(hub, id_target, api) ::
 
   return tgt.toJSON()
 
-  function on_msg(pkt) ::
-    tgt._recv_(pkt)
+  async function on_msg(pkt) ::
+    try ::
+      await tgt._recv_(pkt)
 
-    if null != api.on_msg ::
-      api.on_msg(pkt)
-        .catch @ console.error
+      if pkt.op.msgid ::
+        pkt.op.resolve @ pkt.json()
+
+      if null != api.on_msg ::
+        await api.on_msg(pkt)
+    catch err ::
+      console.error @ err
 
 
 
@@ -29,18 +34,15 @@ const hub = Hub.create('hub')
 const apple = addTarget @ hub, 'apple', @{}
   async on_init(tgt) ::
     console.log @ 'init apple' //, tgt, orange
-    const res = tgt.to(orange).send @:
+    await tgt.to(orange).send @:
       msg: 'hello from Apple'
-
-    console.log @ 'res?', res
-    console.log @ 'await res:', await res
 
   async on_msg(pkt) ::
     console.log()
     console.log @ 'apple got', pkt, pkt.json()
 
-    if pkt.has_reply ::
-      pkt.anon.send @:
+    if pkt.op.from ::
+      pkt.op.anon().send @:
         msg: 'zoiks!'
     else ::
       console.log @ 'no reply available', pkt, pkt._hdr_.op
@@ -53,11 +55,10 @@ const orange = addTarget @ hub, 'orange', @{}
   async on_msg(pkt) ::
     console.log @ 'orange got', pkt, pkt.json()
 
-    if pkt.has_reply ::
-      const res = pkt.reply.send @:
+    if pkt.op.from ::
+      await pkt.op.reply().send @:
         msg: 'back at ya!'
-      console.log @ 'orange replyed', res
-      console.log @ 'orange replyed:', await res
     else ::
       console.log @ 'no reply available', pkt, pkt._hdr_.op
 
+setTimeout @ ()=>null, 6000

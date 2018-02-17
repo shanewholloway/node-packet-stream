@@ -14,7 +14,7 @@ const f_token = @{} attr: 'token'
   pack: hdr => is_defined @ 'token', hdr.token
 
 const f_from_route = @{} attr: 'from_route'
-  unpack: (v, hdr) => :: hdr.from_route = v
+  unpack: (v, hdr) => :: hdr.from=true; hdr.from_route = v
   pack: hdr => is_defined @ 'from_route', hdr.from_route
 
 const f_from_target = @{} attr: 'from_target'
@@ -105,11 +105,11 @@ all_ops.forEach @ op => :: op_unpack_table[op.op_key] = op.unpack
 
 
 function ident(op) :: return op
-export function op_unpack(pkt) ::
-  const hdr = pkt._hdr_, op = hdr.op = {}
+export function op_unpack(pkt, op) ::
+  const hdr = pkt._hdr_
   const unpack = op_unpack_table[hdr[2]] || ident
   unpack(hdr, op)
-  return op
+  return pkt.op = hdr.op = op
 
 
 

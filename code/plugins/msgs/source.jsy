@@ -18,32 +18,22 @@ export function msg_source_api(hub, shared) ::
     else if 'function' === typeof ctx ::
       ctx = ctx(createContext)
 
+    const pkt_api = @{}
+      anon() :: return anon_api @ null, this
+      reply() :: return sendFrom_api @ null, this, from_route, from_target, ctx
+      resolve(ans) ::
+        const {msgid} = this
+        if msgid :: return ctx.on_response(msgid, ans)
+
     return @{} _recv_
-      toJSON() :: return @{} [sym_sampi]: `${from_route} ${from_target}`
+      toJSON(obj={}) ::
+        obj[sym_sampi] = `${from_route} ${from_target}`
+        return obj
 
       anon(id) :: return anon_api @ id, null
       to(id) :: return sendFrom_api @ id, null, from_route, from_target, ctx
 
 
     function _recv_(pkt) ::
-      const pkt_op = op_unpack(pkt)
-      if undefined !== pkt_op.from_target ::
-        let _reply, _anon
-
-        const reply = () => _reply || @ _reply =
-          sendFrom_api @ null, pkt_op, from_route, from_target, ctx
-        const anon = () => _anon || @ _anon =
-          anon_api @ null, pkt_op
-
-        Object.defineProperties @ pkt, @{}
-          has_reply: {value: true}
-          reply: {get: reply}
-          anon: {get: anon}
-
-      if undefined !== pkt_op.msgid ::
-        Object.defineProperties @ pkt, @{}
-          resolveWith: @{} value(ans)::
-            ctx.on_response @ pkt_op.msgid, ans
-
-      return pkt
+      return op_unpack @ pkt, Object.create(pkt_api)
 

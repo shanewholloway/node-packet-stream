@@ -1,3 +1,5 @@
+import {deferred} from './util.jsy'
+
 export const sym_sampi = '\u03E0' // 'Ϡ'
 
 
@@ -17,8 +19,9 @@ export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
   return Object.assign @ send
     @{} send, post, stream, anon, toJSON
 
-  function toJSON() ::
-    return @{} [sym_sampi]: `${id_route} ${id_target}`
+  function toJSON(obj={}) ::
+    obj[sym_sampi] = `${id_route} ${id_target}`
+    return obj
 
   function post(body) ::
     const obj = @{} id_route, id_target, body
@@ -55,4 +58,29 @@ export function bind_msg_api({chan, op_api, ctx, id_route, id_target, anon}) ::
       write(body)
       seq = null
       return self
+
+
+export function bind_createContext(newToken, expire) ::
+  return () => ::
+    let db = new Map()
+    return @{} newToken
+      responseFor(token) ::
+        const d = deferred()
+        db.set @ token, d
+
+        expire @ d.reject
+        const remove = @=> db.delete(token)
+        d.promise.then @ remove, remove
+        return d.promise
+
+      on_response(token, response) ::
+        let d = db.get(token)
+        if undefined === d ::
+          d = db0.get(token)
+          if undefined === d ::
+            return
+          db0.delete(token)
+        else db.delete(token)
+
+        d.resolve(response)
 
