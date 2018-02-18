@@ -1,3 +1,4 @@
+import {inspect} from 'util'
 import {TestDirectHub as Hub} from './_setup.jsy'
 
 const hub = Hub.create('hub')
@@ -7,10 +8,17 @@ const apple = @{} id_route, id_target: 'apple'
 ::
   const {_recv_} = hub.msgs.as(apple)
   hub.local.registerTarget @ apple.id_target, pkt => ::
-    _recv_(pkt)
-    if ! pkt.op.seq :: console.log()
-    console.log @ 'GOT:', pkt, pkt.pkt_kind, pkt.op
-    if pkt.op.seq < 0 :: console.log()
+    const rpkt = _recv_(pkt)
+    if null == rpkt :: 
+      console.log @ 'Part:', pkt, inspect(pkt.op, {colors:true})
+
+    else if rpkt.is_pkt ::
+      console.log @ 'Pkt:', pkt, inspect(pkt.op, {colors:true})
+      console.log()
+
+    else if rpkt.is_multi_pkt ::
+      console.log @ 'MultiPkt:', rpkt, inspect(rpkt.op, {colors:true})
+      console.log()
 
 const msg_apple = hub.msgs.to @: id_route, id_target: 'apple'
 

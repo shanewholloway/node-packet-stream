@@ -46,26 +46,58 @@ export function msg_base_api(hub, options) ::
     createContext() ::
       let db = new Map()
       return @{} newToken
-        responseFor(token) ::
+        deferredFor(token) ::
           if ! token :: return
-          const d = deferred()
-          db.set @ token, d
+          let d = db.get(token)
+          if undefined !== d :: return d
+          d = deferred()
+          db.set(token, d)
 
-          expire @ d.reject
+          expire(d.reject)
           const remove = @=> db.delete(token)
           d.promise.then @ remove, remove
-          return d.promise
+          return d
+
+        responseFor(token) ::
+          return this.deferredFor(d).promise
 
         on_response(token, response) ::
-          let d = db.get(token)
-          if undefined === d ::
-            d = db0.get(token)
-            if undefined === d ::
-              return
-            db0.delete(token)
-          else db.delete(token)
+          const d = db.get(token)
+          if undefined !== d ::
+            db.delete(token)
+            d.resolve(response)
 
-          d.resolve(response)
+        on_split_pkt(pkt, op) ::
+          const key = op.token || op.msgid
+          let d = db.get(key)
+          if undefined === d ::
+            d = this.deferredFor(key)
+            d.feed = this.on_new_split(key, d)
+          else if undefined === d.feed ::
+            d.feed = this.on_new_split(key, d)
+
+          pkt.complete = d.promise
+          return d.feed(pkt, op)
+
+        on_new_split(key, d) ::
+          let fin, parts=[]
+          return function (pkt, op) ::
+            const {seq} = op
+            if seq >= 0 ::
+              parts[seq] = pkt
+              if ! fin :: return null
+            else ::
+              parts[-seq] = pkt
+              fin = true
+
+            if ! parts.includes(undefined) ::
+              // all parts accounted for
+              const multi = _pkts_.joinPackets(parts)
+              parts = null
+              d.resolve(multi)
+              db.delete(key)
+              return multi
+            return null
 
 
     bind_msg_api({anon, op_api}) ::

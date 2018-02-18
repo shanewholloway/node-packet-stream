@@ -4,8 +4,8 @@ export const PktBase = @{}
   get id_target() :: return this._hdr_[1]
 
   inspect() :: return this._hdr_
-    ? `«pkt ${this.pkt_kind} ${JSON.stringify(this._hdr_.join(' '))}»`
-    : `«{Pkt ${this.pkt_kind}}»`
+    ? `«pkt(${this.pkt_kind}) ${JSON.stringify(this._hdr_.join(' '))}»`
+    : `«{Pkt(${this.pkt_kind})}»`
   repack_pkt(repack) :: return repack(this, this.pkt_kind)
 
 
@@ -41,6 +41,14 @@ export const MultiPktBase = @{}
   __proto__: null, is_pkt: false, is_multi_pkt: true
   get id_route() :: return this.pkt0.id_route
   get id_target() :: return this.pkt0.id_target
+  get op() :: return this.pkt0.op
+
+  inspect() :: return undefined !== this.pkt0
+    ? `«multipkt(${this._parts_} ${this.pkt_kind}) ${JSON.stringify([this.id_route, this.id_target].join(' '))}»`
+    : `«{MultiPkt(${this.pkt_kind})}»`
+
+  repack_pkt(repack) ::
+    throw new Error @ 'MultiPkt are not repackable'
 
   json // and... text(){}  buffer(){}  base64(){}
 
@@ -196,9 +204,11 @@ export function splitParts(buf, len) ::
 export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBody}) ::
 
   const MultiPktJson = @{} __proto__: MultiPktBase
+    pkt_kind: 'json', is_pkt_json: true
     text() :: return this._body_
 
   const MultiPktData = @{} __proto__: MultiPktBase
+    pkt_kind: 'data', is_pkt_data: true
     text() :: return decode_utf8 @ this.buffer()
     buffer() :: return this._body_
 
@@ -242,9 +252,11 @@ export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBo
       if 'split_json' === pkt_kind ::
         return Object.create @ MultiPktJson, @{}
           pkt0: {value: pkt0}
+          _parts_: {value: parts.length}
           _body_: {value: parts.join('')}
       else ::
         return Object.create @ MultiPktData, @{}
           pkt0: {value: pkt0}
+          _parts_: {value: parts.length}
           _body_: {value: concatBody(parts)}
 
