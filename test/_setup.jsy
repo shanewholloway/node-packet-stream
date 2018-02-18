@@ -5,7 +5,7 @@ import {TextEncoder, TextDecoder} from 'util'
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
-import BasicHub from '../dist/index.js'
+import BasicHub from '../cjs/msg-fabric-core-node.js'
 
 import tcp from '../esm/plugin-tcp'
 import tls from '../esm/plugin-tls'

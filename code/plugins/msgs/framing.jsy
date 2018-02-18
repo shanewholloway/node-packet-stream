@@ -87,6 +87,10 @@ const _as_unpackN_fn = (...fns) =>
 
 export function standard_frames() ::
   return @[]
+    // control datagram:
+    as_op_frame @: kind: 'ctrl', action: '?', frames: @# frm.token
+    as_op_frame @: kind: 'ctrl', action: '!', frames: @# frm.msgid
+
     // datagram:
     as_op_frame @: kind: 'datagram', action: '-', frames: @#
     as_op_frame @: kind: 'datagram', action: '@', frames: @# frm.from_route, frm.from_target

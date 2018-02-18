@@ -32,8 +32,10 @@ export function msg_source_api(shared) ::
 
 
     function _recv_(pkt) ::
-      const op = op_unpack @ pkt, Object.create(pkt_api)
+      const op = op_unpack @ pkt, {__proto__: pkt_api}
       if pkt.is_pkt_split ::
         return ctx.on_split_pkt(pkt, op)
-      return pkt
+      else if op.msgid ::
+        return ctx.on_response(op.msgid, pkt)
+      else return pkt
 

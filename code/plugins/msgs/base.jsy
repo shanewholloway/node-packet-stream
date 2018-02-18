@@ -59,13 +59,15 @@ export function msg_base_api(hub, options) ::
           return d
 
         responseFor(token) ::
-          return this.deferredFor(d).promise
+          return this.deferredFor(token).promise
 
         on_response(token, response) ::
           const d = db.get(token)
-          if undefined !== d ::
-            db.delete(token)
-            d.resolve(response)
+          if undefined === d ::
+            return response
+          db.delete(token)
+          d.resolve(response)
+          return null
 
         on_split_pkt(pkt, op) ::
           const key = op.token || op.msgid
@@ -140,6 +142,13 @@ export function msg_base_api(hub, options) ::
             .writeAll(parts, true)
             .response
 
+        ctrl(body) ::
+          const {response, opo} = this._new_response()
+          const {id_route, id_target} = this._mx_
+          const obj = @{} id_route, id_target, body
+          const pkt = op_api.ctrl @ obj, opo
+          this._send_pkt(pkt)
+          return response
 
 
   function bind_msg_api0() ::
