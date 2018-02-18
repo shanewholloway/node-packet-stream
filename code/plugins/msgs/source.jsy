@@ -15,21 +15,25 @@ export function msg_source_api(shared) ::
     else if 'function' === typeof ctx ::
       ctx = ctx(createContext)
 
-    const pkt_api = @{}
-      anon() :: return anon_api @ null, this
-      reply() :: return from_api @ null, this, from_route, from_target, ctx
-      resolve(ans) ::
-        const {msgid} = this
-        return msgid ? ctx.on_resolve(msgid, ans) : ans
-
-    return @{} _recv_
+    const source = @{} _recv_
       toJSON(obj={}) ::
         obj[sym_sampi] = `${from_route} ${from_target}`
         return obj
 
-      anon(id) :: return anon_api @ id, null
-      to(id) :: return from_api @ id, null, from_route, from_target, ctx
+      anon(id) :: return anon_api @ id, null, source
+      to(id) :: return from_src @ id, null
 
+    const from_src = from_api @:
+      from_route, from_target, ctx, source
+
+    const pkt_api = @{}
+      anon() :: return anon_api @ null, this, source
+      reply() :: return from_src @ null, this
+      resolve(ans) ::
+        const {msgid} = this
+        return msgid ? ctx.on_resolve(msgid, ans) : ans
+
+    return source
 
     function _recv_(pkt) ::
       const op = op_unpack @ pkt, {__proto__: pkt_api}

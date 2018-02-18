@@ -9,18 +9,21 @@ export function msg_sendFrom_api(shared) ::
 
   const mx_api = bind_mx_api(source_api, reply_api)
 
-  return shared.from_api = (to_id, pkt_op, from_route, from_target, ctx) => ::
+  return shared.from_api = ({from_route, from_target, ctx, source}) =>
+    (to_id, pkt_op) => ::
 
-    const [id_route, id_target] = null !== to_id
-      ? as_source_id(to_id) : as_reply_id(pkt_op)
+      const [id_route, id_target] = null !== to_id
+        ? as_source_id(to_id) : as_reply_id(pkt_op)
 
-    if null == id_route || null == id_target ::
-      throw new Error @ `Invalid id`
+      if null == id_route || null == id_target ::
+        throw new Error @ `Invalid id`
 
-    return mx_api @ pkt_op, @{}
-      id_route, id_target, ctx
-      pkt_op, opo0: @{} from_route, from_target
+      return mx_api @ pkt_op, @{}
+        id_route, id_target, ctx, source
+        pkt_op, opo0: {from_route, from_target}
 
 
-  function anon() :: return shared.anon_api(this._mx_, this._mx_.pkt_op)
+  function anon() ::
+    return shared.anon_api @
+      this._mx_, this._mx_.pkt_op, this._mx_.source
 
