@@ -165,6 +165,8 @@ export function msg_base_api(hub, options) ::
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON(obj={}) :: obj[sym_sampi] = this[sym_sampi]; return obj
 
+      get replyExpected() :: return !! this._mx_.opo0.msgid
+
       _new_token() ::
         const {ctx, opo0} = this._mx_
         const token = ctx.newToken()
