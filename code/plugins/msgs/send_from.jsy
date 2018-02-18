@@ -9,7 +9,7 @@ export function msg_sendFrom_api(shared) ::
 
   const mx_api = bind_mx_api(source_api, reply_api)
 
-  return shared.sendFrom_api = (to_id, pkt_op, from_route, from_target, ctx) => ::
+  return shared.from_api = (to_id, pkt_op, from_route, from_target, ctx) => ::
 
     const [id_route, id_target] = null !== to_id
       ? as_source_id(to_id) : as_reply_id(pkt_op)

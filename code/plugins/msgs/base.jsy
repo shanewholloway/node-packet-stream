@@ -30,8 +30,8 @@ export function bind_mx_api(source_api, reply_api) ::
 
 export default msg_base_api
 export function msg_base_api(hub, options) ::
-  const { _pkts_ } = hub
-  const { random } = hub.data_utils
+  const _pkts_ = hub._pkts_
+  const random = hub.data_utils.random
 
   const chan = options.channel || hub.channel
   const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
@@ -105,17 +105,26 @@ export function msg_base_api(hub, options) ::
     bind_msg_api({anon, op_api}) ::
       return @{} __proto__: msg_api0, anon
 
+        send(body) ::
+          const {msgid} = this._mx_.opo0
+          return msgid ? this._withResponse(body) : this.post(body)
+
+        answer(body) :: return this._withResponse(body)
+        query(body) :: return this._withResponse(body)
+
         post(body) ::
           const parts = _pkts_.splitBody(body)
           if 1 < parts.length ::
-            return this._msend(parts, this._mx_.opo0)
+            const {opo} = this._new_token()
+            return this._msend(parts, opo)
 
           const {id_route, id_target, opo0} = this._mx_
           const obj = @{} id_route, id_target, body: parts[0]
           const pkt = op_api.datagram @ obj, opo0
           this._send_pkt(pkt)
 
-        send(body) ::
+
+        _withResponse(body) ::
           const {response, opo} = this._new_response()
 
           const parts = _pkts_.splitBody(body)
@@ -156,13 +165,20 @@ export function msg_base_api(hub, options) ::
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON(obj={}) :: obj[sym_sampi] = this[sym_sampi]; return obj
 
+      _new_token() ::
+        const {ctx, opo0} = this._mx_
+        const token = ctx.newToken()
+        return @{} token,
+          opo: Object.assign @ {token}, opo0
+
       _new_response() ::
         const {ctx, opo0} = this._mx_
         if opo0.msgid :: return @{} opo: opo0
 
         const token = ctx.newToken()
-        return @{} token, response: ctx.responseFor(token)
+        return @{} token,
           opo: Object.assign @ {token}, opo0
+          response: ctx.responseFor(token)
 
       _send_pkt(pkt) :: chan.send(pkt)
 

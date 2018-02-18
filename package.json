@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -28,7 +28,7 @@
     "umd/"
   ],
   "main": "cjs/msg-fabric-core-node.js",
-  "module": "esm/index.js",
+  "module": "esm/msg-fabric-core-node.js",
   "browser": "umd/msg-fabric-core-browser.js",
   "dependencies": {},
   "devDependencies": {

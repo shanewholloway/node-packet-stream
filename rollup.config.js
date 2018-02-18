@@ -30,7 +30,10 @@ function package_core() {
       external, plugins },
 
     { input: 'code/index.node.jsy',
-      output: { file: pkg.main, format: 'cjs', sourcemap },
+      output: [
+        { file: pkg.module, format: 'es', sourcemap },
+        { file: pkg.main, format: 'cjs', sourcemap },
+      ],
       external: ['crypto', 'url'], plugins },
 
     prod_plugins &&

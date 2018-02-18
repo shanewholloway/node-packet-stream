@@ -2,7 +2,7 @@ import {sym_sampi, as_source_id} from './base.jsy'
 
 export default msg_source_api
 export function msg_source_api(shared) ::
-  const { op_unpack, createContext, sendFrom_api, anon_api } = shared
+  const { op_unpack, createContext, from_api, anon_api } = shared
 
   return shared.source_api = (src_id, ctx) => ::
 
@@ -17,10 +17,10 @@ export function msg_source_api(shared) ::
 
     const pkt_api = @{}
       anon() :: return anon_api @ null, this
-      reply() :: return sendFrom_api @ null, this, from_route, from_target, ctx
+      reply() :: return from_api @ null, this, from_route, from_target, ctx
       resolve(ans) ::
         const {msgid} = this
-        if msgid :: return ctx.on_response(msgid, ans), true
+        return msgid ? ctx.on_response(msgid, ans) : ans
 
     return @{} _recv_
       toJSON(obj={}) ::
@@ -28,7 +28,7 @@ export function msg_source_api(shared) ::
         return obj
 
       anon(id) :: return anon_api @ id, null
-      to(id) :: return sendFrom_api @ id, null, from_route, from_target, ctx
+      to(id) :: return from_api @ id, null, from_route, from_target, ctx
 
 
     function _recv_(pkt) ::
