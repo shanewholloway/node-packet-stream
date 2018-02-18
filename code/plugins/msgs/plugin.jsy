@@ -1,8 +1,8 @@
 import base_api from './base.jsy'
 import framing_api from './framing.jsy'
-import anon_api from './anon.jsy'
+import send_anon_api from './send_anon.jsy'
 import source_api from './source.jsy'
-import sendFrom_api from './reply.jsy'
+import send_from_api from './send_from.jsy'
 
 
 export default function msgs_plugin(plugin_options) ::
@@ -25,8 +25,8 @@ export default function msgs_plugin(plugin_options) ::
         ? ns => options.bind_replymsg(ns, bind_msg_api)
         : bind_msg_api
 
-      const as_anon = anon_api(shared)
-      sendFrom_api(shared)
+      const as_anon = send_anon_api(shared)
+      send_from_api(shared)
       const as_src = source_api(shared)
 
       return @{}

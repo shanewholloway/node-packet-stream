@@ -29,13 +29,13 @@ function package_core() {
       ],
       external, plugins },
 
-    { input: 'code/index.nodejs.jsy',
+    { input: 'code/index.node.jsy',
       output: { file: pkg.main, format: 'cjs', sourcemap },
       external: ['crypto', 'url'], plugins },
 
     prod_plugins &&
       { input: 'code/index.browser.jsy',
-        output: { file: pkg.browser, name:'msg_fabric_core', format: 'umd', sourcemap },
+        output: { file: pkg.browser, name:'msg-fabric-core', format: 'umd', sourcemap },
         external, plugins: prod_plugins },
   ]}
 
@@ -44,7 +44,7 @@ function package_plugin_pkt() {
   const external = []
   const bundles = {
     'index': ['plugin-pkt-all', external],
-    'node': ['plugin-pkt-nodejs', external],
+    'node': ['plugin-pkt-node', external],
     'browser': ['plugin-pkt-browser', external],
     'browser_binary': ['plugin-pkt-browser-binary', external],
     'browser_line': ['plugin-pkt-browser-line', external],
@@ -88,8 +88,8 @@ function package_plugin_msgs() {
 
 
 function bundleForPlugin(plugin_name) {
-  return ([name, [out, external]]) => (
-    { input: `code/plugins/${plugin_name}/${name}.jsy`,
+  return ([filename, [out, external]]) => (
+    { input: `code/plugins/${plugin_name}/${filename}.jsy`,
       output: [
         { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
         { file: `esm/${out}.js`, format: 'es', sourcemap },

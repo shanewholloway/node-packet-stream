@@ -23,14 +23,13 @@
     "passing"
   ],
   "files": [
-    "dist/",
     "cjs/",
     "esm/",
     "umd/"
   ],
-  "main": "dist/index.js",
+  "main": "cjs/msg-fabric-core-node.js",
   "module": "esm/index.js",
-  "browser": "umd/msg-fabric-core.js",
+  "browser": "umd/msg-fabric-core-browser.js",
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -44,7 +43,7 @@
     "presets": "jsy/lean"
   },
   "scripts": {
-    "clean": "rm cjs/* esm/* umd/* dist/*",
+    "clean": "rm cjs/* esm/* umd/*",
     "build": "rollup --config",
     "watch": "npm -s run build -- --watch",
     "pretest": "npm -s run build",
