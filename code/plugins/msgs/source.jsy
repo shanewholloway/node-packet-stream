@@ -20,7 +20,7 @@ export function msg_source_api(shared) ::
       reply() :: return from_api @ null, this, from_route, from_target, ctx
       resolve(ans) ::
         const {msgid} = this
-        return msgid ? ctx.on_response(msgid, ans) : ans
+        return msgid ? ctx.on_resolve(msgid, ans) : ans
 
     return @{} _recv_
       toJSON(obj={}) ::
@@ -35,7 +35,5 @@ export function msg_source_api(shared) ::
       const op = op_unpack @ pkt, {__proto__: pkt_api}
       if pkt.is_pkt_split ::
         return ctx.on_split_pkt(pkt, op)
-      else if op.msgid ::
-        return ctx.on_response(op.msgid, pkt)
       else return pkt
 

@@ -32,3 +32,4 @@ export default function msgs_plugin(plugin_options) ::
       return @{}
         to(id) :: return as_anon(id, null)
         as(id) :: return as_src(id)
+        expire: shared.expire

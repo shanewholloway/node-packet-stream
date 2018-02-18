@@ -61,16 +61,16 @@ export function msg_base_api(hub, options) ::
         responseFor(token) ::
           return this.deferredFor(token).promise
 
-        on_response(token, response) ::
-          const d = db.get(token)
-          if undefined === d ::
-            return response
-          db.delete(token)
-          d.resolve(response)
+        on_resolve(msgid, ans) ::
+          if ! msgid :: return ans
+          const d = db.get(msgid)
+          if undefined === d :: return ans
+          db.delete(msgid)
+          d.resolve(ans)
           return null
 
         on_split_pkt(pkt, op) ::
-          const key = op.token || op.msgid
+          const key = '~ ' + (op.token || op.msgid)
           let d = db.get(key)
           if undefined === d ::
             d = this.deferredFor(key)
