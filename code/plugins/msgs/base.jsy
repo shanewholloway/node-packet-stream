@@ -42,6 +42,9 @@ export function msg_base_api(hub, options) ::
 
   return @{}
     newToken, expire, msg_api0
+    bind_msg_api
+    bind_sendmsg
+    bind_replymsg
 
     createContext() ::
       let db = new Map()
@@ -102,62 +105,114 @@ export function msg_base_api(hub, options) ::
             return null
 
 
-    bind_msg_api({anon, op_api}) ::
-      return @{} __proto__: msg_api0, anon
+  function bind_sendmsg(kw) ::
+    const api = bind_msg_api(kw)
+    api.send = api.post
+    return api
 
-        send(body) ::
-          const {msgid} = this._mx_.opo0
-          return msgid ? this._withResponse(body) : this.post(body)
+  function bind_replymsg(kw) ::
+    const api = bind_msg_api(kw)
+    api.send = api.answer
+    api.replyExpected = true
+    return api
 
-        answer(body) :: return this._withResponse(body)
-        query(body) :: return this._withResponse(body)
+  function bind_msg_api({anon, op_api}) ::
+    return @{} __proto__: msg_api0, anon
+      answer: _mp_with_response
+      query: _mp_with_response
+      post: _mp_post
 
-        post(body) ::
-          const parts = _pkts_.splitBody(body)
-          if 1 < parts.length ::
-            const {opo} = this._new_token()
-            return this._msend(parts, opo)
+      dg_post: _dg_post
+      dg_query: _dg_response
+      dg_answer: _dg_response
 
-          const {id_route, id_target, opo0} = this._mx_
-          const obj = @{} id_route, id_target, body: parts[0]
-          const pkt = op_api.datagram @ obj, opo0
-          this._send_pkt(pkt)
+      stream() ::
+        const {response, opo} = this._new_response()
+        return _wstream(this, opo, op_api.stream, response)
 
+      multipart() ::
+        const {response, opo} = this._new_response()
+        return _wstream(this, opo, op_api.multipart, response)
 
-        _withResponse(body) ::
-          const {response, opo} = this._new_response()
-
-          const parts = _pkts_.splitBody(body)
-          if 1 < parts.length ::
-            return this._msend(parts, opo, response)
-
-          const {id_route, id_target} = this._mx_
-          const obj = @{} id_route, id_target, body: parts[0]
-          const pkt = op_api.direct @ obj, opo
-          this._send_pkt(pkt)
-          return response
+      ctrl(body) ::
+        const {response, opo} = this._new_response()
+        const {id_route, id_target} = this._mx_
+        const obj = @{} id_route, id_target, body
+        const pkt = op_api.ctrl @ obj, opo
+        this._send_pkt(pkt)
+        return response
 
 
-        stream() ::
-          const {response, opo} = this._new_response()
-          return this._wstream(opo, op_api.stream, response)
+    function _mp_post(body) ::
+      const parts = _pkts_.splitBody(body)
+      if 1 < parts.length ::
+        const {opo} = this._new_token()
+        return _msend(this, parts, opo)
 
-        multipart() ::
-          const {response, opo} = this._new_response()
-          return this._wstream(opo, op_api.multipart, response)
+      const {id_route, id_target, opo0} = this._mx_
+      const obj = @{} id_route, id_target, body: parts[0]
+      const pkt = op_api.datagram @ obj, opo0
+      this._send_pkt(pkt)
 
-        _msend(parts, opo, response) ::
-          return this._wstream(opo, op_api.multipart, response)
-            .writeAll(parts, true)
-            .response
+    function _mp_with_response(body) ::
+      const {response, opo} = this._new_response()
 
-        ctrl(body) ::
-          const {response, opo} = this._new_response()
-          const {id_route, id_target} = this._mx_
+      const parts = _pkts_.splitBody(body)
+      if 1 < parts.length ::
+        return _msend(this, parts, opo, response)
+
+      const {id_route, id_target} = this._mx_
+      const obj = @{} id_route, id_target, body: parts[0]
+      const pkt = op_api.direct @ obj, opo
+      this._send_pkt(pkt)
+      return response
+
+    function _dg_post(body) ::
+      const {id_route, id_target, opo0} = this._mx_
+      const obj = @{} id_route, id_target, body
+      const pkt = op_api.datagram @ obj, opo0
+      this._send_pkt(pkt)
+
+    function _dg_response(body) ::
+      const {response, opo} = this._new_response()
+      const {id_route, id_target} = this._mx_
+      const obj = @{} id_route, id_target, body
+      const pkt = op_api.direct @ obj, opo
+      this._send_pkt(pkt)
+      return response
+
+    function _msend(msgapi, parts, opo, response) ::
+      return _wstream(msgapi, opo, op_api.multipart, response)
+        .writeAll(parts, true)
+        .response
+
+    function _wstream(msgapi, opo, op_method, response) ::
+      const {id_route, id_target} = msgapi._mx_
+      let seq=0, self
+      return self = @{} response
+        write: body => ::
           const obj = @{} id_route, id_target, body
-          const pkt = op_api.ctrl @ obj, opo
-          this._send_pkt(pkt)
-          return response
+          const pkt = op_method @ obj,
+            Object.assign({seq: seq++}, opo)
+          msgapi._send_pkt(pkt)
+          return self
+
+        writeAll: (body, close) => ::
+          let cur, next
+          for next of body ::
+            if undefined !== cur ::
+              self.write(cur)
+            cur = next
+
+          return undefined === cur ? self
+            : close ? self.end(cur)
+              : self.write(cur)
+
+        end: body => ::
+          seq = -seq
+          self.write(body)
+          seq = null
+          return self
 
 
   function bind_msg_api0() ::
@@ -165,7 +220,7 @@ export function msg_base_api(hub, options) ::
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON(obj={}) :: obj[sym_sampi] = this[sym_sampi]; return obj
 
-      get replyExpected() :: return !! this._mx_.opo0.msgid
+      _send_pkt(pkt) :: chan.send(pkt)
 
       _new_token() ::
         const {ctx, opo0} = this._mx_
@@ -181,34 +236,4 @@ export function msg_base_api(hub, options) ::
         return @{} token,
           opo: Object.assign @ {token}, opo0
           response: ctx.responseFor(token)
-
-      _send_pkt(pkt) :: chan.send(pkt)
-
-      _wstream(opo, op_method, response) ::
-        const {id_route, id_target} = this._mx_
-        let seq=0, self
-        return self = @{} response
-          write: body => ::
-            const obj = @{} id_route, id_target, body
-            const pkt = op_method @ obj,
-              Object.assign({seq: seq++}, opo)
-            this._send_pkt(pkt)
-            return self
-
-          writeAll: (body, close) => ::
-            let cur, next
-            for next of body ::
-              if undefined !== cur ::
-                self.write(cur)
-              cur = next
-
-            return undefined === cur ? self
-              : close ? self.end(cur)
-                : self.write(cur)
-
-          end: body => ::
-            seq = -seq
-            self.write(body)
-            seq = null
-            return self
 

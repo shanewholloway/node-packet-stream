@@ -16,14 +16,8 @@ export default function msgs_plugin(plugin_options) ::
 
       framing_api(shared, options.bind_framings)
 
-      const {bind_msg_api} = shared
-      shared.bind_sendmsg_api = options.bind_sendmsg
-        ? ns => options.bind_sendmsg(ns, bind_msg_api)
-        : bind_msg_api
-
-      shared.bind_replymsg_api = options.bind_replymsg
-        ? ns => options.bind_replymsg(ns, bind_msg_api)
-        : bind_msg_api
+      if options.bind_msgapis ::
+        _extend_msgapis(options, shared)
 
       const as_anon = send_anon_api(shared)
       send_from_api(shared)
@@ -33,3 +27,15 @@ export default function msgs_plugin(plugin_options) ::
         to(id) :: return as_anon(id, null)
         as(id) :: return as_src(id)
         expire: shared.expire
+
+
+function _extend_msgapis(options, shared) ::
+  const {bind_msg_api, bind_sendmsg, bind_replymsg} =
+    options.bind_msgapis @:
+      bind_msg_api: shared.bind_msg_api
+      bind_sendmsg: shared.bind_sendmsg
+      bind_replymsg: shared.bind_replymsg
+
+  if bind_msg_api :: shared.bind_msg_api = bind_msg_api
+  if bind_sendmsg :: shared.bind_sendmsg = bind_sendmsg
+  if bind_replymsg :: shared.bind_replymsg = bind_replymsg

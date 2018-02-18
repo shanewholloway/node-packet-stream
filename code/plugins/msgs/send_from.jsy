@@ -2,10 +2,10 @@ import {as_source_id, as_reply_id, bind_mx_api} from './base.jsy'
 
 export default msg_sendFrom_api
 export function msg_sendFrom_api(shared) ::
-  const { bind_sendmsg_api, bind_replymsg_api } = shared
+  const { bind_sendmsg, bind_replymsg } = shared
 
-  const source_api = bind_sendmsg_api @: anon, op_api: shared.ops_api.from_source
-  const reply_api = bind_replymsg_api @: anon, op_api: shared.ops_api.from_reply
+  const source_api = bind_sendmsg @: anon, op_api: shared.ops_api.from_source
+  const reply_api = bind_replymsg @: anon, op_api: shared.ops_api.from_reply
 
   const mx_api = bind_mx_api(source_api, reply_api)
 
