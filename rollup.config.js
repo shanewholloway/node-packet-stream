@@ -47,7 +47,7 @@ function package_core() {
     prod_plugins &&
       { input: 'code/index.browser.jsy',
         output: [
-          { file: pkg.browser, name:'msg-fabric-core', format: 'umd', sourcemap },
+          { file: pkg.browser, name:'msg-fabric-core', format: 'umd' },
         ],
         external: [], plugins: prod_plugins },
   ]}
