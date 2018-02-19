@@ -1,4 +1,4 @@
-import Hub from './index.jsy'
+import FabricHub from './index.jsy'
 import platform from '../plugins/platform/browser.jsy'
 import pkt from '../plugins/pkt/browser.jsy'
 import msgs from '../plugins/msgs/plugin.jsy'

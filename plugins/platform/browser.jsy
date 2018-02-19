@@ -19,7 +19,7 @@ const data_utils = @{}
 function random(n, asBase64) ::
   const ua = new Uint8Array(n)
   window.crypto.getRandomValues(ua)
-  return asBase64 ? pack_base64(bytes.toString('base64')) : ua
+  return asBase64 ? pack_base64(ua) : ua
 
 function parse_url(url) ::
   return new URL(url)
