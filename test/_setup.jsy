@@ -5,11 +5,11 @@ import {TextEncoder, TextDecoder} from 'util'
 Object.assign @ global, @:
   URL, TextDecoder, TextEncoder
 
-import BasicHub from '../cjs/msg-fabric-core-node.js'
+import BasicHub from '..'
 
-import tcp from '../esm/plugin-tcp'
-import tls from '../esm/plugin-tls'
-import direct from '../esm/plugin-direct'
+import tcp from '../esm/plugin-net-tcp'
+import tls from '../esm/plugin-net-tls'
+import direct from '../esm/plugin-net-direct'
 
 
 export const TestDirectHub = BasicHub.plugin @ direct()
