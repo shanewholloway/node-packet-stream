@@ -19,15 +19,13 @@ export default [].concat(
 
 
 function package_core() {
-  const external = []
-
   return [
     { input: 'code/index.jsy',
       output: [
         { file: 'esm/index.js', format: 'es', sourcemap },
         { file: 'cjs/index.js', format: 'cjs', sourcemap, exports: 'named' },
       ],
-      external, plugins },
+      external: [], plugins },
 
     { input: 'code/index.node.jsy',
       output: [
@@ -36,10 +34,17 @@ function package_core() {
       ],
       external: ['crypto', 'url'], plugins },
 
+    { input: 'code/index.browser.jsy',
+      output: 
+        { file: 'esm/msg-fabric-core-browser', format: 'es', sourcemap },
+      external: [], plugins },
+
     prod_plugins &&
       { input: 'code/index.browser.jsy',
-        output: { file: pkg.browser, name:'msg-fabric-core', format: 'umd', sourcemap },
-        external, plugins: prod_plugins },
+        output: [
+          { file: pkg.browser, name:'msg-fabric-core', format: 'umd', sourcemap },
+        ],
+        external: [], plugins: prod_plugins },
   ]}
 
 
@@ -71,9 +76,9 @@ function package_plugin_net() {
   const external=[], external_node=['crypto', 'url']
   const bundles = {
     'index': ['plugin-net-all', ['net', 'tls', 'stream']],
-    'tcp': ['plugin-tcp', ['net']],
-    'tls': ['plugin-tls', ['tls']],
-    'direct': ['plugin-direct', ['stream']],
+    'tcp': ['plugin-net-tcp', ['net']],
+    'tls': ['plugin-net-tls', ['tls']],
+    'direct': ['plugin-net-direct', ['stream']],
   }
 
   return Object.entries(bundles).map(bundleForPlugin('net')) }
@@ -92,7 +97,7 @@ function package_plugin_msgs() {
 
 function bundleForPlugin(plugin_name) {
   return ([filename, [out, external]]) => (
-    { input: `code/plugins/${plugin_name}/${filename}.jsy`,
+    { input: `plugins/${plugin_name}/${filename}.jsy`,
       output: [
         { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
         { file: `esm/${out}.js`, format: 'es', sourcemap },
