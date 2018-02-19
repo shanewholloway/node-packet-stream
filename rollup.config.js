@@ -1,13 +1,18 @@
 import pkg from './package.json'
 import {minify} from 'uglify-es'
-import rpi_jsy from 'rollup-plugin-jsy-babel'
 import rpi_uglify from 'rollup-plugin-uglify'
+import rpi_gzip from "rollup-plugin-gzip"
+import rpi_jsy from 'rollup-plugin-jsy-babel'
+
 
 const sourcemap = 'inline'
 const plugins = [rpi_jsy()]
 
 const ugly = { warnings: true, output: {comments: false, max_line_len: 256}}
-const prod_plugins = plugins.concat([rpi_uglify(ugly, minify)])
+const prod_plugins = plugins.concat([
+  rpi_uglify(ugly, minify),
+  rpi_gzip({ options: {level: 9 } }),
+])
 
 export default [].concat(
   package_core(),
