@@ -1,18 +1,22 @@
 require('source-map-support').install()
 
-import {URL} from 'url'
-import {TextEncoder, TextDecoder} from 'util'
-Object.assign @ global, @:
-  URL, TextDecoder, TextEncoder
+const {URL} = require('url')
+const {TextEncoder, TextDecoder} = require('util')
+Object.assign(global, {URL, TextDecoder, TextEncoder})
 
-import BasicHub from '..'
+const BasicHub = require('..')
 
-import tcp from '../esm/plugin-net-tcp'
-import tls from '../esm/plugin-net-tls'
-import direct from '../esm/plugin-net-direct'
+const tcp = require('../cjs/plugin-net-tcp')
+const tls = require('../cjs/plugin-net-tls')
+const direct = require('../cjs/plugin-net-direct')
 
+const TestDirectHub = BasicHub.plugin( direct() )
+const TestNetHub = BasicHub.plugin( tcp(), tls() )
 
-export const TestDirectHub = BasicHub.plugin @ direct()
-export const TestNetHub = BasicHub.plugin @ tcp(), tls()
-
-export default BasicHub
+module.exports = exports = BasicHub
+Object.assign(exports, {
+  default: BasicHub,
+  BasicHub,
+  TestDirectHub,
+  TestNetHub,
+})

@@ -34,20 +34,24 @@ function package_core() {
 
     { input: 'code/index.node.jsy',
       output: [
+        { file: 'esm/core-node.js', format: 'es', sourcemap },
         { file: pkg.module, format: 'es', sourcemap },
         { file: pkg.main, format: 'cjs', sourcemap },
       ],
       external: ['crypto', 'url'], plugins },
 
     { input: 'code/index.browser.jsy',
-      output: 
-        { file: 'esm/msg-fabric-core-browser', format: 'es', sourcemap },
+      output: [
+        { file: 'cjs/core-browser.js', format: 'cjs', sourcemap },
+        { file: 'esm/core-browser.js', format: 'es', sourcemap },
+        { file: 'umd/msg-fabric-core.js', format: 'umd', sourcemap, name:'msg-fabric-core' },
+      ],
       external: [], plugins },
 
     prod_plugins &&
       { input: 'code/index.browser.jsy',
         output: [
-          { file: pkg.browser, name:'msg-fabric-core', format: 'umd' },
+          { file: pkg.browser, format: 'umd', name:'msg-fabric-core' },
         ],
         external: [], plugins: prod_plugins },
   ]}
@@ -56,55 +60,59 @@ function package_core() {
 function package_plugin_pkt() {
   const external = []
   const bundles = {
-    'index': ['plugin-pkt-all', external],
+    'index': ['plugin-pkt-all', external, {exports: 'named'}],
     'node': ['plugin-pkt-node', external],
     'browser': ['plugin-pkt-browser', external],
     'browser_binary': ['plugin-pkt-browser-binary', external],
     'browser_line': ['plugin-pkt-browser-line', external],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('pkt')) }
+  return bundleForPlugin(bundles, 'pkt') }
 
 
 function package_plugin_platform() {
   const external=[], external_node=['crypto', 'url']
   const bundles = {
-    'index': ['plugin-platform-all', external_node],
+    'index': ['plugin-platform-all', external_node, {exports: 'named'}],
     'node': ['plugin-platform-node', external_node],
     'browser': ['plugin-platform-browser', external],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('platform')) }
+  return bundleForPlugin(bundles, 'platform') }
 
 
 function package_plugin_net() {
   const external=[], external_node=['crypto', 'url']
   const bundles = {
-    'index': ['plugin-net-all', ['net', 'tls', 'stream']],
+    'index': ['plugin-net-all', ['net', 'tls', 'stream'], {exports: 'named'}],
     'tcp': ['plugin-net-tcp', ['net']],
     'tls': ['plugin-net-tls', ['tls']],
     'direct': ['plugin-net-direct', ['stream']],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('net')) }
+  return bundleForPlugin(bundles, 'net') }
 
 
 function package_plugin_msgs() {
   const external=[]
   const bundles = {
-    'index': ['plugin-msgs-all', external],
+    'index': ['plugin-msgs-all', external, {exports: 'named'}],
     'plugin': ['plugin-msgs', external],
   }
 
-  return Object.entries(bundles).map(bundleForPlugin('msgs')) }
+  return bundleForPlugin(bundles, 'msgs') }
 
 
 
-function bundleForPlugin(plugin_name) {
-  return ([filename, [out, external]]) => (
+function bundleForPlugin(bundles, plugin_name) {
+  const as_bundle = (filename, out, external, {exports}) => (
     { input: `plugins/${plugin_name}/${filename}.jsy`,
       output: [
-        { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports: 'named'  },
+        { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports },
         { file: `esm/${out}.js`, format: 'es', sourcemap },
       ],
-      external, plugins } )}
+      external, plugins } )
+
+  return Object.entries(bundles)
+    .map(([filename, [out, external, kw]]) =>
+      as_bundle( filename, out, external||[], kw||{} ) )}

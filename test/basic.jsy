@@ -1,7 +1,7 @@
-import Hub from './_setup.jsy'
+const Hub = require('./_setup.jsy')
 
 const h1 = new Hub()
-console.dir @ h1, @{} colors: true
+console.dir( h1, { colors: true })
 
 const h2 = Hub.create()
-console.dir @ h2, @{} colors: true
+console.dir( h2, { colors: true })
