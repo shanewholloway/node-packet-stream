@@ -7,14 +7,21 @@ import {applyPlugins} from './utils.jsy'
 export class FabricHub ::
   static create(...args) :: return new this(...args)
 
-  constructor(id_local_route) ::
+  constructor(options) ::
+    if null == options :: options = {}
+    else if 'string' === typeof options ::
+      options = @{} id_route: options
+
+    Object.defineProperties @ this, @{}
+      options: {value: options}
+
     applyPlugins @ 'pre', this.pluginList, this
 
     const router = this._init_fabricRouter()
     const dispatch = router.dispatch
 
     const p2p = this.createP2PRoute(router)
-    const local = this.createLocalRoute(router, id_local_route)
+    const local = this.createLocalRoute(router, options.id_route)
     p2p.publishRoute(local)
 
     const channel = this._bindSendLocal(dispatch)
@@ -48,7 +55,10 @@ export class FabricHub ::
     return new klass.TargetRouter @
       id_route, router
 
-  newRouteId() :: return this.data_utils.random(5, true).slice(0, 6)
+  newRouteId() ::
+    const id = this.data_utils.random(5, true).slice(0, 6)
+    const prefix = this.options.prefix
+    return undefined === prefix ? id : prefix+id
 
   /* data_utils is provided by router plugins
 
