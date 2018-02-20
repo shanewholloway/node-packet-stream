@@ -1,0 +1,36 @@
+import { PktJsonBase, PktDataBase, bind_binaryPacket } from './common.jsy'
+
+export default function({ decode_utf8, encode_utf8, pack_base64, unpack_base64, as_data, concat_data }) ::
+  const packBody=as_data, concatBody=concat_data
+
+  const PktJson = @{} __proto__: PktJsonBase
+    text() :: return decode_utf8 @ this._body_
+
+  const PktData = @{} __proto__: PktDataBase
+    text() :: return decode_utf8 @ this._body_
+    base64() :: return pack_base64 @ this._body_
+    buffer() :: return this._body_
+
+
+  return bind_binaryPacket @:
+    decode_utf8, unpack_base64, packBody, packParts, concatBody
+    PktJson, PktData
+
+
+  function packParts(hdr, body) ::
+    if body ::
+      return packPartsU8 @ hdr, packBody(body)
+    else return hdr
+
+  function packPartsU8(hdr, body) ::
+    hdr = encode_utf8(hdr)
+    const len0 = hdr.byteLength
+    const len = len0 + body.byteLength
+
+    const u8 = new Uint8Array(len)
+    u8.set @ hdr, 0
+
+    if len0 !== len ::
+      u8.set @ new Uint8Array(body.buffer || body), len0
+    return u8
+

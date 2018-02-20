@@ -1,3 +1,4 @@
 export * from './browser_util.jsy'
-export * from './browser_binary.jsy'
+export * from './browser_call_binary.jsy'
+export * from './browser_len_binary.jsy'
 export * from './browser_line.jsy'

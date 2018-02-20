@@ -30,7 +30,7 @@ export function bind_mx_api(source_api, reply_api) ::
 
 export default msg_base_api
 export function msg_base_api(hub, options) ::
-  const _pkts_ = hub._pkts_
+  const {splitBody, joinPackets} = hub._pkts_
   const random = hub.data_utils.random
 
   const chan = options.channel || hub.channel
@@ -97,7 +97,7 @@ export function msg_base_api(hub, options) ::
 
             if ! parts.includes(undefined) ::
               // all parts accounted for
-              const multi = _pkts_.joinPackets(parts)
+              const multi = joinPackets(parts)
               parts = null
               d.resolve(multi)
               db.delete(key)
@@ -144,7 +144,7 @@ export function msg_base_api(hub, options) ::
 
 
     function _mp_post(body) ::
-      const parts = _pkts_.splitBody(body)
+      const parts = splitBody(body)
       if 1 < parts.length ::
         const {opo} = this._new_token()
         return _msend(this, parts, opo)
@@ -157,7 +157,7 @@ export function msg_base_api(hub, options) ::
     function _mp_with_response(body) ::
       const {response, opo} = this._new_response()
 
-      const parts = _pkts_.splitBody(body)
+      const parts = splitBody(body)
       if 1 < parts.length ::
         return _msend(this, parts, opo, response)
 

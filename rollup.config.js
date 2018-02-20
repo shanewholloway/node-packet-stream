@@ -63,7 +63,6 @@ function package_plugin_pkt() {
     'index': ['plugin-pkt-all', external, {exports: 'named'}],
     'node': ['plugin-pkt-node', external],
     'browser': ['plugin-pkt-browser', external],
-    'browser_binary': ['plugin-pkt-browser-binary', external],
     'browser_line': ['plugin-pkt-browser-line', external],
   }
 

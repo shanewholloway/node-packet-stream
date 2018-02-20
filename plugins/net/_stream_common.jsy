@@ -15,7 +15,7 @@ export function stream_common(hub) ::
 
 
 export function bind_channelDispatch(hub, channel_base) ::
-  const {dispatch} = hub, {packBinaryPacket, unpackBinaryPacket} = hub._pkts_node_
+  const {dispatch} = hub, {packBinaryPacket, unpackBinaryPacket} = hub._pkts_node_.bin_len
   const pktDispatch = function (channel, pktList) ::
     pktList = pktList.map(unpackBinaryPacket)
     return dispatch @ pktList, channel
