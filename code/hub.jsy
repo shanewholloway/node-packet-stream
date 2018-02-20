@@ -57,7 +57,7 @@ export class FabricHub ::
 
   newRouteId() ::
     const id = this.data_utils.random(5, true).slice(0, 6)
-    const prefix = this.options.prefix
+    const prefix = this.options.id_prefix
     return undefined === prefix ? id : prefix+id
 
   /* data_utils is provided by router plugins
