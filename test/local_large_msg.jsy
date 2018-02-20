@@ -23,10 +23,13 @@ const apple = @{} id_route, id_target: 'apple'
 const msg_apple = hub.msgs.to @: id_route, id_target: 'apple'
 
 const line = '0123456789abcde '.repeat(16)
+msg_apple.send @ Array(16).fill(line)
+msg_apple.send @ Array(32).fill(line)
+msg_apple.send @ Array(62).fill(line)
+
+msg_apple.send @ Array(64).fill(line)
 msg_apple.send @ Array(128).fill(line)
 msg_apple.send @ Array(256).fill(line)
-msg_apple.send @ Array(384).fill(line)
 msg_apple.send @ Array(512).fill(line)
-msg_apple.send @ Array(768).fill(line)
 msg_apple.send @ Array(1024).fill(line)
 

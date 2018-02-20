@@ -22,7 +22,11 @@ export const PktDataBase = @{} __proto__: PktBase
   json // and... text(){}  buffer(){}  base64(){}
 
 
-export const maxlen = (1<<16) - (1<<10)
+// Max of 16,384 bytes is the practical SCTP limit. (ref: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels#Concerns_with_large_messages)
+export const maxlen_pkt = 16 << 10
+export const maxlen_hdr = 256 // 192 bytes id_route + id_target; 56 all op fields; 8 bytes spacing overhead
+export const maxlen_msg = maxlen_pkt - maxlen_hdr // 1.6% overhead reserved
+
 export const sym_split = Symbol('pkt split')
 export const k_data = '=', k_split_data = '?'
 export const k_json = '@', k_split_json = '#'
@@ -196,7 +200,7 @@ export function is_json_body(body) ::
 export function splitParts(buf, len) ::
   const parts = []
   for let i1=0,i0=0; i0<len; i0 = i1 ::
-    i1 = i0 + maxlen
+    i1 = i0 + maxlen_msg
     parts.push @ buf.slice(i0, i1)
   return parts
 
@@ -223,7 +227,7 @@ export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBo
     splitBody(body) ::
       if is_json_body(body) ::
         const src = JSON.stringify(body)||''
-        if src.length <= maxlen ::
+        if src.length <= maxlen_msg ::
           return [{[sym_split]: k_json, src}]
 
         return splitParts(src, src.length)
@@ -231,7 +235,7 @@ export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBo
             [sym_split]: k_split_json, src, idx
 
       const buf = packBody(body)
-      if buf.byteLength <= maxlen ::
+      if buf.byteLength <= maxlen_msg ::
         return [{[sym_split]: k_data, buf}]
 
       return splitParts(buf, buf.byteLength)
