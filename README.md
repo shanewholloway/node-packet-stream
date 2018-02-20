@@ -11,9 +11,7 @@ Inspired by:
 - Foundational
   - [msg-fabric](https://www.npmjs.com/package/msg-fabric)
   - [msg-fabric-core](https://www.npmjs.com/package/msg-fabric-core)
-  - [msg-fabric-packet-stream](https://www.npmjs.com/package/msg-fabric-packet-stream)
 
 - Plugins
-  - [msg-fabric-plugin-router-ec](https://npmjs.com/packages/msg-fabric-plugin-router-ec) Eliptic Curve verifable router identify
   - [msg-fabric-plugin-swim-discovery](https://npmjs.com/packages/msg-fabric-plugin-swim-discovery)
     - **SWIM:** Scalable Weakly-consistent Infection-style Process Group Membership Protocol [PDF](http://www.cs.cornell.edu/~asdas/research/dsn02-SWIM.pdf)
