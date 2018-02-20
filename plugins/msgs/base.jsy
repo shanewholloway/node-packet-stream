@@ -38,7 +38,7 @@ export function msg_base_api(hub, options) ::
   const expire = timeoutReaper @ options.timeout || 5000
   const newToken = () => random(tokenLen, true)
 
-  const msg_api0 = bind_msg_api0()
+  const msg_api0 = bind_msg_api0(chan)
 
   return @{}
     newToken, expire, msg_api0
@@ -215,12 +215,12 @@ export function msg_base_api(hub, options) ::
           return self
 
 
-  function bind_msg_api0() ::
+  function bind_msg_api0(chan) ::
     return @{} __proto__: null
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON(obj={}) :: obj[sym_sampi] = this[sym_sampi]; return obj
 
-      _send_pkt(pkt) :: chan.send(pkt)
+      _send_pkt: chan.send.bind(chan)
 
       _new_token() ::
         const {ctx, opo0} = this._mx_

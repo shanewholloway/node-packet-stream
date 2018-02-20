@@ -24,8 +24,10 @@ export default function msgs_plugin(plugin_options) ::
       const as_src = source_api(shared)
 
       return @{}
-        to(id) :: return as_anon(id, null)
-        as(id) :: return as_src(id)
+        to(id) :: return as_anon @ id, null, as_anon.root_source(this)
+        as(id) :: return as_src @ id, this
+
+        createContext: shared.createContext
         expire: shared.expire
 
 

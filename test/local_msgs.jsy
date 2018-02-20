@@ -61,4 +61,3 @@ const orange = addTarget @ hub, 'orange', @{}
     else ::
       console.log @ 'no reply available', pkt, pkt._hdr_.op
 
-setTimeout @ ()=>null, 6000

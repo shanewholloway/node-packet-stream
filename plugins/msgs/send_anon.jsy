@@ -10,7 +10,11 @@ export function msg_anon_api(shared) ::
   const mx_api = bind_mx_api(source_api, reply_api)
   const anon_ctx = @{} newToken, responseFor() {}, on_response() {}
 
-  return shared.anon_api = (to_id, pkt_op, source) => ::
+  anon_api.root_source = pi_msgs => @:
+  return shared.anon_api = anon_api
+
+  function anon_api(to_id, pkt_op, source) ::
+    if null == source :: throw new TypeError('Invalid source')
 
     const [id_route, id_target] = null !== to_id
       ? as_source_id(to_id) : as_reply_id(pkt_op)

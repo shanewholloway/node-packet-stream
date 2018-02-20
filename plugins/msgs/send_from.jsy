@@ -9,8 +9,10 @@ export function msg_sendFrom_api(shared) ::
 
   const mx_api = bind_mx_api(source_api, reply_api)
 
-  return shared.from_api = ({from_route, from_target, ctx, source}) =>
-    (to_id, pkt_op) => ::
+  return shared.from_api = ({from_route, from_target, ctx, source}) => ::
+    if null == source :: throw new TypeError('Invalid source')
+
+    return (to_id, pkt_op) => ::
 
       const [id_route, id_target] = null !== to_id
         ? as_source_id(to_id) : as_reply_id(pkt_op)
@@ -24,6 +26,7 @@ export function msg_sendFrom_api(shared) ::
 
 
   function anon() ::
+    const _mx_ = this._mx_
     return shared.anon_api @
-      this._mx_, this._mx_.pkt_op, this._mx_.source
+      _mx_, _mx_.pkt_op, _mx_.source
 
