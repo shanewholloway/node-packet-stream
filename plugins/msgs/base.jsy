@@ -134,17 +134,17 @@ export function msg_base_api(hub, options) ::
         const {response, opo} = this._new_response()
         return _wstream(this, opo, op_api.multipart, response)
 
-      ctrl(body) ::
+      ctrl(body, meta) ::
         const {response, opo} = this._new_response()
         const {id_route, id_target} = this._mx_
-        const obj = @{} id_route, id_target, body
+        const obj = @{} id_route, id_target, body, meta
         const pkt = op_api.ctrl @ obj, opo
         this._send_pkt(pkt)
         return response
 
 
-    function _mp_post(body) ::
-      const parts = splitBody(body)
+    function _mp_post(body, meta) ::
+      const parts = splitBody(body, meta)
       if 1 < parts.length ::
         const {opo} = this._new_token()
         return _msend(this, parts, opo)
@@ -154,29 +154,29 @@ export function msg_base_api(hub, options) ::
       const pkt = op_api.datagram @ obj, opo0
       this._send_pkt(pkt)
 
-    function _mp_with_response(body) ::
+    function _mp_with_response(body, meta) ::
       const {response, opo} = this._new_response()
 
-      const parts = splitBody(body)
+      const parts = splitBody(body, meta)
       if 1 < parts.length ::
         return _msend(this, parts, opo, response)
 
       const {id_route, id_target} = this._mx_
-      const obj = @{} id_route, id_target, body: parts[0]
+      const obj = @{} id_route, id_target, body: parts[0], meta
       const pkt = op_api.direct @ obj, opo
       this._send_pkt(pkt)
       return response
 
-    function _dg_post(body) ::
+    function _dg_post(body, meta) ::
       const {id_route, id_target, opo0} = this._mx_
-      const obj = @{} id_route, id_target, body
+      const obj = @{} id_route, id_target, body, meta
       const pkt = op_api.datagram @ obj, opo0
       this._send_pkt(pkt)
 
-    function _dg_response(body) ::
+    function _dg_response(body, meta) ::
       const {response, opo} = this._new_response()
       const {id_route, id_target} = this._mx_
-      const obj = @{} id_route, id_target, body
+      const obj = @{} id_route, id_target, body, meta
       const pkt = op_api.direct @ obj, opo
       this._send_pkt(pkt)
       return response

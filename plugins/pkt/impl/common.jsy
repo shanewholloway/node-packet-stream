@@ -54,7 +54,8 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
       ? @ undefined !== body.src
           ? as_pkt0 @ hdr, meta, body.src, pktByKind[k_token]
           : as_pkt0 @ hdr, meta, body.buf, pktByKind[k_token]
+
       : @ is_json_body(body)
-          ? as_pkt0 @ hdr, json_stringify(meta||null), json_stringify(body)||'', PktJson
-          : as_pkt0 @ hdr, json_stringify(meta||null), packBody(body), PktData
+          ? as_pkt0 @ hdr, json_stringify(meta)||'', json_stringify(body)||'', PktJson
+          : as_pkt0 @ hdr, json_stringify(meta)||'', packBody(body), PktData
 
