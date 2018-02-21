@@ -1,4 +1,4 @@
-import { is_json_body, json_stringify } from './common_base.jsy'
+import { is_json_body, json_stringify, o_create } from './common_base.jsy'
 
 import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.jsy'
 import { json } from './common.jsy'
@@ -90,7 +90,7 @@ export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBo
       const parts = pktList.map(unpack_split)
       const _body_ = is_json ? parts.join('') : concatBody(parts)
 
-      return Object.create @ MultiPkt, @{}
+      return o_create @ MultiPkt, @{}
         pkt0: @{} value: pkt0
         _parts_: @{} value: parts.length
         _meta_: @{} value: pkt0._meta_

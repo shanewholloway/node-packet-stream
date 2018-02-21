@@ -8,8 +8,9 @@ export function as_hdr({id_route, id_target, op}) ::
     ? `${id_route} ${id_target} ${op?op.join(' '):''}`
     : `${id_route} ${id_target}`
 
+export const o_create = Object.create
 export function as_pkt0(hdr, meta, body, aPktBase) ::
-  return Object.create @ aPktBase, @{}
+  return o_create @ aPktBase, @{}
     _hdr_: @{} value: hdr.split(' ')
     _meta_: @{} value: meta
     _body_: @{} value: body
