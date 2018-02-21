@@ -1,5 +1,5 @@
-import { PktJsonBase, PktDataBase, bind_binaryPacket } from './common.jsy'
-import { decode_utf8, unpack_base64, packBody, concatBody } from './node_util.jsy'
+import { PktJsonBase, PktDataBase, bind_binaryCallPacket } from '../common_binary.jsy'
+import { decode_utf8, unpack_base64, packBody, concatBody } from './util.jsy'
 
 export default function({}) ::
 
@@ -12,7 +12,7 @@ export default function({}) ::
     buffer() :: return this._body_
 
 
-  return bind_binaryPacket @:
+  return bind_binaryCallPacket @:
     decode_utf8, unpack_base64, packBody, packParts, concatBody
     PktJson, PktData
 

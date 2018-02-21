@@ -1,5 +1,5 @@
-import { PktJsonBase, PktDataBase, bind_linePacket } from './common.jsy'
-import { packBody, packBody64, concatBody } from './node_util.jsy'
+import { PktJsonBase, PktDataBase, bind_linePacket } from '../common_line.jsy'
+import { packBody, packBody64, concatBody } from './util.jsy'
 
 export default function({}) ::
 

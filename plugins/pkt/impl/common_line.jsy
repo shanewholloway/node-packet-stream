@@ -1,0 +1,54 @@
+import { is_json_body, json_stringify, json_parse, bind_repack } from './common_base.jsy'
+import {as_hdr, as_pkt0} from './common_base.jsy'
+
+import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.jsy'
+import { PktSplitJson, PktSplitData64 } from './common.jsy'
+import { bind_packObjPacket } from './common.jsy'
+
+export { PktJsonBase, PktDataBase } from './common.jsy'
+
+export function bind_linePacket(options) ::
+  const { packBody, packBody64, PktData, PktJson } = options
+
+  const pktByKind = @{}
+    [k_data]: PktData, [k_split_data]: PktSplitData64
+    [k_json]: PktJson, [k_split_json]: PktSplitJson
+
+  const repack_line = bind_repack @:
+    json: (pkt, hdr) => `${hdr}\t${k_json}${pkt._meta_}\t${pkt.text()}`
+    split_json: (pkt, hdr) => `${hdr}\t${k_split_json}${pkt._meta_}\t${pkt._body_}`
+
+    data: (pkt, hdr) => `${hdr}\t${k_data}${pkt._meta_}\t${pkt.base64()}`
+    split_data: (pkt, hdr) => `${hdr}\t${k_split_data}${pkt._meta_}\t${packBody64(pkt._body_)}`
+    split_b64: (pkt, hdr) => `${hdr}\t${k_split_data}${pkt._meta_}\t${pkt._body_}`
+
+  return @{}
+    unpackLinePacket(pkt_line) ::
+      const i1 = pkt_line.indexOf('\t', 0)
+      const i2 = pkt_line.indexOf('\t', 1+i1)
+      if -1 === i1 || -1 === i2 ::
+        throw new Error @ 'Invalid packet'
+
+      const hdr = pkt_line.slice(0, i1)
+      const kind = pkt_line[1+i1]
+      const meta = pkt_line.slice(2+i1, i2)
+      const body = pkt_line.slice(1+i2)
+
+      return as_pkt0 @ hdr, meta, body, pktByKind[kind]
+
+    packLinePacket(obj) ::
+      if 'function' === typeof obj.repack_pkt ::
+        return obj.repack_pkt(repack_line)
+
+      const hdr=as_hdr(obj), {body, meta}=obj, k_token=body[sym_split]
+      return undefined !== k_token
+        ? @ undefined !== body.src
+            ? `${hdr}\t${k_token}${meta}\t${body.src}`
+            : `${hdr}\t${k_token}${meta}\t${packBody64(body.buf)}`
+
+        : @ is_json_body(body)
+            ? `${hdr}\t${k_json}${json_stringify(meta)||''}\t${json_stringify(body)||''}`
+            : `${hdr}\t${k_data}${json_stringify(meta)||''}\t${packBody64(body)}`
+
+    fromObjLinePacket: bind_packObjPacket(options, repack_line)
+

@@ -1,0 +1,98 @@
+import { is_json_body, json_stringify } from './common_base.jsy'
+
+import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.jsy'
+import { json } from './common.jsy'
+
+// Max of 16,384 bytes is the practical SCTP limit. (ref: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels#Concerns_with_large_messages)
+export const maxlen_pkt = 16 << 10
+export const maxlen_hdr = 256 // 192 bytes id_route + id_target; 56 all op fields; 8 bytes spacing overhead
+export const maxlen_msg = maxlen_pkt - maxlen_hdr // 1.6% overhead reserved
+
+
+export const MultiPktBase = @{}
+  __proto__: null, is_pkt: false, is_multi_pkt: true
+  get id_route() :: return this.pkt0.id_route
+  get id_target() :: return this.pkt0.id_target
+  get op() :: return this.pkt0.op
+
+  inspect() :: return undefined !== this.pkt0
+    ? `«multipkt(${this._parts_} ${this.pkt_kind}) ${json_stringify([this.id_route, this.id_target].join(' '))}»`
+    : `«{MultiPkt(${this.pkt_kind})}»`
+
+  repack_pkt(repack) ::
+    throw new Error @ 'MultiPkt are not repackable'
+
+  json // and... text(){}  buffer(){}  base64(){}
+
+
+
+export function splitParts(buf, len) ::
+  const parts = []
+  for let i1=0,i0=0; i0<len; i0 = i1 ::
+    i1 = i0 + maxlen_msg
+    parts.push @ buf.slice(i0, i1)
+  return parts
+
+
+export default bind_multiPacket
+export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBody}) ::
+
+  const MultiPktJson = @{} __proto__: MultiPktBase
+    pkt_kind: 'json', is_pkt_json: true
+    text() :: return this._body_
+
+  const MultiPktData = @{} __proto__: MultiPktBase
+    pkt_kind: 'data', is_pkt_data: true
+    text() :: return decode_utf8 @ this.buffer()
+    buffer() :: return this._body_
+
+  const unpackByKind = @{}
+    split_b64: pkt => unpack_base64 @ pkt._body_
+    split_data: pkt => pkt._body_
+    split_json: pkt =>
+      'string' === typeof pkt._body_ ? pkt._body_
+        : decode_utf8(pkt._body_)
+
+  return @{}
+    splitBody(body, meta) ::
+      if is_json_body(body) ::
+        const src = json_stringify(body)||''
+        if src.length <= maxlen_msg ::
+          return [{[sym_split]: k_json, src}]
+
+        return splitParts(src, src.length)
+          .map @ (src, idx) => 0 === idx
+            ? @{} [sym_split]: k_split_json, src, idx, meta
+            : @{} [sym_split]: k_split_json, src, idx
+
+      const buf = packBody(body)
+      if buf.byteLength <= maxlen_msg ::
+        return [{[sym_split]: k_data, buf}]
+
+      return splitParts(buf, buf.byteLength)
+        .map @ (buf, idx) => 0 === idx
+          ? @{} [sym_split]: k_split_data, buf, idx, meta
+          : @{} [sym_split]: k_split_data, buf, idx
+
+
+    joinPackets(pktList) ::
+      const pkt0=pktList[0], pkt_kind=pkt0.pkt_kind
+      if ! pktList.every(pkt => pkt_kind === pkt.pkt_kind) ::
+        throw new Error @ `Mismatched pkt_kind`
+
+      const unpack_split=unpackByKind[pkt_kind]
+      if ! unpack_split ::
+        throw new Error @ `Unknown pkt_kind: ${pkt_kind}`
+
+      const is_json = 'split_json' === pkt_kind
+      const MultiPkt = is_json ? MultiPktJson : MultiPktData
+
+      const parts = pktList.map(unpack_split)
+      const _body_ = is_json ? parts.join('') : concatBody(parts)
+
+      return Object.create @ MultiPkt, @{}
+        pkt0: @{} value: pkt0
+        _parts_: @{} value: parts.length
+        _meta_: @{} value: pkt0._meta_
+        _body_: @{} value: _body_
+

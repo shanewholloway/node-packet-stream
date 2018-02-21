@@ -1,5 +1,5 @@
-import pkt_call_binary from './impl/browser_call_binary.jsy'
-import pkt_multi from './impl/browser_multi.jsy'
+import pkt_call_binary from './impl/browser/call_binary.jsy'
+import pkt_multi from './impl/browser/multi.jsy'
 
 export default function browser_pkt_plugin() ::
   return @: order: -1, subclass(FabricHub) ::

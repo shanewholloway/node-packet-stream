@@ -1,5 +1,5 @@
-import pkt_line from './impl/browser_line.jsy'
-import pkt_multi from './impl/browser_multi.jsy'
+import pkt_line from './impl/browser/line.jsy'
+import pkt_multi from './impl/browser/multi.jsy'
 
 export default function browser_line_pkt_plugin() ::
   return @: order: -1, subclass(FabricHub) ::

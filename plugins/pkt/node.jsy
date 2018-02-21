@@ -1,6 +1,6 @@
-import pkt_len_binary from './impl/node_len_binary.jsy'
-import pkt_call_binary from './impl/node_call_binary.jsy'
-import pkt_multi from './impl/node_multi.jsy'
+import pkt_len_binary from './impl/node/len_binary.jsy'
+import pkt_call_binary from './impl/node/call_binary.jsy'
+import pkt_multi from './impl/node/multi.jsy'
 
 export default function node_pkt_plugin() ::
   return @: order: -1, subclass(FabricHub) ::

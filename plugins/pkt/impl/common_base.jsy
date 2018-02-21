@@ -1,0 +1,27 @@
+export const json_parse = JSON.parse
+export const json_stringify = JSON.stringify
+
+export function as_hdr({id_route, id_target, op}) ::
+  if 'string' !== typeof id_route :: throw new TypeError @ 'id_route'
+  if 'string' !== typeof id_target :: throw new TypeError @ 'id_target'
+  return op && op.length
+    ? `${id_route} ${id_target} ${op?op.join(' '):''}`
+    : `${id_route} ${id_target}`
+
+export function as_pkt0(hdr, meta, body, aPktBase) ::
+  return Object.create @ aPktBase, @{}
+    _hdr_: @{} value: hdr.split(' ')
+    _meta_: @{} value: meta
+    _body_: @{} value: body
+
+
+export function is_json_body(body) ::
+  if null == body :: return true
+  return undefined === body.byteLength
+    && 'string' !== typeof body
+
+export function bind_repack(repackByKind) ::
+  return (pkt, pkt_kind) =>
+    repackByKind[pkt_kind] @
+      pkt, pkt._hdr_.join(' ')
+

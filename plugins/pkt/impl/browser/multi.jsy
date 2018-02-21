@@ -1,4 +1,4 @@
-import { bind_multiPacket } from './common.jsy'
+import { bind_multiPacket } from '../common_multi.jsy'
 
 export default function({ decode_utf8, unpack_base64, as_data, concat_data }) ::
   return bind_multiPacket @: decode_utf8, unpack_base64, packBody: as_data, concatBody: concat_data
