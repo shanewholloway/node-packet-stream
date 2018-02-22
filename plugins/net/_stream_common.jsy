@@ -1,12 +1,4 @@
-export const channel_base = @{}
-  undeliverable(pkt, mode) ::
-    const {id_route, id_target} = pkt
-    console.warn @ '~~ undeliverable «channel»', @{}
-      mode, id_route, id_target
-
-  sendRoutingHandshake(hub) ::
-    return this.send @ hub.p2p.helloHandshake()
-
+export const channel_base = {}
 
 export default stream_common
 export function stream_common(hub) ::
@@ -15,24 +7,17 @@ export function stream_common(hub) ::
 
 
 export function bind_channelDispatch(hub, channel_base) ::
-  const {dispatch} = hub, {packBinaryPacket, unpackBinaryPacket} = hub._pkts_node_.bin_len
-  const pktDispatch = function (channel, pktList) ::
-    pktList = pktList.map(unpackBinaryPacket)
-    return dispatch @ pktList, channel
+  const createChannel = hub._pkts_node_.bin_len.createChannel
 
   return function (rstream, wstream, chan_base=channel_base) ::
-    const channel = Object.create @ chan_base, @{}
-      send: @{} value: send
-
-    recvPacketStream @ rstream, pktDispatch.bind(null, channel)
+    const [recv, channel] = createChannel @ hub.dispatch, send_packed, chan_base
+    recvPacketStream @ rstream, recv
     return channel
 
-    function send(...objs) ::
-      if null === objs[0] ::
-        return void wstream.end()
-      for const obj of objs ::
-        const buf = packBinaryPacket(obj)
-        wstream.write(buf)
+    function send_packed(d_pkt) ::
+      if null !== d_pkt ::
+        wstream.write(d_pkt)
+      else wstream.end()
 
 
 export function recvPacketStream(rstream, dispatchCallback) ::

@@ -22,5 +22,5 @@ export default function stream_plugin(plugin_options={}) ::
 
     function createDirectChannel(rstream, wstream) ::
       const channel = _common_.createRWChannel(rstream, wstream)
-      channel.sendRoutingHandshake(hub)
+      channel.send @ hub.p2p.helloHandshake()
       return channel

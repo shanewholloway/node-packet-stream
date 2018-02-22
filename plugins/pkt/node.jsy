@@ -1,5 +1,7 @@
+import mixinCreateChannel from './impl/channel.jsy'
 import pkt_len_binary from './impl/node/len_binary.jsy'
 import pkt_call_binary from './impl/node/call_binary.jsy'
+import pkt_line from './impl/node/line.jsy'
 import pkt_multi from './impl/node/multi.jsy'
 
 export default function node_pkt_plugin() ::
@@ -8,9 +10,11 @@ export default function node_pkt_plugin() ::
 
     const bin_len = pkt_len_binary(data_utils)
     const bin_call = pkt_call_binary(data_utils)
+    const line = pkt_line(data_utils)
+    mixinCreateChannel @ bin_len, bin_call, line
 
     const _pkts_ = Object.assign @ {}
-      @{} bin_len, bin_call
+      @{} bin_len, bin_call, line
       bin_len
       pkt_multi(data_utils)
 

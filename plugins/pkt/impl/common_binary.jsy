@@ -10,7 +10,8 @@ export { PktJsonBase, PktDataBase } from './common.jsy'
 export function bind_binaryCallPacket(options) ::
   const _common_ = bind_binaryPacketCommon(options)
   const _unpackBySlice = _common_._unpackBinaryPacketBySlice
-  _common_.unpackBinaryPacket = unpackBinaryCallPacket
+  _common_.packPacket = _common_.packBinaryPacket
+  _common_.unpackPacket = _common_.unpackBinaryPacket = unpackBinaryCallPacket
   return _common_
 
   function unpackBinaryCallPacket(pkt_buf) ::
@@ -20,7 +21,8 @@ export function bind_binaryCallPacket(options) ::
 export function bind_binaryLenPacket(options) ::
   const _common_ = bind_binaryPacketCommon(options)
   const _unpackBySlice = _common_._unpackBinaryPacketBySlice
-  _common_.unpackBinaryPacket = unpackBinaryLenPacket
+  _common_.packPacket = _common_.packBinaryPacket
+  _common_.unpackPacket = _common_.unpackBinaryPacket = unpackBinaryLenPacket
   return _common_
 
   function unpackBinaryLenPacket(pkt_buf) ::

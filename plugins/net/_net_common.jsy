@@ -26,7 +26,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
 
     bindChannel(sock) ::
       const channel = this.createSocketChannel(sock)
-      channel.sendRoutingHandshake(hub)
+      channel.send @ hub.p2p.helloHandshake()
       return channel
 
     createClient(_impl_) ::

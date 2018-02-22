@@ -99,9 +99,9 @@ export class FabricHub ::
     const {_fromObjPacket, _hub_channel_} = this
     return Object.create @ _hub_channel_, @{} send: {value: hub_send}
 
-    function hub_send(...objs) ::
-      const pktList = objs.map @ _fromObjPacket
-      return dispatch @ pktList, _hub_channel_
+    function hub_send(obj) ::
+      const pkt = _fromObjPacket(obj)
+      return dispatch @ [pkt], _hub_channel_
   _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
 
 
@@ -135,6 +135,7 @@ const _hub_channel_ = @{}
       mode, id_route, id_target
 
 Object.defineProperties @ FabricHub.prototype, @{}
+  is_fabric_hub: @{} value: true
   pluginList: @{} value: Object.freeze([])
   _hub_channel_: @{} value: Object.create(_hub_channel_)
 
