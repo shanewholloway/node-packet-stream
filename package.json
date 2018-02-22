@@ -51,8 +51,8 @@
     "build": "rollup --config",
     "watch": "npm -s run build -- --watch",
     "pretest": "npm -s run build",
-    "test": "mocha --require babel-core/register test/unit/index.js",
-    "test:watch": "mocha --watch --require babel-core/register test/unit/index.js",
+    "test": "mocha --require babel-core/register test/unittest/node.js",
+    "test:watch": "mocha --watch --require babel-core/register test/unittest/node.js",
     "demo": "babel-node test/manual/server.jsy"
   }
 }

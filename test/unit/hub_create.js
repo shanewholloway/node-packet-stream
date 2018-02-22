@@ -1,5 +1,4 @@
-import { expect } from './_utils'
-import { Hub } from './_setup'
+import { Hub, expect } from './_setup'
 
 describe @ 'Hub creation', @=> ::
 
