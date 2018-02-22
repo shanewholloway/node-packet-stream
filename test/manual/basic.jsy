@@ -1,4 +1,4 @@
-const Hub = require('./_setup.jsy')
+const Hub = require('../_setup')
 
 const h1 = new Hub()
 console.dir( h1, { colors: true })

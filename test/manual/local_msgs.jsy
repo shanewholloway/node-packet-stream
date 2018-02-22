@@ -1,4 +1,4 @@
-import {TestDirectHub as Hub} from './_setup.jsy'
+import {TestDirectHub as Hub} from '../_setup'
 
 function addTarget(hub, id_target, api) ::
   const {id_route} = hub.local

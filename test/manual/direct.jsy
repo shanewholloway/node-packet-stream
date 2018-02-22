@@ -1,4 +1,4 @@
-import {TestNetHub as Hub} from './_setup.jsy'
+import {TestDirectHub as Hub} from '../_setup'
 
 const ha = Hub.create('$ha$')
 const hb = Hub.create('$hb$')
@@ -24,24 +24,15 @@ function addTarget(id_target, {id_route, registerTarget}) ::
 
 console.log()
 
-const chain = Promise.resolve()
+Promise.resolve()
 .then @ do_ha_local
 //.then @ do_ha_remote // will not work before do_connect
-.then @ do_serve
 .then @ do_connect
-.then @=> sleep(10) // allow some time for handshaking
 .then @ do_ha_remote
 
-async function do_serve() ::
-  const svr = ha.tcp.createServer()
-    .listen(0, '127.0.0.1')
-
-  chain.then @=> svr.unref()
-  return svr.conn_info(true)
-
-async function do_connect(addr) ::
-  const chan_ab = await hb.connect(addr)
-  const chan_ac = await hc.connect(addr)
+async function do_connect() ::
+  const chan_ab = await ha.direct.connect(hb)
+  const chan_ac = await ha.direct.connect(hc)
 
   chan_ab.send @ msg_turtle @: hello: 'soup', mode: 'channel'
   chan_ab.send @ msg_snake @: hello: 'bites', mode: 'channel'
@@ -62,5 +53,3 @@ async function do_ha_remote() ::
   ha.send @ msg_crow @: look: 'shiny!', mode: 'remote'
   ha.send @ msg_hawk @: look: 'a bunny!', mode: 'remote'
 
-
-function sleep(ms, res) :: return new Promise @ resolve => setTimeout @ resolve, ms|0, res
