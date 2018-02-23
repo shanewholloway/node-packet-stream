@@ -1,16 +1,14 @@
-export const channel_base = {}
-
 export default stream_common
 export function stream_common(hub) ::
-  const createRWChannel = bind_channel(hub, channel_base)
-  return @{} channel_base, createRWChannel
+  const createRWChannel = bind_channel(hub)
+  return @{} createRWChannel
 
 
-export function bind_channel(hub, channel_base) ::
+export function bind_channel(hub) ::
   const createChannel = hub._pkts_node_.bin_len.createChannel
 
-  return function (rstream, wstream, chan_base=channel_base) ::
-    const [recv, channel] = createChannel @ hub.dispatch, send_packed, chan_base
+  return function (rstream, wstream) ::
+    const [recv, channel] = createChannel @ hub.dispatch, send_packed
     recvPacketStream @ rstream, recv
     return channel
 
