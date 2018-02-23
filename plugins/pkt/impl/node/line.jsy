@@ -1,11 +1,8 @@
-import { PktJsonBase, PktDataBase, bind_linePacket } from '../common_line.jsy'
+import { PktJson, PktDataBase, bind_linePacket } from '../common_line.jsy'
 import { packBody, packBody64, concatBody } from './util.jsy'
 
 const o_defineProperty = Object.defineProperty
 export default function({}) ::
-
-  const PktJson = @{} __proto__: PktJsonBase
-    text() :: return this._body_
 
   const PktData = @{} __proto__: PktDataBase
     text() :: return this.buffer().toString('utf-8')

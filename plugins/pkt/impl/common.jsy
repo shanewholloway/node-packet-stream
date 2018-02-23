@@ -17,9 +17,10 @@ export function json(reviver) ::
   const src = this.text()
   if src :: return json_parse(src, reviver)
 
-export const PktJsonBase = @{} __proto__: PktBase
+export const PktJson = @{} __proto__: PktBase
   pkt_kind: 'json', is_pkt_json: true
-  json // and... text(){}
+  text() :: return this._body_
+  json
 
 export const PktDataBase = @{} __proto__: PktBase
   pkt_kind: 'data', is_pkt_data: true

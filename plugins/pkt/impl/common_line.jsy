@@ -5,7 +5,7 @@ import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.
 import { PktSplitJson, PktSplitData64 } from './common.jsy'
 import { bind_packObjPacket } from './common.jsy'
 
-export { PktJsonBase, PktDataBase } from './common.jsy'
+export { PktJson, PktDataBase } from './common.jsy'
 
 export function bind_linePacket(options) ::
   const { packBody, packBody64, PktData, PktJson } = options
