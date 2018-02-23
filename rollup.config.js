@@ -20,8 +20,10 @@ export default [].concat(
   package_core(),
   package_plugin_platform(),
   package_plugin_pkt(),
+  package_plugin_msgs(),
+  package_plugin_direct(),
   package_plugin_net(),
-  package_plugin_msgs()
+  package_plugin_web(),
 ).filter(e => e)
 
 
@@ -66,6 +68,17 @@ function package_core() {
   ]}
 
 
+function package_plugin_platform() {
+  const external=[], external_node=['crypto', 'url']
+  const bundles = {
+    'index': ['plugin-platform-all', external_node, {exports: 'named'}],
+    'node': ['plugin-platform-node', external_node],
+    'browser': ['plugin-platform-browser', external],
+  }
+
+  return bundleForPlugin(bundles, 'platform') }
+
+
 function package_plugin_pkt() {
   const external = []
   const bundles = {
@@ -78,15 +91,24 @@ function package_plugin_pkt() {
   return bundleForPlugin(bundles, 'pkt') }
 
 
-function package_plugin_platform() {
-  const external=[], external_node=['crypto', 'url']
+function package_plugin_msgs() {
+  const external=[]
   const bundles = {
-    'index': ['plugin-platform-all', external_node, {exports: 'named'}],
-    'node': ['plugin-platform-node', external_node],
-    'browser': ['plugin-platform-browser', external],
+    'index': ['plugin-msgs-all', external, {exports: 'named'}],
+    'plugin': ['plugin-msgs', external],
   }
 
-  return bundleForPlugin(bundles, 'platform') }
+  return bundleForPlugin(bundles, 'msgs') }
+
+
+function package_plugin_direct() {
+  const external=[]
+  const bundles = {
+    'index': ['plugin-js-direct-all', [], {exports: 'named'}],
+    'direct': ['plugin-js-direct', []],
+  }
+
+  return bundleForPlugin(bundles, 'direct') }
 
 
 function package_plugin_net() {
@@ -101,14 +123,14 @@ function package_plugin_net() {
   return bundleForPlugin(bundles, 'net') }
 
 
-function package_plugin_msgs() {
+function package_plugin_web() {
   const external=[]
   const bundles = {
-    'index': ['plugin-msgs-all', external, {exports: 'named'}],
-    'plugin': ['plugin-msgs', external],
+    'index': ['plugin-web-all', [], {exports: 'named'}],
+    'web': ['plugin-web', []],
   }
 
-  return bundleForPlugin(bundles, 'msgs') }
+  return bundleForPlugin(bundles, 'web') }
 
 
 

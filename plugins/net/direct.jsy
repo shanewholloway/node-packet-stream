@@ -1,19 +1,21 @@
 import {PassThrough} from 'stream'
 import stream_common from './_stream_common.jsy'
 
-export default function stream_plugin(plugin_options={}) ::
+export default function direct_stream_plugin(plugin_options={}) ::
+  const pi_name = plugin_options.name || 'direct_stream'
+
   return function(hub) ::
     const _common_ = stream_common(hub)
     const plugin = Object.assign @ connect, @{}
       connect, connectDirect, createDirectChannel
-    return hub.direct = plugin
+    return hub[pi_name] = plugin
 
     function connect(peer) ::
       return connectDirect(peer)[0]
 
     function connectDirect(peer) ::
-      if peer.direct && 'function' === typeof peer.direct.createDirectChannel ::
-        peer = peer.direct
+      if peer[pi_name] && 'function' === typeof peer[pi_name].createDirectChannel ::
+        peer = peer[pi_name]
 
       const streams = @[] new PassThrough(), new PassThrough()
       return @[]

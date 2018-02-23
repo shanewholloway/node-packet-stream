@@ -1,0 +1,42 @@
+const yes = () => true
+
+export function bind_sendChannel(hub, pkts) ::
+  const createChannel = pkts.createChannel
+
+  return function (tgt_recv, tgt_send, accept) ::
+    if null == tgt_send :: tgt_send = tgt_recv
+    if null == accept :: accept = yes
+
+    const [recv, channel] = createChannel @ hub.dispatch, send_packed
+
+    tgt_recv.addEventListener @ 'message',
+      m => :: if accept(m) :: recv(m.data)
+
+    return channel
+
+    function send_packed(d_pkt) ::
+      if null !== d_pkt ::
+        tgt_send.send(d_pkt)
+      else if 'function' === typeof tgt_send.close ::
+        tgt_send.close()
+
+
+export function bind_postMessageChannel(hub, pkts) ::
+  const createChannel = pkts.createChannel
+
+  return function (tgt_recv, tgt_send, accept) ::
+    if null == tgt_send :: tgt_send = tgt_recv
+    if null == accept :: accept = yes
+
+    const [recv, channel] = createChannel @ hub.dispatch, send_packed
+
+    tgt_recv.addEventListener @ 'message',
+      m => :: if accept(m) :: recv(m.data)
+
+    return channel
+
+    function send_packed(d_pkt) ::
+      if null !== d_pkt ::
+        tgt_send.postMessage(d_pkt)
+      else if 'function' === typeof tgt_send.close ::
+        tgt_send.close()

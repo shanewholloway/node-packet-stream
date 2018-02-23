@@ -2,11 +2,11 @@ export const channel_base = {}
 
 export default stream_common
 export function stream_common(hub) ::
-  const createRWChannel = bind_channelDispatch(hub, channel_base)
+  const createRWChannel = bind_channel(hub, channel_base)
   return @{} channel_base, createRWChannel
 
 
-export function bind_channelDispatch(hub, channel_base) ::
+export function bind_channel(hub, channel_base) ::
   const createChannel = hub._pkts_node_.bin_len.createChannel
 
   return function (rstream, wstream, chan_base=channel_base) ::

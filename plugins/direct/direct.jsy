@@ -1,0 +1,29 @@
+export default function direct_plugin(plugin_options={}) ::
+  const pi_name = plugin_options.name || 'direct'
+
+  return hub => ::
+    const _createRWChannel = hub._pkts_.bin_call.createChannel
+    return hub[pi_name] = Object.assign @ connect, @{}
+      connect, connectDirectPair, createDirectChannel
+
+    function connect(peer) ::
+      return connectDirectPair(peer)[0]
+
+    function connectDirectPair(peer) ::
+      if peer[pi_name] && 'function' === typeof peer[pi_name].createDirectChannel ::
+        peer = peer[pi_name]
+
+      const [recv_self, chan_self] =
+        createDirectChannel @
+          d_pkt => Promise.resolve(d_pkt).then(recv_peer)
+
+      const [recv_peer, chan_peer] =
+        peer.createDirectChannel @
+          d_pkt => Promise.resolve(d_pkt).then(recv_self)
+
+      return @[] chan_self, chan_peer
+
+    function createDirectChannel(send) ::
+      return _createRWChannel @ hub.dispatch,
+        d_pkt => :: if null !== d_pkt :: send(d_pkt)
+

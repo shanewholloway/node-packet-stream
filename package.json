@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.5.6",
+  "version": "0.5.7-0",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -50,6 +50,7 @@
     "clean": "rm cjs/* esm/* umd/*",
     "build": "rollup --config",
     "watch": "npm -s run build -- --watch",
+    "prepublish": "npm -s test",
     "pretest": "npm -s run build",
     "test": "npm -s run test:one",
     "test:one": "mocha --require babel-core/register test/unittest/node.js",
