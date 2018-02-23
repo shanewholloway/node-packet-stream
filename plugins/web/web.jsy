@@ -5,11 +5,12 @@ export default function web_plugin(plugin_options={}) ::
   return hub => ::
     let p_WebSocket = plugin_options.WebSocket
 
-    const connectSend = bind_sendChannel @ hub, hub._pkts_.bin_call
-    const connectPostMessage = bind_postMessageChannel @ hub, hub._pkts_.bin_call
+    const createSendChannel = bind_sendChannel @ hub, hub._pkts_.bin_call
+    const createPostMessageChannel = bind_postMessageChannel @ hub, hub._pkts_.bin_call
 
     hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'], connectWS
     return hub.web = @{}
+      createSendChannel, createPostMessageChannel
       connectSend, connectPostMessage
       connectWS, customWebSocket
 
@@ -17,8 +18,36 @@ export default function web_plugin(plugin_options={}) ::
       p_WebSocket = WebSocket
       return this
 
+    function connectSend(...args) ::
+      const channel = createSendChannel(...args)
+      channel.peer_info = hub.p2p.hello(hub, channel)
+      return channel
+
+    function connectPostMessage(...args) ::
+      const channel = createPostMessageChannel(...args)
+      channel.peer_info = hub.p2p.hello(hub, channel)
+      return channel
+
     function connectWS(ws_or_wss_url) ::
-      const l_WebSocket = p_WebSocket || _global.WebSocket
-      const websock = new l_WebSocket(ws_or_wss_url)
-      return createRWSendChannel @ websock, websock
+      let websock
+      if 'function' === typeof ws_or_wss_url.send ::
+        websock = ws_or_wss_url
+      else ::
+        const l_WebSocket = p_WebSocket || _global.WebSocket
+        websock = new l_WebSocket(ws_or_wss_url)
+
+      const channel = createSendChannel(websock)
+      channel.peer_info = new Promise @ (resolve, reject) => ::
+        const readyState = websock.readyState
+
+        websock.addEventListener @ 'error', reject
+        if 0 === readyState :: // connecting state
+          websock.addEventListener @ 'open', () => ::
+            hub.p2p.hello(hub, channel).then(resolve, reject)
+
+        else if 1 === readyState :: // open state
+          hub.p2p.hello(hub, channel).then(resolve, reject)
+
+        else reject @ new Error @ 'WebSocket closed'
+      return channel
 

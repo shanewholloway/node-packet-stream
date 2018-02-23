@@ -9,8 +9,8 @@ export function bind_sendChannel(hub, pkts) ::
 
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
 
-    tgt_recv.addEventListener @ 'message',
-      m => :: if accept(m) :: recv(m.data)
+    tgt_recv.addEventListener @ 'message', m => ::
+      if accept(m) :: recv @# m.data
 
     return channel
 
@@ -30,8 +30,8 @@ export function bind_postMessageChannel(hub, pkts) ::
 
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
 
-    tgt_recv.addEventListener @ 'message',
-      m => :: if accept(m) :: recv(m.data)
+    tgt_recv.addEventListener @ 'message', m => ::
+      if accept(m) :: recv @# m.data
 
     return channel
 

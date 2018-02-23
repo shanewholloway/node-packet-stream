@@ -1,0 +1,37 @@
+const WebSocket = require('ws')
+
+
+import BasicHub from '../_setup'
+import web_plugin from '../../cjs/plugin-web'
+const WebFabricHub = BasicHub.plugin @ web_plugin()
+    
+const hub = WebFabricHub.create('$server$')
+
+hub.local.registerTarget @ 'hello-server'
+  (...args) => console.log('RECV in WS hello-server:', args)
+
+
+
+const http = require('http')
+const server = http.createServer()
+
+server.listen @ 8000, '127.0.0.1', () =>
+  console.log @ 'Listening', server.address()
+ 
+const wss = new WebSocket.Server @: server
+wss.on @ 'error', (...args) => :: console.log @ 'error?', args
+wss.on @ 'connection', (ws, req) => :: add_websocket(ws)
+
+
+function add_websocket(ws) ::
+  const channel = hub.web.connectWS(ws)
+  console.log @ 'Msg-Fabric faye-websocket connected', @{}
+    version: ws.version, protocol: ws.protocol
+    channel, send: channel.send
+
+  channel.peer_info.then @ peer_info => ::
+    console.log('peer_info:', peer_info)
+    hub.send @:
+      id_route: '$browser$', id_target: 'hello-browser',
+      body: @{} msg: 'hello from the WS websocket server'
+

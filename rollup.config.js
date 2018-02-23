@@ -49,6 +49,7 @@ function package_core() {
         { file: 'cjs/core-browser.js', format: 'cjs', sourcemap },
         { file: 'esm/core-browser.js', format: 'es', sourcemap },
         { file: 'umd/msg-fabric-core.js', format: 'umd', sourcemap, name:'msg-fabric-core' },
+        { file: 'test/manual/browser.umd.js', format: 'umd', sourcemap, name:'msg-fabric-core' },
       ],
       external: [], plugins },
 

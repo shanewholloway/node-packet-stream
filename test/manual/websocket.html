@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Msg-Fabric-Endpoint WebSocket Tests</title>
+<script src='./browser.umd.js'></script>
+
+<script>
+  const FabricHub = window.FabricHub = window['msg-fabric-core']
+  const hub = window.hub = FabricHub.create('$browser$')
+
+  hub.local.registerTarget('hello-browser',
+    (...args) => console.log('RECV in hello-browser:', args) )
+
+
+  console.log({hub})
+  console.log("hub.connect('ws://127.0.0.1:8000')")
+
+  if (1) {
+    const ws_chan = window.ws_chan =
+      hub.connect('ws://127.0.0.1:8000')
+
+    ws_chan.peer_info.then(peer_info => {
+      window.peer_info = peer_info
+      console.log('peer_info:', peer_info)
+      hub.send({
+        id_route: '$server$', id_target: 'hello-server',
+        body: {msg: 'hello from the browser'} })
+    })
+  }
+
+</script>
