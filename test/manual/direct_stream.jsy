@@ -1,4 +1,6 @@
-import Hub from '../_setup'
+import BasicHub from '../_setup'
+import direct_stream_plugin from '../../cjs/plugin-net-direct'
+const Hub = BasicHub.plugin @ direct_stream_plugin()
 
 const ha = Hub.create('$ha$')
 const hb = Hub.create('$hb$')
@@ -31,8 +33,8 @@ Promise.resolve()
 .then @ do_ha_remote
 
 async function do_connect() ::
-  const chan_ab = await ha.direct.connect(hb)
-  const chan_ac = await ha.direct.connect(hc)
+  const chan_ab = await ha.direct_stream.connect(hb)
+  const chan_ac = await ha.direct_stream.connect(hc)
 
   chan_ab.send @ msg_turtle @: hello: 'soup', mode: 'channel'
   chan_ab.send @ msg_snake @: hello: 'bites', mode: 'channel'
