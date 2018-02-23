@@ -1,3 +1,5 @@
+export const sym_sampi = '\u03E0' // 'Ϡ'
+
 var Hub
 export { Hub }
 export function _init(FabricHub) :: Hub = FabricHub
