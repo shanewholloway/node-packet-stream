@@ -32,7 +32,7 @@ export class FabricRouter extends FabricBase ::
 
     async function dispatch_one(pkt, pktctx) ::
       try ::
-        const id_route = pkt.id_route
+        const id_route = pkt.id_route || ''
         let route = routes_map.get(id_route)
         if undefined === route ::
           route = await hub_router.discoverRoute(id_route, pktctx)

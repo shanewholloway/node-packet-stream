@@ -27,7 +27,7 @@ export class TargetRouter extends FabricBase ::
     return this
 
     async function dispatch_target(pkt, pktctx) ::
-      const id_target = pkt.id_target
+      const id_target = pkt.id_target || ''
       let target = targets_map.get(id_target)
       if undefined === target ::
         target = await tgt_router.discoverTarget(id_target, pktctx)
