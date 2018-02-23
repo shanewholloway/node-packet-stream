@@ -37,6 +37,9 @@ export class FabricRouter extends FabricBase ::
         if undefined === route ::
           route = await hub_router.discoverRoute(id_route, pktctx)
           if undefined === route ::
+            // the route could have been registered during discovery
+            route = routes_map.get(id_route)
+          if undefined === route ::
             const channel = pktctx.channel
             return channel && channel.undeliverable(pkt, 'route')
 
@@ -68,8 +71,11 @@ export class FabricRouter extends FabricBase ::
 
 
   async discoverRoute(id_route, pktctx) ::
+    let lstDiscovery = this.routeDiscovery
+    if 0 === lstDiscovery.length :: return
+
     const route = await this._discoverFirst @
-      this.routeDiscovery
+      lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_route, id_route, pktctx
       err => this._on_error @ 'router.discovery', err
 

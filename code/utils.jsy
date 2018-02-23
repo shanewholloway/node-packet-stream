@@ -34,8 +34,9 @@ export function discoverFirst(lstFns, query, on_error) ::
   return res
 
 export const timeoutResolve = (ms, answer) =>
-  new Promise @ resolve =>
-    setTimeout @ resolve, ms, answer
+  new Promise @ resolve => ::
+    const tid = setTimeout @ resolve, ms, answer
+    if tid.unref :: tid.unref()
 
 
 export function applyPlugins(key, pluginList, ...args) ::
@@ -52,6 +53,7 @@ export class FabricBase ::
 Object.assign @ FabricBase.prototype, @{}
   _promiseQueue: promiseQueue
   _discoverFirst: discoverFirst
-  _discoveryDefault: @[] () => timeoutResolve(5000, null)
+  _discoveryDefault: []
+  _discoveryTimeout() :: return () => timeoutResolve(5000, null)
   _on_error(scope, err) :: console.error @ scope, err
 

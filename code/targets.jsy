@@ -32,6 +32,9 @@ export class TargetRouter extends FabricBase ::
       if undefined === target ::
         target = await tgt_router.discoverTarget(id_target, pktctx)
         if undefined === target ::
+          // the target could have been registered during discovery
+          target = targets_map.get(id_target)
+        if undefined === target ::
           const channel = pktctx.channel
           return channel && channel.undeliverable(pkt, 'target')
 
@@ -53,8 +56,11 @@ export class TargetRouter extends FabricBase ::
 
 
   async discoverTarget(id_target, pktctx) ::
+    let lstDiscovery = this.targetDiscovery
+    if 0 === lstDiscovery.length :: return
+
     const target = await this._discoverFirst @
-      this.targetDiscovery
+      lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_target, id_target, pktctx
       err => this._on_error @ 'target.discovery', err
 
