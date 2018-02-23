@@ -1,17 +1,24 @@
 import {bind_sendChannel, bind_postMessageChannel} from './_web_channel.jsy'
 
 export default function web_plugin(plugin_options={}) ::
-  const WebSocket_ = plugin_options.WebSocket || WebSocket
-
+  const _global = 'undefined' !== typeof window ? window : global
   return hub => ::
+    let p_WebSocket = plugin_options.WebSocket
+
     const connectSend = bind_sendChannel @ hub, hub._pkts_.bin_call
     const connectPostMessage = bind_postMessageChannel @ hub, hub._pkts_.bin_call
 
     hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'], connectWS
     return hub.web = @{}
-      connectSend, connectPostMessage, connectWS
+      connectSend, connectPostMessage
+      connectWS, customWebSocket
+
+    function customWebSocket(WebSocket) ::
+      p_WebSocket = WebSocket
+      return this
 
     function connectWS(ws_or_wss_url) ::
-      const websock = new WebSocket_(ws_or_wss_url)
+      const l_WebSocket = p_WebSocket || _global.WebSocket
+      const websock = new l_WebSocket(ws_or_wss_url)
       return createRWSendChannel @ websock, websock
 
