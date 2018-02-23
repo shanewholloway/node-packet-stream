@@ -41,7 +41,10 @@ function unpack_base64(str_b64) ::
   return res
 
 function decode_utf8(u8) ::
-  return new TextDecoder().decode(u8)
+  if undefined === u8.byteLength ::
+    throw new Error @ 'Expected TypedArray'
+  const buf = u8.buffer || new ArrayBuffer(u8)
+  return new TextDecoder().decode(buf)
 
 function encode_utf8(str) ::
   return new TextEncoder().encode(str)
