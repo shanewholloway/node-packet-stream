@@ -1,3 +1,5 @@
+import {o_create} from './common_base.jsy'
+
 export default mixinCreateChannel
 export function mixinCreateChannel(...args) ::
   for const pkts of args ::
@@ -6,6 +8,8 @@ export function mixinCreateChannel(...args) ::
 
 
 export const _channel_base_ = @{} __proto__: null
+  toJSON() :: throw new Error @ 'Not serializable'
+  inspect() :: return '«channel»'
   undeliverable
   on_send_error
 
@@ -43,7 +47,7 @@ export function bindCreateChannel(packPacket, unpackPacket) ::
     if undefined === channel_base.on_send_error ::
       props.on_send_error = @{} value: on_send_error
 
-    const chan = Object.create(channel_base, props)
+    const chan = o_create(channel_base, props)
     return @[] recv, chan
 
 

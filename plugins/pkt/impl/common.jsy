@@ -60,3 +60,17 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
           ? as_pkt0 @ hdr, json_stringify(meta)||'', json_stringify(body)||'', PktJson
           : as_pkt0 @ hdr, json_stringify(meta)||'', packBody(body), PktData
 
+
+export function bind_unpackStringPacket(pktByKind) ::
+  return function (pkt_str) ::
+    const i1 = pkt_str.indexOf('\t', 0)
+    const i2 = pkt_str.indexOf('\t', 1+i1)
+    if -1 === i1 || -1 === i2 ::
+      throw new Error @ 'Invalid packet'
+
+    const hdr = pkt_str.slice(0, i1)
+    const kind = pkt_str[1+i1]
+    const meta = pkt_str.slice(2+i1, i2)
+    const body = pkt_str.slice(1+i2)
+
+    return as_pkt0 @ hdr, meta, body, pktByKind[kind]

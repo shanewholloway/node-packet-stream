@@ -3,19 +3,22 @@ import { as_hdr, as_pkt0 } from './common_base.jsy'
 
 import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.jsy'
 import { PktSplitJson, PktSplitData } from './common.jsy'
-import { bind_packObjPacket } from './common.jsy'
+import { bind_packObjPacket, bind_unpackStringPacket } from './common.jsy'
 
 export { PktJson, PktDataBase } from './common.jsy'
 
 export function bind_binaryCallPacket(options) ::
   const _common_ = bind_binaryPacketCommon(options)
+  const _unpackStrPacket = _common_._unpackStrPacket
   const _unpackBySlice = _common_._unpackBinaryPacketBySlice
   _common_.packPacket = _common_.packBinaryPacket
   _common_.unpackPacket = _common_.unpackBinaryPacket = unpackBinaryCallPacket
   return _common_
 
   function unpackBinaryCallPacket(pkt_buf) ::
-    return _unpackBySlice @ pkt_buf, 0
+    return 'string' === typeof pkt_buf
+      ? _unpackStrPacket(pkt_buf)
+      : _unpackBySlice(pkt_buf, 0)
 
 
 export function bind_binaryLenPacket(options) ::
@@ -82,4 +85,5 @@ export function bind_binaryPacketCommon(options) ::
       return as_pkt0 @ hdr, meta, body, pktByKind[kind]
 
     fromObjBinaryPacket: bind_packObjPacket(options, repack_binary)
+    _unpackStrPacket: bind_unpackStringPacket(pktByKind)
 
