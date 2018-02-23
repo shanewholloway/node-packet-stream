@@ -21,7 +21,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
       sock.setNoDelay(true)
       return Object.defineProperties @ 
         this.createRWChannel(sock, sock)
-        @{} conn_info: @{} value: sock_conn_info.bind(sock)
+        @{} conn_info: @{} value() :: return sock_conn_info(sock)
 
 
     bindChannel(sock) ::
