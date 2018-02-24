@@ -44,11 +44,13 @@ export function binaryLenPrefixFeedUint16LE(shutdown, dispatchCallback) ::
       const buf = parseNext()
       if undefined !== buf ::
         pktList.push @ buf
-      else if 0 !== pktList.length ::
-        try ::
-          return dispatchCallback(pktList)
-        catch err ::
-          return shutdown(err)
+      else break
+
+    if 0 !== pktList.length ::
+      try ::
+        return dispatchCallback(pktList)
+      catch err ::
+        return shutdown(err)
 
   function parseNext() ::
     if null === tipLen ::
