@@ -7,10 +7,32 @@ describe @ 'Hub creation', @=> ::
     expect @ hub.local.id_route
     .to.be.a('string')
 
+    expect(hub.dispatch).to.be.a @ 'function'
+    expect(hub.router.dispatch).to.be.a @ 'function'
+    expect(hub.router.dispatch).to.be.equal @ hub.dispatch
+
+    expect(hub.send).to.be.a @ 'function'
+    expect(hub.channel.send).to.be.a @ 'function'
+    expect(hub.channel.send).to.be.equal @ hub.send
+
+    expect(hub.local.registerTarget).to.be.a @ 'function'
+    expect(hub.p2p.registerTarget).to.be.a @ 'function'
+
   it @ 'Hub.create', @=>> :: 
     const hub = Hub.create()
     expect @ hub.local.id_route
     .to.be.a('string')
+
+    expect(hub.dispatch).to.be.a @ 'function'
+    expect(hub.router.dispatch).to.be.a @ 'function'
+    expect(hub.router.dispatch).to.be.equal @ hub.dispatch
+
+    expect(hub.send).to.be.a @ 'function'
+    expect(hub.channel.send).to.be.a @ 'function'
+    expect(hub.channel.send).to.be.equal @ hub.send
+
+    expect(hub.local.registerTarget).to.be.a @ 'function'
+    expect(hub.p2p.registerTarget).to.be.a @ 'function'
 
   it @ 'new Hub with specified id_route', @=>> :: 
     const hub = new Hub('$unit$')

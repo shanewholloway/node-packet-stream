@@ -50,7 +50,7 @@ export class FabricRouter extends FabricBase ::
     function dispatch(pktList, channel) ::
       const pq = pqueue() // pq will dispatch during Promise resolutions
       return pktList.map @ pkt =>
-        pq.then @ () => dispatch_one @ pkt, {channel, hub_router}
+        pq.then @ () => dispatch_one @ pkt, {channel, hub_router, redispatch: dispatch_one}
 
 
     function registerRoute(id_route, route) ::
