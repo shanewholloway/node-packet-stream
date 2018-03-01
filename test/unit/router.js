@@ -10,12 +10,9 @@ describe @ 'Router', @=> ::
       undeliverable({id_route, id_target}, mode) ::
         log @ 'undeliverable', @{} mode, id_route, id_target
 
-      async send(obj) ::
+      send(obj) ::
         const pkt = hub._fromObjPacket(obj)
-        let lst = await hub.dispatch @ [pkt], this
-        // for testing, wait for everything to finish dispatching
-        await Promise.all(lst)
-        return lst
+        return hub.dispatch @ pkt, this
 
 
   describe @ 'messages to targets', @=> ::

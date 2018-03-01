@@ -101,7 +101,7 @@ export class FabricHub ::
 
     function hub_send(obj) ::
       const pkt = _fromObjPacket(obj)
-      return dispatch @ [pkt], _hub_channel_
+      return dispatch @ pkt, _hub_channel_
   _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
 
 

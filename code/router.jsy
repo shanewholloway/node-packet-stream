@@ -1,3 +1,4 @@
+const isArray = Array.isArray
 import {FabricBase} from './utils.jsy'
 
 export class FabricRouter extends FabricBase ::
@@ -47,10 +48,13 @@ export class FabricRouter extends FabricBase ::
       catch err ::
         hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
 
-    function dispatch(pktList, channel) ::
+    function dispatch(pktArg, channel) ::
+      const pktctx = @{} channel, hub_router, redispatch: dispatch_one
       const pq = pqueue() // pq will dispatch during Promise resolutions
-      return pktList.map @ pkt =>
-        pq.then @ () => dispatch_one @ pkt, {channel, hub_router, redispatch: dispatch_one}
+      return isArray(pktArg)
+        ? pktArg.map @ pkt =>
+            pq.then @=> dispatch_one @ pkt, pktctx
+        : pq.then @=> dispatch_one @ pktArg, pktctx
 
 
     function registerRoute(id_route, route) ::
