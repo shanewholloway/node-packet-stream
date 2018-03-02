@@ -32,12 +32,12 @@ export function bind_mx_api(source_api, reply_api) ::
 export default msg_base_api
 export function msg_base_api(hub, options) ::
   const {splitBody, joinPackets} = hub._pkts_
-  const random = hub.data_utils.random
+  const random_base64 = hub.data_utils.random_base64
 
   const chan = options.channel || hub.channel
   const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
   const expire = timeoutReaper @ options.timeout || 5000
-  const newToken = () => random(tokenLen, true)
+  const newToken = () => random_base64(tokenLen)
 
   const msg_api0 = bind_msg_api0(chan)
 

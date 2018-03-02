@@ -28,7 +28,7 @@ export class P2PRouter extends TargetRouter ::
     this.registerTarget @ 'olleh', this._tgt_olleh.bind(this)
 
   hello(hub, channel, timeout=1000) ::
-    const req_id = hub.data_utils.random(3, true)
+    const req_id = hub.data_utils.random_base64(3)
     channel.send @ this.helloHandshake(req_id)
 
     const ans = new Promise @ (resolve, reject) => ::

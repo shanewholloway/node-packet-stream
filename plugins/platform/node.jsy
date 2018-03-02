@@ -12,14 +12,17 @@ export default function nodejs_platform_plugin(plugin_options={}) ::
 
 
 const data_utils = @{}
-  random, parse_url
+  parse_url
+  random, random_base64,
   pack_base64, unpack_base64
   decode_utf8, encode_utf8
   as_data, concat_data
 
-function random(n, asBase64) ::
-  const bytes = randomBytes(n)
-  return asBase64 ? bytes.toString('base64') : bytes
+function random(n) ::
+  return randomBytes(n)
+
+function random_base64(n) ::
+  return randomBytes(n).toString('base64')
 
 function parse_url(url) ::
   return new URL(url)
