@@ -1,4 +1,4 @@
-import { Hub, expect } from './_setup'
+import { Hub, expect } from '../_setup'
 
 describe @ 'Plugin platform', @=> ::
 

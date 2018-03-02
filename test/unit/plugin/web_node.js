@@ -1,6 +1,6 @@
-import { Hub, expect, newLog } from './_setup'
+import { Hub, expect, newLog } from '../_setup'
 
-describe @ 'Plugin direct', @=> ::
+describe @ 'NodeJS Plugin web', @=> ::
   var log, test_chan
   beforeEach @=>> ::
     log = newLog()

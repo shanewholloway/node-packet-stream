@@ -1,1 +1,1 @@
-import './plugin_web'
+import './plugin/web'
