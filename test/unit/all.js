@@ -1,3 +1,5 @@
 import './smoke'
 import './hub_create'
 import './router'
+import './p2p'
+import './targets'
