@@ -3,3 +3,8 @@ import './hub_create'
 import './router'
 import './p2p'
 import './targets'
+
+import './plugin_platform'
+import './plugin_pkt'
+import './plugin_msgs'
+import './plugin_direct'

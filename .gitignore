@@ -1,3 +1,4 @@
+syntax: glob
 package-lock.json
 test/**/*.iife*
 test/**/*.umd*
