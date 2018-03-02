@@ -4,12 +4,8 @@ import {randomBytes} from 'crypto'
 export default function nodejs_platform_plugin(plugin_options={}) ::
   return @: order: -9, subclass(FabricHub) ::
 
-    Object.assign @ FabricHub.prototype, @{}
-      data_utils
-
-    Object.assign @ FabricHub.TargetRouter.prototype, @{}
-      data_utils
-
+    for const base of [FabricHub, FabricHub.TargetRouter, FabricHub.P2PRouter] ::
+      Object.assign @ base.prototype, @{} data_utils
 
 const data_utils = @{}
   parse_url

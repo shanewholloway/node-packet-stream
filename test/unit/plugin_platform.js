@@ -1,18 +1,32 @@
 import { Hub, expect } from './_setup'
 
 describe @ 'Plugin platform', @=> ::
-  it @ 'data_utils members', @=>> ::
-    const hub = Hub.create()
 
-    expect(hub.data_utils.random).to.be.a('function')
-    expect(hub.data_utils.random_base64).to.be.a('function')
-    expect(hub.data_utils.parse_url).to.be.a('function')
-    expect(hub.data_utils.pack_base64).to.be.a('function')
-    expect(hub.data_utils.unpack_base64).to.be.a('function')
-    expect(hub.data_utils.decode_utf8).to.be.a('function')
-    expect(hub.data_utils.encode_utf8).to.be.a('function')
-    expect(hub.data_utils.as_data).to.be.a('function')
-    expect(hub.data_utils.concat_data).to.be.a('function')
+  function has_data_utils(host) ::
+    expect(host.data_utils).to.not.equal(undefined)
+
+    expect(host.data_utils.random).to.be.a('function')
+    expect(host.data_utils.random_base64).to.be.a('function')
+    expect(host.data_utils.parse_url).to.be.a('function')
+    expect(host.data_utils.pack_base64).to.be.a('function')
+    expect(host.data_utils.unpack_base64).to.be.a('function')
+    expect(host.data_utils.decode_utf8).to.be.a('function')
+    expect(host.data_utils.encode_utf8).to.be.a('function')
+    expect(host.data_utils.as_data).to.be.a('function')
+    expect(host.data_utils.concat_data).to.be.a('function')
+
+
+  it @ 'hub.data_utils members', @=>> ::
+    const hub = Hub.create()
+    has_data_utils(hub)
+
+  it @ 'hub.local members', @=>> ::
+    const hub = Hub.create()
+    has_data_utils(hub.local)
+
+  it @ 'hub.p2p members', @=>> ::
+    const hub = Hub.create()
+    has_data_utils(hub.p2p)
 
   it @ 'data_utils.url', @=>> ::
     const hub = Hub.create()
