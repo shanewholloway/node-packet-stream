@@ -69,7 +69,7 @@ export function msg_base_api(hub, options) ::
           if ! msgid :: return ans
           const d = db.get(msgid)
           if undefined === d :: return ans
-          db.delete(msgid)
+          expire @=> db.delete(msgid)
           d.resolve(ans)
           return null
 
@@ -101,7 +101,7 @@ export function msg_base_api(hub, options) ::
               const multi = joinPackets(parts)
               parts = null
               d.resolve(multi)
-              db.delete(key)
+              expire @=> db.delete(key)
               return multi
             return null
 

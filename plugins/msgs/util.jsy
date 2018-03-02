@@ -16,7 +16,6 @@ export function timeoutReaper(timeout=5000) ::
   function tick() ::
     if 0 !== reap.length ::
       const err = new Error('Timeout')
-      console.log @ 'EXPIRE', reap
       for const fn of reap :: fn(err)
     reap = q; q = []
 
