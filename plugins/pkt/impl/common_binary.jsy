@@ -39,7 +39,7 @@ export function bind_binaryLenPacket(options) ::
 const _fromCharCode = String.fromCharCode
 export function bind_binaryPacketCommon(options) ::
   const @{}
-    decode_utf8, unpack_base64, packParts
+    decode_utf8, unpack_base64, packParts, as_data
     PktData, PktJson
   = options
 
@@ -80,7 +80,7 @@ export function bind_binaryPacketCommon(options) ::
       const hdr = decode_utf8 @ pkt_buf.slice(i0, i1)
       const kind = _fromCharCode @ pkt_buf[1+i1]
       const meta = decode_utf8 @ pkt_buf.slice(2+i1, i2)
-      const body = pkt_buf.slice(1+i2)
+      const body = as_data @ pkt_buf.slice(1+i2)
 
       return as_pkt0 @ hdr, meta, body, pktByKind[kind]
 

@@ -10,14 +10,12 @@ export default function({ decode_utf8, encode_utf8, pack_base64, unpack_base64, 
 
 
   return bind_binaryCallPacket @:
-    decode_utf8, unpack_base64, packBody, packParts, concatBody
+    decode_utf8, unpack_base64, as_data, packBody, packParts, concatBody
     PktJson, PktData
 
 
   function packParts(hdr, body) ::
-    if body ::
-      return packPartsU8 @ hdr, packBody(body)
-    else return hdr
+    return body ? packPartsU8(hdr, packBody(body)) : hdr
 
   function packPartsU8(hdr, body) ::
     hdr = encode_utf8(hdr)

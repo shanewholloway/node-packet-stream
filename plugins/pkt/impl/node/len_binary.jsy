@@ -1,7 +1,7 @@
 import { PktJson, PktDataBase, bind_binaryLenPacket } from '../common_binary.jsy'
 import { decode_utf8, unpack_base64, packBody, concatBody } from './util.jsy'
 
-export default function({}) ::
+export default function({as_data}) ::
 
   const PktData = @{} __proto__: PktDataBase
     text() :: return this._body_.toString('utf-8')
@@ -10,7 +10,7 @@ export default function({}) ::
 
 
   return bind_binaryLenPacket @:
-    decode_utf8, unpack_base64, packBody, packParts, concatBody
+    decode_utf8, unpack_base64, as_data, packBody, packParts, concatBody
     PktJson, PktData
 
 

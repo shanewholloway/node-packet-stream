@@ -3,7 +3,7 @@ import { Hub, expect } from '../_setup'
 describe @ 'Plugin platform', @=> ::
 
   function has_data_utils(host) ::
-    expect(host.data_utils).to.not.equal(undefined)
+    expect(host.data_utils).to.not.be.undefined
 
     expect(host.data_utils.random).to.be.a('function')
     expect(host.data_utils.random_base64).to.be.a('function')

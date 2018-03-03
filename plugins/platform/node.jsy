@@ -38,7 +38,7 @@ function encode_utf8(str) ::
 function as_data(data) ::
   if null === data ::
     return Buffer([])
-  return Buffer.from(data)
+  return Buffer.isBuffer(data) ? data : Buffer.from(data)
 
 function concat_data(parts) ::
   return Buffer.concat(parts)

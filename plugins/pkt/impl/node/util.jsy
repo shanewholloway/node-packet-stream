@@ -1,4 +1,8 @@
+const isBuffer = Buffer.isBuffer
+
 export function decode_utf8(buf) ::
+  if ! isBuffer(buf) ::
+    buf = Buffer.from(buf)
   return buf.toString('utf-8')
 
 export function unpack_base64(sz) ::
@@ -8,6 +12,8 @@ export function packBody(body) ::
   return Buffer.from @ null!=body ? body : ''
 
 export function packBody64(body) ::
+  if ! isBuffer(body) ::
+    body = Buffer.from(body)
   return packBody(body).toString('base64')
 
 export function concatBody(parts) ::

@@ -46,18 +46,17 @@ function unpack_base64(str_b64) ::
 function decode_utf8(u8) ::
   if undefined === u8.byteLength ::
     throw new Error @ 'Expected TypedArray'
-  const buf = u8.buffer || new ArrayBuffer(u8)
-  return new TextDecoder().decode(buf)
+  return new TextDecoder().decode(u8.buffer)
 
 function encode_utf8(str) ::
   return new TextEncoder().encode(str)
 
 function as_data(data) ::
-  if null === data ::
-    return new ArrayBuffer(0)
+  if null === data || undefined === data ::
+    return new Uint8Array(0)
   return 'string' === typeof data
     ? encode_utf8(data)
-    : new ArrayBuffer(data)
+    : new Uint8Array(data.buffer || data)
 
 function concat_data(parts) ::
   let i=0, len=0
