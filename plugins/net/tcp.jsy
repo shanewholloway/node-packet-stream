@@ -7,7 +7,7 @@ export default function tcp_plugin(plugin_options={}) ::
 
   return function(hub) ::
     const plugin = Object.assign @ connect, @{}
-      connect, createServer, on_url_connect
+      connect, createServer, on_url_connect, with_url_options
 
     const _common_ = net_common @ hub, plugin, protocol
     return hub[protocol] = plugin
@@ -20,3 +20,7 @@ export default function tcp_plugin(plugin_options={}) ::
     function createServer(onPeer) ::
       return _common_.createServer @ onPeer,
         handler => _tcp_server @ handler
+
+    function with_url_options(options) ::
+      return this.url_options = Object.assign @
+        {}, this.url_options, options

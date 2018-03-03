@@ -7,13 +7,13 @@ export default function direct_stream_plugin(plugin_options={}) ::
   return function(hub) ::
     const _common_ = stream_common(hub)
     const plugin = Object.assign @ connect, @{}
-      connect, connectDirect, createDirectChannel
+      connect, connectDirectPair, createDirectChannel
     return hub[pi_name] = plugin
 
     function connect(peer) ::
-      return connectDirect(peer)[0]
+      return connectDirectPair(peer)[0]
 
-    function connectDirect(peer) ::
+    function connectDirectPair(peer) ::
       if peer[pi_name] && 'function' === typeof peer[pi_name].createDirectChannel ::
         peer = peer[pi_name]
 
@@ -25,4 +25,4 @@ export default function direct_stream_plugin(plugin_options={}) ::
     function createDirectChannel(rstream, wstream) ::
       const channel = _common_.createRWChannel(rstream, wstream)
       channel.peer_info = hub.p2p.hello(hub, channel)
-      return channel
+      return Promise.resolve(channel)

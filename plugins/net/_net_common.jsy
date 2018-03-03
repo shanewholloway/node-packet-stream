@@ -77,7 +77,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
 
     unpackConnectURL(url) ::
       const {hostname:host, port} = url
-      const options = {host, port}
+      const options = Object.assign @ {host, port}, plugin.url_options
       return plugin.on_url_connect
         ? plugin.on_url_connect(options, url)
         : options

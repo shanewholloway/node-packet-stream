@@ -28,5 +28,5 @@ export default function direct_plugin(plugin_options={}) ::
         d_pkt => :: if null !== d_pkt :: send_packed(d_pkt)
       channel.peer_info = Promise.resolve().then @=>>
         hub.p2p.hello(hub, await channel)
-      return [recv, channel]
+      return @[] recv, Promise.resolve(channel)
 
