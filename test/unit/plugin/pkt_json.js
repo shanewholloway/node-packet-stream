@@ -22,7 +22,7 @@ export default function (pkts_kind) ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
@@ -54,7 +54,7 @@ export default function (pkts_kind) ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 

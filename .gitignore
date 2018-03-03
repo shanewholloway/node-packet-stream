@@ -1,4 +1,5 @@
 syntax: glob
+*.grep
 package-lock.json
 test/**/*.iife*
 test/**/*.umd*

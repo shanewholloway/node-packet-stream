@@ -29,7 +29,7 @@ export default function() ::
         connect(hub_a, hub_b) ::
           const pair = hub_b.direct_stream.connectDirectPair @ hub_a
           expect(pair).to.be.an('array')
-          expect(pair.length).to.equal(2)
+          expect(pair).to.have.lengthOf(2)
           expect(pair[0]).to.be.a('promise')
           expect(pair[1]).to.be.a('promise')
           return pair[1]
@@ -39,7 +39,7 @@ export default function() ::
         connect(hub_a, hub_b) ::
           const pair = hub_a.direct_stream.connectDirectPair @ hub_b.direct_stream
           expect(pair).to.be.an('array')
-          expect(pair.length).to.equal(2)
+          expect(pair).to.have.lengthOf(2)
           expect(pair[0]).to.be.a('promise')
           expect(pair[1]).to.be.a('promise')
           return pair[1]

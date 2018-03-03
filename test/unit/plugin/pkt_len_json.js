@@ -11,7 +11,7 @@ export default function () ::
         id_target: '$target$'
         body: @{} msg: 'a test pkt'
 
-    expect(pkt.length).to.equal(41)
+    expect(pkt).to.have.lengthOf(41)
     expect(pkt[0]).to.equal(41)
     expect(pkt[1]).to.equal(0)
     expect @ pkt.slice(2).toString()
@@ -29,7 +29,7 @@ export default function () ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
@@ -52,7 +52,7 @@ export default function () ::
         body: @{} msg: 'a test pkt'
         meta: @{} kind: '$meta$'
 
-    expect(pkt.length).to.equal(58)
+    expect(pkt).to.have.lengthOf(58)
     expect(pkt[0]).to.equal(58)
     expect(pkt[1]).to.equal(0)
     expect @ pkt.slice(2).toString()
@@ -70,7 +70,7 @@ export default function () ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 

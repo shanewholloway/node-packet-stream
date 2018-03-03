@@ -30,7 +30,7 @@ describe @ 'Plugin direct', @=> ::
       connect(hub_a, hub_b) ::
         const pair = hub_b.direct.connectDirectPair @ hub_a
         expect(pair).to.be.an('array')
-        expect(pair.length).to.equal(2)
+        expect(pair).to.have.lengthOf(2)
         expect(pair[0]).to.be.a('promise')
         expect(pair[1]).to.be.a('promise')
         return pair[1]
@@ -40,7 +40,7 @@ describe @ 'Plugin direct', @=> ::
       connect(hub_a, hub_b) ::
         const pair = hub_a.direct.connectDirectPair @ hub_b.direct
         expect(pair).to.be.an('array')
-        expect(pair.length).to.equal(2)
+        expect(pair).to.have.lengthOf(2)
         expect(pair[0]).to.be.a('promise')
         expect(pair[1]).to.be.a('promise')
         return pair[1]

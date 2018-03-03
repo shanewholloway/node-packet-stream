@@ -11,7 +11,7 @@ export default function () ::
         id_target: '$target$'
         body: new Uint8Array @# 1,2,3,4
 
-    expect(buf.length).to.equal(25)
+    expect(buf).to.have.lengthOf(25)
     expect @ Array.from(buf)
     .to.be.deep.equal @#
       25, 0, 36, 114, 111, 117, 116, 101, 36, 32, 36, 116, 97, 114, 103, 101, 116, 36, 9, 61, 9, 1, 2, 3, 4
@@ -23,7 +23,7 @@ export default function () ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
@@ -44,7 +44,7 @@ export default function () ::
         body: new Uint8Array @# 1,2,3,4
         meta: @{} kind: '$meta$'
 
-    expect(buf.length).to.equal(42)
+    expect(buf).to.have.lengthOf(42)
     expect @ Array.from(buf)
     .to.be.deep.equal @#
       42, 0, 36, 114, 111, 117, 116, 101, 36, 32, 36, 116, 97, 114, 103, 101, 116, 36, 9, 61, 123, 34, 107, 105, 110, 100, 34, 58, 34, 36, 109, 101, 116, 97, 36, 34, 125, 9, 1, 2, 3, 4
@@ -57,7 +57,7 @@ export default function () ::
     expect(pkt.id_route).to.be.equal('$route$')
     expect(pkt.id_target).to.be.equal('$target$')
 
-    expect(pkt._hdr_.length).to.be.equal(2)
+    expect(pkt._hdr_).to.have.lengthOf(2)
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
