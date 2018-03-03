@@ -1,4 +1,197 @@
-import { Hub, expect, newLog } from '../_setup'
+const http = require('http')
+const https = require('https')
+
+const WSWebSocket = require('ws')
+const FayeWebSocket = require('faye-websocket')
+
+const { generate: generateEC } = require('ec-pem')
+const { createSelfSignedCertificate } = require('ec-pem/cert')
+
+import { expect } from '../_setup'
+import { testChannelConnection } from './_chan_tests'
 
 export default function () ::
-  it.skip @ 'todo', @=>> ::
+  describe @ 'using "faye-websockets" WebSocket library', @=> ::
+    var faye_ws_test_api, faye_wss_test_api
+    before @=>> ::
+      faye_ws_test_api = await faye_ws_setup(false)
+      faye_wss_test_api = await faye_ws_setup(true)
+
+    it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
+      await testChannelConnection @:
+        __proto__: faye_ws_test_api
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          const ws = new FayeWebSocket.Client @ this.conn_url
+          return hub_b.web.connectWS(ws)
+
+    it @ 'hub.web.connectWS is a channel for wss://', @=>> ::
+      await testChannelConnection @:
+        __proto__: faye_wss_test_api
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('wss://')
+          const ws = new FayeWebSocket.Client @ this.conn_url, [], @{} ca: this.ca
+          return hub_b.web.connectWS(ws)
+
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel', @=>> ::
+      await testChannelConnection @:
+        __proto__: faye_ws_test_api
+
+        init_b(hub) ::
+          hub.web.createWebSocket = url =>
+            new FayeWebSocket.Client @ url+''
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          return hub_b.web.connectWS(this.conn_url)
+
+    it @ 'hub.connect("wss://127.0.0.1:«port»") is a channel', @=>> ::
+      await testChannelConnection @:
+        __proto__: faye_wss_test_api
+
+        init_b(hub) ::
+          hub.web.createWebSocket = url =>
+            new FayeWebSocket.Client @ url+'', [], @{} ca: this.ca
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('wss://')
+          return hub_b.connect(this.conn_url)
+
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
+      await testChannelConnection @:
+        __proto__: faye_ws_test_api
+
+        init_b(hub) ::
+          hub.web.customWebSocket @ FayeWebSocket.Client
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          return hub_b.web.connectWS(this.conn_url)
+
+
+
+  describe @ 'using "ws" WebSocket library', @=> ::
+    var ws_test_api, wss_test_api
+    before @=>> ::
+      ws_test_api = await wslib_ws_setup(false)
+      wss_test_api = await wslib_ws_setup(true)
+
+    it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
+      await testChannelConnection @:
+        __proto__: ws_test_api
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          const ws = new WSWebSocket @ this.conn_url
+          return hub_b.web.connectWS(ws)
+
+    it @ 'hub.web.connectWS is a channel for wss://', @=>> ::
+      await testChannelConnection @:
+        __proto__: wss_test_api
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('wss://')
+          const ws = new WSWebSocket @ this.conn_url, [], @{} ca: this.ca
+          return hub_b.web.connectWS(ws)
+
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel', @=>> ::
+      await testChannelConnection @:
+        __proto__: ws_test_api
+
+        init_b(hub) ::
+          hub.web.createWebSocket = url =>
+            new WSWebSocket @ url+''
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          return hub_b.web.connectWS(this.conn_url)
+
+    it @ 'hub.connect("wss://127.0.0.1:«port»") is a channel', @=>> ::
+      await testChannelConnection @:
+        __proto__: wss_test_api
+
+        init_b(hub) ::
+          hub.web.createWebSocket = url =>
+            new WSWebSocket @ url+'', [], @{} ca: this.ca
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('wss://')
+          return hub_b.connect(this.conn_url)
+
+
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
+      await testChannelConnection @:
+        __proto__: ws_test_api
+
+        init_b(hub) ::
+          hub.web.customWebSocket @ WSWebSocket
+
+        connect(hub_a, hub_b) ::
+          expect(this.conn_url).to.be.a('string').to.have.string('ws://')
+          return hub_b.web.connectWS(this.conn_url)
+
+
+export async function common_ws_setup(tls_opt, init_websocket_lib) ::
+  if true === tls_opt ::
+    tls_opt = await createSelfSignedCertificate @
+      'localhost', @{} altNames: @[] 'localhost', '127.0.0.1'
+      generateEC('prime256v1')
+
+  return @{}
+    sleep: 2
+    done: Promise.resolve()
+
+    async init_a(hub_a) ::
+      const svr = tls_opt
+        ? https.createServer(tls_opt)
+        : http.createServer()
+
+      if tls_opt :: this.ca = [tls_opt.cert]
+
+      Object.defineProperties @ this, @{} svr_a: {value: svr}
+      await init_websocket_lib(svr, hub_a, this)
+
+      const listen_opts = Object.assign @ {}
+        tls_opt, @{} port: 0, host: '127.0.0.1'
+
+      this.conn_url = await new Promise @ (resolve, reject) => ::
+        svr.once @ 'error', reject
+        svr.listen @ listen_opts, () => ::
+          const {address, port} = svr.address()
+          resolve @ `${tls_opt ? 'wss' : 'ws'}://${address}:${port}`
+
+    async after() ::
+      this.svr_a.unref().close()
+
+
+export async function faye_ws_setup(tls_opt) ::
+  return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
+    server.on @ 'upgrade', async (request, socket, body) => ::
+      if FayeWebSocket.isWebSocket(request) ::
+        const ws = new FayeWebSocket(request, socket, body)
+        test_api.done = test_api.done.then @=>
+          add_websocket(hub_a, ws)
+
+
+export async function wslib_ws_setup(tls_opt) ::
+  return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
+    const wss = new WSWebSocket.Server @: server
+    wss.on @ 'connection', (ws, req) => ::
+      test_api.done = test_api.done.then @=>
+        add_websocket(hub_a, ws)
+
+
+export async function add_websocket(hub_a, ws) ::
+  const p_chan = hub_a.web.connectWS(ws)
+  expect(p_chan).to.be.a('promise')
+  await expect(p_chan).to.be.fulfilled
+
+  const chan = await p_chan
+  expect(chan.peer_info).to.be.a('promise')
+  await expect(chan.peer_info).to.be.fulfilled
+
+  const peer_info = await chan.peer_info
+  expect(peer_info).to.have.property('routes')
+  expect(peer_info.routes).to.have.lengthOf(1)
+  expect(peer_info.routes[0]).to.be.oneOf @# '$one$', '$two$'
+
+  return chan
+

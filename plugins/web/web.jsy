@@ -3,38 +3,47 @@ import {bind_sendChannel, bind_postMessageChannel} from './_web_channel.jsy'
 export default function web_plugin(plugin_options={}) ::
   const _global = 'undefined' !== typeof window ? window : global
   return hub => ::
-    let p_WebSocket = plugin_options.WebSocket
+    let WebSocket = plugin_options.WebSocket
 
     const createSendChannel = bind_sendChannel @ hub, hub._pkts_.bin_call
     const createPostMessageChannel = bind_postMessageChannel @ hub, hub._pkts_.bin_call
 
-    hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'], connectWS
-    return hub.web = @{}
+    const plugin = @{} WebSocket,
       createSendChannel, createPostMessageChannel
       connectSend, connectPostMessage
-      connectWS, customWebSocket
+      connectWS, createWebSocket, customWebSocket
+
+    hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],
+      url => plugin.connectWS(url)
+    return hub.web = plugin
 
     function customWebSocket(WebSocket) ::
-      p_WebSocket = WebSocket
+      this.WebSocket = WebSocket
       return this
+
+    function createWebSocket(ws_or_wss_url) ::
+      const l_WebSocket = this.WebSocket || _global.WebSocket
+      return new l_WebSocket(ws_or_wss_url+'')
 
     function connectSend(...args) ::
       const channel = createSendChannel(...args)
       channel.peer_info = hub.p2p.hello(hub, channel)
-      return channel
+      return Promise.resolve(channel)
 
     function connectPostMessage(...args) ::
       const channel = createPostMessageChannel(...args)
       channel.peer_info = hub.p2p.hello(hub, channel)
-      return channel
+      return Promise.resolve(channel)
 
     function connectWS(ws_or_wss_url) ::
       let websock
-      if 'function' === typeof ws_or_wss_url.send ::
-        websock = ws_or_wss_url
-      else ::
-        const l_WebSocket = p_WebSocket || _global.WebSocket
-        websock = new l_WebSocket(ws_or_wss_url)
+      if ws_or_wss_url ::
+        websock = 'function' !== typeof ws_or_wss_url.send
+          ? this.createWebSocket(ws_or_wss_url)
+          : ws_or_wss_url
+
+      if undefined === websock ::
+        throw new TypeError @ `Invalid websocket connection`
 
       const channel = createSendChannel(websock)
       channel.peer_info = new Promise @ (resolve, reject) => ::
@@ -49,5 +58,5 @@ export default function web_plugin(plugin_options={}) ::
           hub.p2p.hello(hub, channel).then(resolve, reject)
 
         else reject @ new Error @ 'WebSocket closed'
-      return channel
+      return Promise.resolve(channel)
 

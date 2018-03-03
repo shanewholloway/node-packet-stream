@@ -2,9 +2,10 @@ import FabricBaseHub from '../../code/index.node.jsy'
 import pi_direct from '../../plugins/net/direct.jsy'
 import pi_tcp from '../../plugins/net/tcp.jsy'
 import pi_tls from '../../plugins/net/tls.jsy'
+import pi_web from '../../plugins/web/web.jsy'
 
 const FabricHub = FabricBaseHub
-  .plugins( pi_direct(), pi_tcp(), pi_tls() )
+  .plugins( pi_direct(), pi_tcp(), pi_tls(), pi_web() )
 
 import { _init } from '../unit/_setup'
 _init(FabricHub)

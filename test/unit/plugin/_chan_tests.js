@@ -4,24 +4,25 @@ export async function testChannelConnection(test_api) ::
   const log = newLog()
 
   const hub_a = createTestHub @ 'one', log
+  if test_api.init :: 
+    await test_api.init(hub_a)
   if test_api.init_a :: 
     await test_api.init_a(hub_a)
-  else if test_api.init :: 
-    await test_api.init(hub_a)
 
   const hub_b = createTestHub @ 'two', log
+  if test_api.init :: 
+    await test_api.init(hub_b)
   if test_api.init_b :: 
     await test_api.init_b(hub_b)
-  else if test_api.init :: 
-    await test_api.init(hub_b)
+
+  if test_api.before ::
+    await test_api.before(hub_a, hub_b)
 
   const p_chan = test_api.connect(hub_a, hub_b)
   expect(p_chan).to.be.a('promise')
-  await expect(p_chan).to.be.fulfilled
 
   const chan = await p_chan
   expect(chan.peer_info).to.be.a('promise')
-  await expect(chan.peer_info).to.be.fulfilled
 
   const peer_info = await chan.peer_info
   expect(peer_info).to.have.property('routes')
@@ -30,6 +31,9 @@ export async function testChannelConnection(test_api) ::
 
 
   expect(log.calls).to.be.empty
+
+  if test_api.during ::
+    await test_api.during(hub_a, hub_b)
 
   await hub_b.send @:
     id_route: '$one$'
@@ -53,6 +57,7 @@ export async function testChannelConnection(test_api) ::
     'recv [$two$ tgt_two]'
 
 
-  if test_api.shutdown :: 
-    await test_api.shutdown(hub_a, hub_b)
+  await test_api.done
+  if test_api.after :: 
+    await test_api.after(hub_a, hub_b)
 
