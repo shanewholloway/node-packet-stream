@@ -46,11 +46,11 @@ describe @ 'Hub creation', @=> ::
 
   it @ 'new Hub with id_prefix', @=>> :: 
     const hub = new Hub @: id_prefix: '$unit$'
-    expect @ hub.local.id_route.startsWith('$unit$')
-    .to.be.true
+    expect(hub.local.id_route)
+    .to.satisfy @ sz => sz.startsWith('$unit$')
 
   it @ 'Hub.create with id_prefix', @=>> :: 
     const hub = Hub.create @: id_prefix: '$unit$'
-    expect @ hub.local.id_route.startsWith('$unit$')
-    .to.be.true
+    expect(hub.local.id_route)
+    .to.satisfy @ sz => sz.startsWith('$unit$')
 

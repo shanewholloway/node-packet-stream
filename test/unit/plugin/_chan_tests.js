@@ -23,6 +23,11 @@ export async function testChannelConnection(test_api) ::
   expect(chan.peer_info).to.be.a('promise')
   await expect(chan.peer_info).to.be.fulfilled
 
+  const peer_info = await chan.peer_info
+  expect(peer_info).to.have.property('routes')
+  expect(peer_info.routes).to.have.lengthOf(1)
+  expect(peer_info.routes[0]).to.be.oneOf @# '$one$', '$two$'
+
 
   expect(log.calls).to.be.empty
 
