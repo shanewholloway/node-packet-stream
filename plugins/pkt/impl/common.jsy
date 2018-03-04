@@ -51,7 +51,8 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
     if 'function' === typeof obj.repack_pkt ::
       return obj.repack_pkt(repack)
 
-    const hdr=as_hdr(obj), {body, meta}=obj, k_token=body[sym_split]
+    const hdr=as_hdr(obj), {body, meta}=obj
+    const k_token = null!=body ? body[sym_split] : undefined
     return undefined !== k_token
       ? @ undefined !== body.src
           ? as_pkt0 @ hdr, meta, body.src, pktByKind[k_token]
