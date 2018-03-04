@@ -1,5 +1,5 @@
-import test_net from './plugin/net'
-import test_web_node from './plugin/web_node'
+import test_net from './plugins/net'
+import test_web_node from './plugins/web_node'
 
 describe @ 'NodeJS Plugins', @=> ::
   describe @ 'net', test_net

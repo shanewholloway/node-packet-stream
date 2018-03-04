@@ -1,4 +1,4 @@
-import test_web from './plugin/web'
+import test_web from './plugins/web'
 
 describe @ 'Browser Plugins', @=> ::
   describe @ 'web', test_web
