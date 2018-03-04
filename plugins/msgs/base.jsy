@@ -14,6 +14,11 @@ export function as_reply_id(id) ::
     : 'string' === typeof id[sym_sampi] ? id[sym_sampi].split(' ', 2)
     : @[] id.from_route, id.from_target
 
+export function make_reply_id({id_route, from_route, id_target, from_target, token}, token2) ::
+  if null == token :: token = token2
+  if null == from_route :: from_route = id_route
+  if null == from_target :: from_target = id_target
+  return @{} token: token, from: true, from_route, from_target
 
 
 export function bind_mx_api(source_api, reply_api) ::
@@ -37,7 +42,7 @@ export function msg_base_api(hub, options) ::
   const chan = options.channel || hub.channel
   const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
   const expire = timeoutReaper @ options.timeout || 5000
-  const newToken = () => random_base64(tokenLen)
+  const newToken = options.newToken || @ () => random_base64(tokenLen)
 
   const msg_api0 = bind_msg_api0(chan)
 
@@ -47,7 +52,7 @@ export function msg_base_api(hub, options) ::
     bind_sendmsg
     bind_replymsg
 
-    createContext() ::
+    createMsgContext() ::
       let db = new Map()
       return @{} newToken
         deferredFor(token) ::
@@ -109,19 +114,21 @@ export function msg_base_api(hub, options) ::
   function bind_sendmsg(kw) ::
     const api = bind_msg_api(kw)
     api.send = api.post
+    api.dg_send = api.dg_post
     return api
 
   function bind_replymsg(kw) ::
     const api = bind_msg_api(kw)
     api.send = api.answer
+    api.dg_send = api.dg_answer
     api.replyExpected = true
     return api
 
   function bind_msg_api({anon, op_api}) ::
     return @{} __proto__: msg_api0, anon
-      answer: _mp_with_response
-      query: _mp_with_response
       post: _mp_post
+      query: _mp_with_response
+      answer: _mp_with_response
 
       dg_post: _dg_post
       dg_query: _dg_response
@@ -245,22 +252,22 @@ export function msg_base_api(hub, options) ::
   function bind_msg_api0(chan) ::
     return @{} __proto__: null
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
-      toJSON(obj={}) :: obj[sym_sampi] = this[sym_sampi]; return obj
+      toJSON() :: return @{} [sym_sampi]: this[sym_sampi]
 
       _send_pkt: chan.send.bind(chan)
 
       _new_token() ::
-        const {ctx, opo0} = this._mx_
-        const token = ctx.newToken()
+        const {mctx, opo0} = this._mx_
+        const token = mctx.newToken()
         return @{} token,
           opo: o_assign @ {token}, opo0
 
       _new_response() ::
-        const {ctx, opo0} = this._mx_
+        const {mctx, opo0} = this._mx_
         if opo0.msgid :: return @{} opo: opo0
 
-        const token = ctx.newToken()
+        const token = mctx.newToken()
         return @{} token,
           opo: o_assign @ {token}, opo0
-          response: ctx.responseFor(token)
+          response: mctx.responseFor(token)
 

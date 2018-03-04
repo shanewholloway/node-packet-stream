@@ -25,9 +25,10 @@ export default function msgs_plugin(plugin_options) ::
 
       return @{}
         to(id) :: return as_anon @ id, null, as_anon.root_source(this)
+        anon(id) :: return as_anon @ id, null, as_anon.root_source(this)
         as(id) :: return as_src @ id, this
 
-        createContext: shared.createContext
+        createMsgContext: shared.createMsgContext
         expire: shared.expire
 
 

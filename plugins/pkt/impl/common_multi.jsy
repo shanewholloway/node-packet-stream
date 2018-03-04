@@ -3,11 +3,8 @@ import { is_json_body, json_stringify, o_create } from './common_base.jsy'
 import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.jsy'
 import { json } from './common.jsy'
 
-// Max of 16,384 bytes is the practical SCTP limit. (ref: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels#Concerns_with_large_messages)
-export const maxlen_pkt = 16 << 10
-export const maxlen_hdr = 256 // 192 bytes id_route + id_target; 56 all op fields; 8 bytes spacing overhead
-export const maxlen_msg = maxlen_pkt - maxlen_hdr // 1.6% overhead reserved
-
+import { maxlen_msg } from './common_base.jsy'
+export { maxlen_pkt, maxlen_hdr, maxlen_msg } from './common_base.jsy'
 
 export const MultiPktBase = @{}
   __proto__: null, is_pkt: false, is_multi_pkt: true

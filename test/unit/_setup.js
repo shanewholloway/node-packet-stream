@@ -23,7 +23,20 @@ export function newLog() ::
       ? args[0] : args
 
   log.calls = _log
+  log.expectOneLogOf = expectOneLogOf
+  log.expectLastLogOf = expectLastLogOf
   return log
+
+async function expectOneLogOf(...args) ::
+  await sleep(1)
+  expect(this.calls).to.have.lengthOf(1)
+  expect(this.calls[0]).to.deep.equal(args)
+
+async function expectLastLogOf(...args) ::
+  await sleep(1)
+  const last = this.calls[ this.calls.length - 1 ]
+  expect @ last.slice(0, -1) // trim off body
+  .to.deep.equal(args)
 
 export function createTestHub(name, log) ::
   const hub = Hub.create @ `$${name}$`

@@ -103,7 +103,7 @@ hub.send({
 ##### Sending to target using the `hub.msgs` api
 
 ```javascript
-const client = hub.msgs.anon({
+const client = hub.msgs.to({
   id_route: tgt_addr.id_route,
   id_target: tgt_addr.id_target })
 

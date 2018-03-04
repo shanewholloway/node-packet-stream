@@ -8,7 +8,7 @@ export function msg_anon_api(shared) ::
   const reply_api = bind_replymsg @: anon, op_api: shared.ops_api.anon_reply
 
   const mx_api = bind_mx_api(source_api, reply_api)
-  const anon_ctx = @{} newToken, responseFor() {}, on_response() {}
+  const anon_mctx = @{} newToken, responseFor() {}, on_response() {}
 
   anon_api.root_source = pi_msgs => @:
   return shared.anon_api = anon_api
@@ -23,7 +23,7 @@ export function msg_anon_api(shared) ::
       throw new Error @ `Invalid id`
 
     return mx_api @ pkt_op, @{}
-      id_route, id_target, ctx: anon_ctx, source, opo0: {}
+      id_route, id_target, mctx: anon_mctx, source, opo0: {}
 
 
 function anon() :: return this
