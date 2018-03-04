@@ -5,7 +5,7 @@ export default function browser_platform_plugin(plugin_options={}) ::
   return @: order: -9, subclass(FabricHub) ::
 
     for const base of [FabricHub, FabricHub.TargetRouter, FabricHub.P2PRouter] ::
-      Object.assign @ base.prototype, @{} data_utils
+      base.prototype.data_utils = data_utils
 
 const data_utils = @{}
   parse_url
@@ -14,14 +14,23 @@ const data_utils = @{}
   decode_utf8, encode_utf8
   as_data, concat_data
 
+const _global_ = @
+    'undefined' !== typeof window ? window
+  : 'undefined' !== typeof self ? self
+  : 'undefined' !== typeof global ? global
+  : @ console.warn('Unknown global exectuion environment'), {}
+
+Object.defineProperties @ data_utils, @{}
+  _global_: {value: _global_}
+
 function random(n) ::
   const ua = new Uint8Array(n)
-  window.crypto.getRandomValues(ua)
+  _global_.crypto.getRandomValues(ua)
   return ua
 
 function random_base64(n) ::
   const ua = new Uint8Array(n)
-  window.crypto.getRandomValues(ua)
+  _global_.crypto.getRandomValues(ua)
   return pack_base64 @ ua
 
 function parse_url(url) ::
@@ -33,10 +42,10 @@ function pack_base64(data) ::
   let res=''
   for (let i=0; i<len; i++)
     res += _fromCharCode(u8[i])
-  return window.btoa(res)
+  return _global_.btoa(res)
 
 function unpack_base64(str_b64) ::
-  const sz = window.atob(str_b64), len = sz.length
+  const sz = _global_.atob(str_b64), len = sz.length
 
   const res = new Uint8Array(len)
   for (let i=0; i<len; i++)

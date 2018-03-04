@@ -3,6 +3,7 @@ import {as_hdr, as_pkt0} from './common_base.jsy'
 
 export const PktBase = @{}
   __proto__: null, is_pkt: true
+  toJSON() :: throw new Error @ 'Packets are not for serializing'
   get id_route() :: return this._hdr_[0]
   get id_target() :: return this._hdr_[1]
   meta(reviver) :: return json_parse(this._meta_||null, reviver)

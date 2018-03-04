@@ -33,6 +33,10 @@ export function bind_postMessageChannel(hub, pkts) ::
     tgt_recv.addEventListener @ 'message', m => ::
       if accept(m) :: recv @# m.data
 
+    if 'function' === typeof tgt_recv.start ::
+      // call aMessagePort.start() :: Starts the sending of messages queued on the port, needed when using EventTarget.addEventListener
+      tgt_recv.start()
+
     return channel
 
     function send_packed(d_pkt) ::

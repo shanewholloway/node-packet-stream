@@ -64,6 +64,12 @@ function package_core() {
         ],
         external: [], plugins: prod_plugins },
 
+    { input: 'test/unittest/browser.hub.js',
+      output: {
+        file: 'test/unittest/browser.hub.umd.js',
+        format: 'umd', name:'MsgFabricTestHub', sourcemap },
+      external: [], plugins: test_plugins },
+
     { input: 'test/unittest/browser.js',
       output: {
         file: 'test/unittest/browser.iife.js',

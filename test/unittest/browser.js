@@ -1,4 +1,4 @@
-import FabricHub from '../../code/index.browser.jsy'
+import FabricHub from './browser.hub.js'
 
 import { _init } from '../unit/_setup'
 _init(FabricHub)

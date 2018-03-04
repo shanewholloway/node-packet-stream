@@ -30,7 +30,7 @@ export function createTestHub(name, log) ::
 
   if log ::
     hub.local.registerTarget @ `tgt_${name}`
-      pkt => log @ `recv [${pkt.id_route} ${pkt.id_target}]`
+      pkt => log @ `recv [${pkt.id_route} ${pkt.id_target}]`, pkt.json()
 
   expect(hub.p2p.public_routes)
   .to.deep.equal @# `$${name}$`

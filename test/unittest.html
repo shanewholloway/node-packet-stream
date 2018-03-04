@@ -11,6 +11,7 @@
 <script>
   mocha.setup({ ui: 'bdd', asyncOnly: true })
   window.require = module => window[module]
+  window.url_msg_fabric_hub = new URL('./unittest/browser.hub.umd.js', window.location).href
 </script>
 <script src='./unittest/browser.iife.js'></script>
 <script>
