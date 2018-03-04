@@ -22,6 +22,7 @@ export default function(setup_msgs_test) ::
         ns.c_anon[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
+          '_recv_ null', @[] '$unit$', '$src$', 'U'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
           @{} kind: 'multipart', seq: 0, token: '1001'
@@ -31,6 +32,7 @@ export default function(setup_msgs_test) ::
         ns.c_from[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
+          '_recv_ null', @[] '$unit$', '$src$', 'M'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
           @{} kind: 'multipart', seq: 0, token: '1001'
@@ -41,6 +43,8 @@ export default function(setup_msgs_test) ::
         it @ `reply().${alias}`, @=>> ::
           ns.c_reply[alias] @ body
 
+          await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'm'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
             @{} kind: 'multipart', seq: 0, msgid: 'test_token'
@@ -51,6 +55,8 @@ export default function(setup_msgs_test) ::
         it @ `reply_anon().${alias}`, @=>> ::
           ns.c_reply_anon[alias] @ body
 
+          await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'u'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
             @{} kind: 'multipart', seq: 0, msgid: 'test_token'
@@ -62,6 +68,8 @@ export default function(setup_msgs_test) ::
         it @ `anon().${alias}`, @=>> ::
           ns.c_anon[alias] @ body
 
+          await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'U'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
             @{} kind: 'multipart', seq: 0, token: '1001'
@@ -71,6 +79,8 @@ export default function(setup_msgs_test) ::
         it @ `to().${alias}`, @=>> ::
           ns.c_from[alias] @ body
 
+          await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'M'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
             @{} kind: 'multipart', seq: 0, token: '1001'
@@ -80,6 +90,8 @@ export default function(setup_msgs_test) ::
       it @ `reply().${alias}`, @=>> ::
         ns.c_reply[alias] @ body
 
+        await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'm'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
           @{} kind: 'multipart', seq: 0, msgid: 'test_token'
@@ -89,6 +101,8 @@ export default function(setup_msgs_test) ::
       it @ `reply_anon().${alias}`, @=>> ::
         ns.c_reply_anon[alias] @ body
 
+        await ns.log.expectSplitLogEntriesOf @
+            '_recv_ null', @[] '$unit$', '$src$', 'u'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
           @{} kind: 'multipart', seq: 0, msgid: 'test_token'
@@ -119,6 +133,7 @@ export default function(setup_msgs_test) ::
 async function expectSplitLogEntriesOf(...args) ::
   await sleep(1)
   
-  for let i = 0; i < this.calls.length - 2; i++ ::
-    expect(this.calls[i]).to.deep.equal @ args
+  const calls = this.calls
+  for let i = 0; i < calls.length - 1; i++ ::
+    expect(calls[i]).to.deep.equal @ args
 

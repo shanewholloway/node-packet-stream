@@ -92,7 +92,7 @@ async function setup_msgs_test() ::
         Object.assign({}, rpkt.op)
         rpkt.is_pkt_json ? rpkt.json() : '--not-json--'
 
-    else log @ `_recv_ null`, pkt._hdr_
+    else log @ `_recv_ null`, pkt._hdr_.slice(0,3)
 
   return @{} log, hub, src, client
     c_anon, c_from, c_reply, c_reply_anon
