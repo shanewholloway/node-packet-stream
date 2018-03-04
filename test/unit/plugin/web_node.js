@@ -19,7 +19,7 @@ export default function () ::
 
     it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
       await testChannelConnection @:
-        __proto__: faye_ws_test_api
+        __proto__: faye_ws_test_api()
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('ws://')
           const ws = new FayeWebSocket.Client @ this.conn_url
@@ -27,7 +27,7 @@ export default function () ::
 
     it @ 'hub.web.connectWS is a channel for wss://', @=>> ::
       await testChannelConnection @:
-        __proto__: faye_wss_test_api
+        __proto__: faye_wss_test_api()
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('wss://')
           const ws = new FayeWebSocket.Client @ this.conn_url, [], @{} ca: this.ca
@@ -35,7 +35,7 @@ export default function () ::
 
     it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel', @=>> ::
       await testChannelConnection @:
-        __proto__: faye_ws_test_api
+        __proto__: faye_ws_test_api()
 
         init_b(hub) ::
           hub.web.createWebSocket = url =>
@@ -47,7 +47,7 @@ export default function () ::
 
     it @ 'hub.connect("wss://127.0.0.1:«port»") is a channel', @=>> ::
       await testChannelConnection @:
-        __proto__: faye_wss_test_api
+        __proto__: faye_wss_test_api()
 
         init_b(hub) ::
           hub.web.createWebSocket = url =>
@@ -59,7 +59,7 @@ export default function () ::
 
     it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
       await testChannelConnection @:
-        __proto__: faye_ws_test_api
+        __proto__: faye_ws_test_api()
 
         init_b(hub) ::
           hub.web.customWebSocket @ FayeWebSocket.Client
@@ -78,7 +78,7 @@ export default function () ::
 
     it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
       await testChannelConnection @:
-        __proto__: ws_test_api
+        __proto__: ws_test_api()
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('ws://')
           const ws = new WSWebSocket @ this.conn_url
@@ -86,7 +86,7 @@ export default function () ::
 
     it @ 'hub.web.connectWS is a channel for wss://', @=>> ::
       await testChannelConnection @:
-        __proto__: wss_test_api
+        __proto__: wss_test_api()
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('wss://')
           const ws = new WSWebSocket @ this.conn_url, [], @{} ca: this.ca
@@ -94,7 +94,7 @@ export default function () ::
 
     it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel', @=>> ::
       await testChannelConnection @:
-        __proto__: ws_test_api
+        __proto__: ws_test_api()
 
         init_b(hub) ::
           hub.web.createWebSocket = url =>
@@ -106,7 +106,7 @@ export default function () ::
 
     it @ 'hub.connect("wss://127.0.0.1:«port»") is a channel', @=>> ::
       await testChannelConnection @:
-        __proto__: wss_test_api
+        __proto__: wss_test_api()
 
         init_b(hub) ::
           hub.web.createWebSocket = url =>
@@ -119,7 +119,7 @@ export default function () ::
 
     it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
       await testChannelConnection @:
-        __proto__: ws_test_api
+        __proto__: ws_test_api()
 
         init_b(hub) ::
           hub.web.customWebSocket @ WSWebSocket
@@ -135,7 +135,7 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
       'localhost', @{} altNames: @[] 'localhost', '127.0.0.1'
       generateEC('prime256v1')
 
-  return @{}
+  return () => @:
     sleep: 2
     done: Promise.resolve()
 
@@ -143,7 +143,7 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
       const svr = tls_opt
         ? https.createServer(tls_opt)
         : http.createServer()
-
+      svr.unref()
       if tls_opt :: this.ca = [tls_opt.cert]
 
       Object.defineProperties @ this, @{} svr_a: {value: svr}
@@ -158,15 +158,19 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
           const {address, port} = svr.address()
           resolve @ `${tls_opt ? 'wss' : 'ws'}://${address}:${port}`
 
+    ws_cleanup: []
     async after() ::
       this.svr_a.unref().close()
+      for const ws of this.ws_cleanup ::
+        ws.close()
 
 
 export async function faye_ws_setup(tls_opt) ::
   return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
-    server.on @ 'upgrade', async (request, socket, body) => ::
-      if FayeWebSocket.isWebSocket(request) ::
-        const ws = new FayeWebSocket(request, socket, body)
+    server.on @ 'upgrade', async (req, sock, body) => ::
+      if FayeWebSocket.isWebSocket(req) ::
+        const ws = new FayeWebSocket(req, sock, body)
+        test_api.ws_cleanup.push @ ws
         test_api.done = test_api.done.then @=>
           add_websocket(hub_a, ws)
 
@@ -175,6 +179,7 @@ export async function wslib_ws_setup(tls_opt) ::
   return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
     const wss = new WSWebSocket.Server @: server
     wss.on @ 'connection', (ws, req) => ::
+      test_api.ws_cleanup.push @ ws
       test_api.done = test_api.done.then @=>
         add_websocket(hub_a, ws)
 
