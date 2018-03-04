@@ -22,20 +22,20 @@ export default function(setup_msgs_test) ::
         ns.c_anon[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
-          '_recv_ null', @[] '$unit$', '$src$', 'U'
+          '_recv_ null', @[] '$unit$', '$src$', 'A'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
-          @{} kind: 'multipart', seq: 0, token: '1001'
+          @{} kind: 'split_datagram', seq: 0, token: '1001'
 
 
       it @ `to().${alias}`, @=>> ::
         ns.c_from[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
-          '_recv_ null', @[] '$unit$', '$src$', 'M'
+          '_recv_ null', @[] '$unit$', '$src$', 'B'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
-          @{} kind: 'multipart', seq: 0, token: '1001'
+          @{} kind: 'split_datagram', seq: 0, token: '1001'
               from: true, from_route: '$cr$', from_target: '$client$'
 
 
@@ -44,10 +44,10 @@ export default function(setup_msgs_test) ::
           ns.c_reply[alias] @ body
 
           await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'm'
+            '_recv_ null', @[] '$unit$', '$src$', 'b'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
-            @{} kind: 'multipart', seq: 0, msgid: 'test_token'
+            @{} kind: 'split_datagram', seq: 0, msgid: 'test_token'
                 from: true, from_route: '$cr$', from_target: '$client$'
                 
 
@@ -56,10 +56,10 @@ export default function(setup_msgs_test) ::
           ns.c_reply_anon[alias] @ body
 
           await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'u'
+            '_recv_ null', @[] '$unit$', '$src$', 'a'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
-            @{} kind: 'multipart', seq: 0, msgid: 'test_token'
+            @{} kind: 'split_datagram', seq: 0, msgid: 'test_token'
 
 
     for const alias of ['query', 'answer', 'send'] ::
@@ -69,10 +69,10 @@ export default function(setup_msgs_test) ::
           ns.c_anon[alias] @ body
 
           await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'U'
+            '_recv_ null', @[] '$unit$', '$src$', 'F'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
-            @{} kind: 'multipart', seq: 0, token: '1001'
+            @{} kind: 'split_direct', seq: 0, token: '1001'
 
 
       if ! /send/.test @ alias ::
@@ -80,10 +80,10 @@ export default function(setup_msgs_test) ::
           ns.c_from[alias] @ body
 
           await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'M'
+            '_recv_ null', @[] '$unit$', '$src$', 'G'
           await ns.log.expectLastLogOf @
             '_recv_ json', null
-            @{} kind: 'multipart', seq: 0, token: '1001'
+            @{} kind: 'split_direct', seq: 0, token: '1001'
                 from: true, from_route: '$cr$', from_target: '$client$'
 
 
@@ -91,10 +91,10 @@ export default function(setup_msgs_test) ::
         ns.c_reply[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'm'
+            '_recv_ null', @[] '$unit$', '$src$', 'g'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
-          @{} kind: 'multipart', seq: 0, msgid: 'test_token'
+          @{} kind: 'split_direct', seq: 0, msgid: 'test_token'
               from: true, from_route: '$cr$', from_target: '$client$'
 
 
@@ -102,10 +102,10 @@ export default function(setup_msgs_test) ::
         ns.c_reply_anon[alias] @ body
 
         await ns.log.expectSplitLogEntriesOf @
-            '_recv_ null', @[] '$unit$', '$src$', 'u'
+            '_recv_ null', @[] '$unit$', '$src$', 'f'
         await ns.log.expectLastLogOf @
           '_recv_ json', null
-          @{} kind: 'multipart', seq: 0, msgid: 'test_token'
+          @{} kind: 'split_direct', seq: 0, msgid: 'test_token'
 
 
   describe @ 'invalid encoding', @=> ::

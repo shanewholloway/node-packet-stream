@@ -1,8 +1,8 @@
-import {deferred, timeoutReaper} from './util.jsy'
+import { o_create, o_assign } from './util.jsy'
+import { deferred, timeoutReaper } from './util.jsy'
+import msg_stream from './msg_stream.jsy'
 
 export const sym_sampi = '\u03E0' // 'Ϡ'
-
-const o_create = Object.create, o_assign = Object.assign
 
 export function as_source_id(id) ::
   return 'string' === typeof id ? id.split(' ', 2)
@@ -135,12 +135,18 @@ export function msg_base_api(hub, options) ::
       dg_answer: _dg_response
 
       stream(extra) ::
+        const {meta} = extra || {}
         const {response, opo} = this._new_response()
-        return _wstream(this, opo, op_api.stream, extra, response)
+        const ms = msg_stream(this, opo, op_api.stream, meta)
+        ms.response = response
+        return ms
 
       multipart(extra) ::
+        const {meta} = extra || {}
         const {response, opo} = this._new_response()
-        return _wstream(this, opo, op_api.multipart, extra, response)
+        const ms = msg_stream(this, opo, op_api.multipart, meta)
+        ms.response = response
+        return ms
 
       ctrl(body, extra) ::
         const meta = undefined !== extra && null !== extra
@@ -161,7 +167,9 @@ export function msg_base_api(hub, options) ::
       const parts = splitBody(body, meta)
       if 1 < parts.length ::
         const {opo} = this._new_token()
-        return _msend(this, parts, opo)
+        msg_stream(this, opo, op_api.split_datagram)
+          .writeAll(parts, true)
+        return
 
       const {id_route, id_target, opo0} = this._mx_
       const obj = @{} id_route, id_target, body: parts[0], meta
@@ -175,7 +183,9 @@ export function msg_base_api(hub, options) ::
 
       const parts = splitBody(body, meta)
       if 1 < parts.length ::
-        return _msend(this, parts, opo, response)
+        msg_stream(this, opo, op_api.split_direct)
+          .writeAll(parts, true)
+        return response
 
       const {id_route, id_target} = this._mx_
       const obj = @{} id_route, id_target, body: parts[0], meta
@@ -200,54 +210,6 @@ export function msg_base_api(hub, options) ::
       const pkt = op_api.direct @ obj, opo
       this._send_pkt(pkt)
       return response
-
-    function _msend(msgapi, parts, opo, response) ::
-      _wstream(msgapi, opo, op_api.multipart, undefined, response)
-        .writeAll(parts, true)
-      return response
-
-    function _wstream(msgapi, opo, op_method, extra, response) ::
-      const meta = undefined !== extra && null !== extra
-        ? extra.meta : undefined
-
-      const {id_route, id_target} = msgapi._mx_
-      let seq=0, self
-      return self = @{} response
-        writeMeta: (body, meta) => ::
-          const obj = @{} id_route, id_target, body, meta
-
-          const pkt = op_method @ obj,
-            o_assign({seq: seq++}, opo)
-          msgapi._send_pkt(pkt)
-
-        write: body => ::
-          const obj = @{} id_route, id_target, body
-
-          if undefined !== meta && null !== meta ::
-            obj.meta = meta
-            meta = undefined
-
-          const pkt = op_method @ obj,
-            o_assign({seq: seq++}, opo)
-          msgapi._send_pkt(pkt)
-
-        writeAll: (body, close) => ::
-          let cur, next
-          for next of body ::
-            if undefined !== cur ::
-              self.write(cur)
-            cur = next
-
-          if undefined !== cur ::
-            return close
-              ? self.end(cur)
-              : self.write(cur)
-
-        end: body => ::
-          seq = -seq
-          self.write(body)
-          seq = null
-
 
   function bind_msg_api0(chan) ::
     return @{} __proto__: null

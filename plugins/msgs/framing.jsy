@@ -95,11 +95,23 @@ export function standard_frames() ::
     as_op_frame @: kind: 'datagram', action: '-', frames: @#
     as_op_frame @: kind: 'datagram', action: '@', frames: @# frm.from_route, frm.from_target
 
+    // split_datagram: a multipart style encoding for when a message has to be split over multiple packets
+    as_op_frame @: kind: 'split_datagram', action: 'A', frames: @# frm.token, frm.seq
+    as_op_frame @: kind: 'split_datagram', action: 'a', frames: @# frm.msgid, frm.seq
+    as_op_frame @: kind: 'split_datagram', action: 'B', frames: @# frm.from_route, frm.from_target, frm.token, frm.seq
+    as_op_frame @: kind: 'split_datagram', action: 'b', frames: @# frm.from_route, frm.from_target, frm.msgid, frm.seq
+
     // direct: 
     as_op_frame @: kind: 'direct', action: 'E', frames: @# frm.token
     as_op_frame @: kind: 'direct', action: 'e', frames: @# frm.msgid
     as_op_frame @: kind: 'direct', action: 'D', frames: @# frm.from_route, frm.from_target, frm.token
     as_op_frame @: kind: 'direct', action: 'd', frames: @# frm.from_route, frm.from_target, frm.msgid
+
+    // split_direct: a multipart style encoding for when a message has to be split over multiple packets
+    as_op_frame @: kind: 'split_direct', action: 'F', frames: @# frm.token, frm.seq
+    as_op_frame @: kind: 'split_direct', action: 'f', frames: @# frm.msgid, frm.seq
+    as_op_frame @: kind: 'split_direct', action: 'G', frames: @# frm.from_route, frm.from_target, frm.token, frm.seq
+    as_op_frame @: kind: 'split_direct', action: 'g', frames: @# frm.from_route, frm.from_target, frm.msgid, frm.seq
 
     // multipart:
     as_op_frame @: kind: 'multipart', action: 'U', frames: @# frm.token, frm.seq

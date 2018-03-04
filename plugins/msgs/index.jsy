@@ -3,5 +3,6 @@ export * from './base.jsy'
 export * from './send_anon.jsy'
 export * from './source.jsy'
 export * from './send_from.jsy'
+export * from './msg_stream.jsy'
 export {default as plugin, default as default} from './plugin.jsy'
 
