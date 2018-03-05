@@ -10,12 +10,34 @@ export function bind_channel(hub) ::
   return function (rstream, wstream) ::
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
     recvPacketStream @ rstream, recv
+
+    let p_drain=null, on_drain
+    wstream.on @ 'drain', @=> ::
+      p_drain = null
+      if null !== on_drain ::
+        on_drain()
+        on_drain = null
+
+    function next_drain(resolve) ::
+      if undefined === resolve ::
+        on_drain = resolve
+      else if null === p_drain ::
+        p_drain = new Promise(next_drain)
+      return p_drain
+
     return channel
 
     function send_packed(d_pkt) ::
       if null !== d_pkt ::
-        wstream.write(d_pkt)
-      else wstream.end()
+        if wstream.write(d_pkt) ::
+          return // sent immediate, no backpressure promise
+        // backpressure as promise for next drain event
+        return set_drain()
+      else ::
+        wstream.end()
+        return new Promise @ resolve =>
+          wstream.once @ 'finish', resolve
+
 
 
 export function recvPacketStream(rstream, dispatchCallback) ::

@@ -1,5 +1,5 @@
 import {inspect} from 'util'
-import {TestDirectHub as Hub} from '../_setup'
+import Hub from '../_setup'
 
 const hub = Hub.create('hub')
 const {id_route} = hub.local

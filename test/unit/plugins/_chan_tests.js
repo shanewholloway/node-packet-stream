@@ -45,21 +45,26 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     id_route: '$one$'
     id_target: 'tgt_one'
     body: @{} msg: 'hello one'
+    on_sent() :: log @ 'on_sent one'
 
   await sleep @ test_api.sleep || 0
 
   expect(log.calls).to.deep.equal @#
+    'on_sent one'
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
 
   await hub_a.send @:
     id_route: '$two$'
     id_target: 'tgt_two'
     body: @{} msg: 'hello two'
+    on_sent() :: log @ 'on_sent two'
 
   await sleep @ test_api.sleep || 0
 
   expect(log.calls).to.deep.equal @#
+    'on_sent one'
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
+    'on_sent two'
     @[] 'recv [$two$ tgt_two]', @{} msg: 'hello two'
 
 
@@ -104,10 +109,12 @@ export async function testSingleSidedChannelConnection(test_api) ::
     id_route: '$remote$'
     id_target: 'tgt_remote'
     body: @{} msg: 'hello remote'
+    on_sent() :: log @ 'on_sent'
 
   await sleep @ test_api.sleep || 0
 
   expect(log.calls).to.deep.equal @#
+    'on_sent'
     @[] 'recv [$one$ tgt_one]', @{}
       from: test_api.from_tag
       pkt_hdr: @[] '$remote$', 'tgt_remote'

@@ -47,13 +47,13 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
     [k_data]: PktData, [k_split_data]: PktSplitData
     [k_json]: PktJson, [k_split_json]: PktSplitJson
 
-  return function (obj) ::
+  return function fromObjBinaryPacket(obj) ::
     if 'function' === typeof obj.repack_pkt ::
       return obj.repack_pkt(repack)
 
-    const hdr=as_hdr(obj), {body, meta}=obj
+    const hdr=as_hdr(obj), {body, meta, on_sent}=obj
     const k_token = null!=body ? body[sym_split] : undefined
-    return undefined !== k_token
+    const pkt = undefined !== k_token
       ? @ undefined !== body.src
           ? as_pkt0 @ hdr, meta, body.src, pktByKind[k_token]
           : as_pkt0 @ hdr, meta, body.buf, pktByKind[k_token]
@@ -62,9 +62,12 @@ export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
           ? as_pkt0 @ hdr, json_stringify(meta)||'', json_stringify(body)||'', PktJson
           : as_pkt0 @ hdr, json_stringify(meta)||'', packBody(body), PktData
 
+    // Pass on on_sent for backpressure signaling
+    if undefined !== on_sent :: pkt.on_sent = on_sent
+    return pkt
 
 export function bind_unpackStringPacket(pktByKind) ::
-  return function (pkt_str) ::
+  return function unpackStrPacket(pkt_str) ::
     const i1 = pkt_str.indexOf('\t', 0)
     const i2 = pkt_str.indexOf('\t', 1+i1)
     if -1 === i1 || -1 === i2 ::

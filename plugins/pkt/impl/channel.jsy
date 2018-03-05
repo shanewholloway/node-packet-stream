@@ -57,7 +57,12 @@ export function bindCreateChannel(packPacket, unpackPacket) ::
 
     function send(obj) ::
       const d_pkt = null === obj ? obj : packPacket(obj)
-      Promise.resolve(d_pkt).then(send_packed, on_send_err)
+      const p = Promise.resolve(d_pkt)
+        .then(send_packed, on_send_err)
+
+      // Trigger on_sent after send_packed's backpressure promise result.
+      if undefined !== obj.on_sent ::
+        p.then @=> obj.on_sent()
 
     function on_send_err(err) ::
       if chan.on_send_err ::

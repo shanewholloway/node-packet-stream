@@ -38,6 +38,10 @@ export class TargetRouter extends FabricBase ::
           const channel = pktctx.channel
           return channel && channel.undeliverable(pkt, 'target')
 
+      // Trigger on_sent for internal hub routing
+      if undefined !== pkt.on_sent ::
+        Promise.resolve().then(pkt.on_sent)
+
       pktctx.tgt_router = tgt_router
       await target(pkt, pktctx)
 

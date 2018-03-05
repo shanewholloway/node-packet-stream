@@ -1,4 +1,4 @@
-import {TestDirectHub as Hub} from '../_setup'
+import Hub from '../_setup'
 
 const ha = Hub.create('$ha$')
 
@@ -13,6 +13,7 @@ function addTarget(id_target, {id_route, registerTarget}) ::
     console.log()
 
   return body => @: id_target, id_route, body
+    on_sent() :: console.log @ 'on sent:', @{} id_target, id_route, body
 
 
 console.log()
