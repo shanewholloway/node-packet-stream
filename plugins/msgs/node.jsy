@@ -1,0 +1,9 @@
+import msg_stream from './msg_stream.node.jsy'
+import base_msgs_plugin from './plugin.jsy'
+
+const default_options = @{} msg_stream
+
+export default function node_msgs_plugin(plugin_options) ::
+  plugin_options = Object.assign @ {}, default_options, plugin_options
+
+  return base_msgs_plugin(plugin_options)

@@ -1,6 +1,5 @@
 import { o_create, o_assign } from './util.jsy'
 import { deferred, timeoutReaper } from './util.jsy'
-import msg_stream from './msg_stream.jsy'
 
 export const sym_sampi = '\u03E0' // 'Ϡ'
 
@@ -44,7 +43,7 @@ export function msg_base_api(hub, options) ::
   const expire = timeoutReaper @ options.timeout || 5000
   const newToken = options.newToken || @ () => random_base64(tokenLen)
 
-  const msg_api0 = bind_msg_api0(chan)
+  const msg_api0 = bind_msg_api0(chan, options.msg_stream)
 
   return @{}
     newToken, expire, msg_api0
@@ -137,14 +136,14 @@ export function msg_base_api(hub, options) ::
       stream(extra) ::
         const {meta} = extra || {}
         const {response, opo} = this._new_response()
-        const ms = msg_stream(this, opo, op_api.stream, meta)
+        const ms = this._msg_stream(this, opo, op_api.stream, meta)
         ms.response = response
         return ms
 
       multipart(extra) ::
         const {meta} = extra || {}
         const {response, opo} = this._new_response()
-        const ms = msg_stream(this, opo, op_api.multipart, meta)
+        const ms = this._msg_stream(this, opo, op_api.multipart, meta)
         ms.response = response
         return ms
 
@@ -167,7 +166,7 @@ export function msg_base_api(hub, options) ::
       const parts = splitBody(body, meta)
       if 1 < parts.length ::
         const {opo} = this._new_token()
-        msg_stream(this, opo, op_api.split_datagram)
+        this._msg_stream(this, opo, op_api.split_datagram)
           .writeAll(parts, true)
         return
 
@@ -183,7 +182,7 @@ export function msg_base_api(hub, options) ::
 
       const parts = splitBody(body, meta)
       if 1 < parts.length ::
-        msg_stream(this, opo, op_api.split_direct)
+        this._msg_stream(this, opo, op_api.split_direct)
           .writeAll(parts, true)
         return response
 
@@ -211,11 +210,12 @@ export function msg_base_api(hub, options) ::
       this._send_pkt(pkt)
       return response
 
-  function bind_msg_api0(chan) ::
+  function bind_msg_api0(chan, msg_stream) ::
     return @{} __proto__: null
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON() :: return @{} [sym_sampi]: this[sym_sampi]
 
+      _msg_stream: msg_stream
       _send_pkt: chan.send.bind(chan)
 
       _new_token() ::

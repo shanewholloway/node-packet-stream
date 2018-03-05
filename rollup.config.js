@@ -46,7 +46,7 @@ function package_core() {
         { file: pkg.module, format: 'es', sourcemap },
         { file: pkg.main, format: 'cjs', sourcemap },
       ],
-      external: ['crypto', 'url'], plugins },
+      external: ['crypto', 'url', 'stream'], plugins },
 
     { input: 'code/index.browser.jsy',
       output: [
@@ -80,40 +80,38 @@ function package_core() {
 
 
 function package_plugin_platform() {
-  const external=[], external_node=['crypto', 'url']
+  const external_node=['crypto', 'url']
   const bundles = {
     'index': ['plugin-platform-all', external_node, {exports: 'named'}],
     'node': ['plugin-platform-node', external_node],
-    'browser': ['plugin-platform-browser', external],
+    'browser': ['plugin-platform-browser', []],
   }
 
   return bundleForPlugin(bundles, 'platform') }
 
 
 function package_plugin_pkt() {
-  const external = []
   const bundles = {
-    'index': ['plugin-pkt-all', external, {exports: 'named'}],
-    'node': ['plugin-pkt-node', external],
-    'browser': ['plugin-pkt-browser', external],
-    'browser_line': ['plugin-pkt-browser-line', external],
+    'index': ['plugin-pkt-all', [], {exports: 'named'}],
+    'node': ['plugin-pkt-node', []],
+    'browser': ['plugin-pkt-browser', []],
+    'browser_line': ['plugin-pkt-browser-line', []],
   }
 
   return bundleForPlugin(bundles, 'pkt') }
 
 
 function package_plugin_msgs() {
-  const external=[]
   const bundles = {
-    'index': ['plugin-msgs-all', external, {exports: 'named'}],
-    'plugin': ['plugin-msgs', external],
+    'index': ['plugin-msgs-all', ['stream'], {exports: 'named'}],
+    'node': ['plugin-msgs-node', ['stream']],
+    'plugin': ['plugin-msgs', []],
   }
 
   return bundleForPlugin(bundles, 'msgs') }
 
 
 function package_plugin_direct() {
-  const external=[]
   const bundles = {
     'index': ['plugin-js-direct-all', [], {exports: 'named'}],
     'direct': ['plugin-js-direct', []],
@@ -123,7 +121,6 @@ function package_plugin_direct() {
 
 
 function package_plugin_net() {
-  const external=[], external_node=['crypto', 'url']
   const bundles = {
     'index': ['plugin-net-all', ['net', 'tls', 'stream'], {exports: 'named'}],
     'tcp': ['plugin-net-tcp', ['net']],
@@ -135,7 +132,6 @@ function package_plugin_net() {
 
 
 function package_plugin_web() {
-  const external=[]
   const bundles = {
     'index': ['plugin-web-all', [], {exports: 'named'}],
     'web': ['plugin-web', []],

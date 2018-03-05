@@ -1,18 +1,24 @@
 import base_api from './base.jsy'
+import msg_stream from './msg_stream.jsy'
 import framing_api from './framing.jsy'
 import send_anon_api from './send_anon.jsy'
 import source_api from './source.jsy'
 import send_from_api from './send_from.jsy'
 
 
+const default_options = @{} msg_stream
+
 export default function msgs_plugin(plugin_options) ::
+  plugin_options = Object.assign @ {}, default_options, plugin_options
+
   return function (hub) ::
     const msgs = createMsgsPlugin(plugin_options)
     msgs.createMsgsPlugin = createMsgsPlugin
     return hub.msgs = msgs
 
     function createMsgsPlugin(options={}) ::
-      const shared = base_api(hub, options)
+      const shared = base_api @ hub,
+        Object.assign @ {}, plugin_options, options
 
       framing_api(shared, options.bind_framings)
 
