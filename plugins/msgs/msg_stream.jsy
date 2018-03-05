@@ -22,14 +22,12 @@ export function msg_stream(msgapi, opo, op_method, meta) ::
         o_assign({seq: seq++}, opo)
       if seq <= 0 :: seq = null
 
-      return _send_pkt_with_backpressure @ pkt
+      return new Promise @ resolve => ::
+        pkt.on_sent = resolve
+        msgapi._send_pkt(pkt)
 
     _lastPacket() :: seq = -seq
 
-  function _send_pkt_with_backpressure(pkt) ::
-    return new Promise @ resolve =>
-      pkt.on_sent = resolve
-      msgapi._send_pkt(pkt)
 
 
 export const msg_stream_base = @{}
@@ -42,7 +40,7 @@ export const msg_stream_base = @{}
     let cur, next
     for next of bodyParts ::
       if undefined !== cur ::
-        this.write(cur)
+        await this.write(cur)
       cur = next
 
     if close :: this._lastPacket()
