@@ -1,12 +1,15 @@
-import {bind_sendChannel, bind_postMessageChannel} from './_web_channel.jsy'
+import { bind_sendChannel, bind_postMessageChannel, bind_webSocketChannel } from './_web_channel.jsy'
 
 export default function web_plugin(plugin_options={}) ::
   return hub => ::
     const _global_ = hub.data_utils._global_
     let WebSocket = plugin_options.WebSocket
 
-    const createSendChannel = bind_sendChannel @ hub, hub._pkts_.bin_call
-    const createPostMessageChannel = bind_postMessageChannel @ hub, hub._pkts_.bin_call
+    const _api_ = @{} hub
+      createChannel: hub._pkts_.bin_call.createChannel
+    const createSendChannel = bind_sendChannel(_api_)
+    const createPostMessageChannel = bind_postMessageChannel(_api_)
+    const createWebSocketChannel = bind_webSocketChannel(_api_)
 
     const plugin = @{} WebSocket,
       createSendChannel, createPostMessageChannel
@@ -45,18 +48,6 @@ export default function web_plugin(plugin_options={}) ::
       if undefined === websock ::
         throw new TypeError @ `Invalid websocket connection`
 
-      const channel = createSendChannel(websock)
-      channel.peer_info = new Promise @ (resolve, reject) => ::
-        const readyState = websock.readyState
-
-        websock.addEventListener @ 'error', reject
-        if 0 === readyState :: // connecting state
-          websock.addEventListener @ 'open', () => ::
-            hub.p2p.hello(hub, channel).then(resolve, reject)
-
-        else if 1 === readyState :: // open state
-          hub.p2p.hello(hub, channel).then(resolve, reject)
-
-        else reject @ new Error @ 'WebSocket closed'
+      const channel = createWebSocketChannel(websock)
       return Promise.resolve(channel)
 

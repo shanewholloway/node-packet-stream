@@ -1,16 +1,17 @@
 const yes = () => true
 
-export function bind_sendChannel(hub, pkts) ::
-  const createChannel = pkts.createChannel
+export function bind_sendChannel(_api_) ::
+  const { hub, createChannel } = _api_
 
-  return function (tgt_recv, tgt_send, accept) ::
+  return _api_.createSendChannel = function (tgt_recv, tgt_send, accept) ::
     if null == tgt_send :: tgt_send = tgt_recv
     if null == accept :: accept = yes
 
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
 
-    tgt_recv.addEventListener @ 'message', m => ::
-      if accept(m) :: recv @# m.data
+    tgt_recv.addEventListener @ 'message'
+      m => :: if accept(m) :: recv @# m.data
+      @{} passive: true
 
     return channel
 
@@ -21,17 +22,18 @@ export function bind_sendChannel(hub, pkts) ::
         tgt_send.close()
 
 
-export function bind_postMessageChannel(hub, pkts) ::
-  const createChannel = pkts.createChannel
+export function bind_postMessageChannel(_api_) ::
+  const { hub, createChannel } = _api_
 
-  return function (tgt_recv, tgt_send, accept) ::
+  return _api_.createPostMessageChannel = function (tgt_recv, tgt_send, accept) ::
     if null == tgt_send :: tgt_send = tgt_recv
     if null == accept :: accept = yes
 
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
 
-    tgt_recv.addEventListener @ 'message', m => ::
-      if accept(m) :: recv @# m.data
+    tgt_recv.addEventListener @ 'message'
+      m => :: if accept(m) :: recv @# m.data
+      @{} passive: true
 
     if 'function' === typeof tgt_recv.start ::
       // call aMessagePort.start() :: Starts the sending of messages queued on the port, needed when using EventTarget.addEventListener
@@ -44,3 +46,42 @@ export function bind_postMessageChannel(hub, pkts) ::
         tgt_send.postMessage(d_pkt)
       else if 'function' === typeof tgt_send.close ::
         tgt_send.close()
+
+
+export function bind_webSocketChannel(_api_) ::
+  if null == _api_.createSendChannel ::
+    bind_sendChannel(_api_)
+
+  const {hub, createSendChannel} = _api_
+  
+  return _api_.createWebSocketChannel = function (websock) ::
+    const channel = createSendChannel(websock)
+
+    channel.when_opened = new Promise @ resolve => ::
+      websock.addEventListener @ 'open'
+        @=> resolve()
+        @{} passive: true, once: true
+
+    channel.when_closed = new Promise @ resolve => ::
+      websock.addEventListener @ 'close'
+        @=> resolve()
+        @{} passive: true, once: true
+
+
+    channel.peer_info = new Promise @ (resolve, reject) => ::
+      const readyState = websock.readyState
+
+      if 0 === readyState :: // connecting state
+        websock.addEventListener @ 'error', reject
+          @{} passive: true, once: true
+
+        websock.addEventListener @ 'open'
+          () => :: hub.p2p.hello(hub, channel).then(resolve, reject)
+          @{} passive: true, once: true
+
+      else if 1 === readyState :: // open state
+        hub.p2p.hello(hub, channel).then(resolve, reject)
+
+      else reject @ new Error @ 'WebSocket closed'
+
+    return channel

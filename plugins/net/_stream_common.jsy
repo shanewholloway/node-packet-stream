@@ -25,6 +25,10 @@ export function bind_channel(hub) ::
         p_drain = new Promise(next_drain)
       return p_drain
 
+    channel.when_closed = new Promise @ resolve => ::
+      rstream.once @ 'end', resolve
+      wstream.once @ 'finish', resolve
+
     return channel
 
     function send_packed(d_pkt) ::
