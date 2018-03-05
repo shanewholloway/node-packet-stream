@@ -3,37 +3,30 @@ import { msg_stream_base, bind_msg_stream } from './msg_stream.jsy'
 
 export const msg_stream_node_base = @{}
   __proto__: msg_stream_base
-  asNodeStream() ::
-    return asNodeWriteStream(this)
+  asNodeStream(options) ::
+    return asNodeWriteStream(this, options)
 
 export const node_msg_stream = bind_msg_stream(msg_stream_node_base)
 export default node_msg_stream
 
 
-export function asNodeWriteStream(msg_stream) ::
-  return new Writable @:
-    async write(chunk, encoding, callback) ::
-      try ::
-        await msg_stream.write(chunk)
-      catch err ::
-        return callback(err)
+export function asNodeWriteStream(msg_stream, options) ::
+  return new Writable @
+    Object.assign @ {}, options, @:
+      decodeStrings: false
 
-      callback()
+      async write(chunk, encoding, callback) ::
+        try ::
+          await msg_stream.write(chunk)
+        catch err ::
+          return callback(err)
 
-    async writev(chunks, callback) ::
-      try ::
-        for const ea of chunks ::
-          await msg_stream.write(ea)
-      catch err ::
-        return callback(err)
+        callback()
 
-      callback()
+      async final(callback) ::
+        try ::
+          await msg_stream.end()
+        catch err ::
+          return callback(err)
 
-    async final(callback) ::
-      try ::
-        await msg_stream.end()
-      catch err ::
-        return callback(err)
-
-      callback()
-
+        callback()
