@@ -7,54 +7,57 @@ import test_msgs_streaming from './msgs_streaming'
 
 
 describe @ 'Plugin msgs', @=> ::
-  describe @ 'address details', @=> ::
-    let ns
-    beforeEach @=>> :: ns = await setup_msgs_test()
-      
-    it @ 'client address details', @=>> ::
-      expect @ ns.client.toJSON()
-      .to.deep.equal @: '\u03E0': '$cr$ $client$'
-      .to.deep.equal @: 'Ϡ': '$cr$ $client$'
-
-      expect @ JSON.stringify @ ns.client
-      .to.deep.equal @ '{"\u03E0":"$cr$ $client$"}'
-      .to.deep.equal @ '{"Ϡ":"$cr$ $client$"}'
-
-    for const variant of ['c_anon', 'c_from', 'c_reply', 'c_reply_anon'] ::
-      it @ `${variant} address details`, @=>> ::
-        
-        expect @ ns[variant].toJSON()
-        .to.deep.equal @: '\u03E0': '$unit$ $src$'
-        .to.deep.equal @: 'Ϡ': '$unit$ $src$'
-
-        expect @ JSON.stringify @ ns[variant]
-        .to.deep.equal @ '{"\u03E0":"$unit$ $src$"}'
-        .to.deep.equal @ '{"Ϡ":"$unit$ $src$"}'
-
-
-    it @ 'source address details', @=>> ::
-      expect(ns.src.toJSON())
-      .to.deep.equal @: '\u03E0': '$unit$ $src$'
-      .to.deep.equal @: 'Ϡ': '$unit$ $src$'
-
-      expect(JSON.stringify(ns.src))
-      .to.deep.equal @ '{"\u03E0":"$unit$ $src$"}'
-      .to.deep.equal @ '{"Ϡ":"$unit$ $src$"}'
-
-    it @ 'src target logs messages ', @=>> ::
-      expect(ns.log.calls).to.be.empty
-
-      const ts = new Date()
-      await ns.hub.send @: id_route: '$unit$', id_target: '$src$', body: {ts}
-
-      await ns.log.expectOneLogOf @
-        '_recv_ json', [], {}, @{} ts: ts.toJSON()
-
-
+  describe @ 'address details', () => test_msgs_address_details(setup_msgs_test)
   describe @ `small sends`, () => test_msgs_small(setup_msgs_test)
   describe @ `large sends`, () => test_msgs_large(setup_msgs_test)
   describe @ `multipart`, () => test_msgs_multipart(setup_msgs_test)
   describe @ `streaming`, () => test_msgs_streaming(setup_msgs_test)
+
+
+
+function test_msgs_address_details(setup_msgs_test) ::
+  let ns
+  beforeEach @=>> :: ns = await setup_msgs_test()
+
+  it @ 'client address details', @=>> ::
+    expect @ ns.client.toJSON()
+    .to.deep.equal @: '\u03E0': '$cr$ $client$'
+    .to.deep.equal @: 'Ϡ': '$cr$ $client$'
+
+    expect @ JSON.stringify @ ns.client
+    .to.deep.equal @ '{"\u03E0":"$cr$ $client$"}'
+    .to.deep.equal @ '{"Ϡ":"$cr$ $client$"}'
+
+  for const variant of ['c_anon', 'c_from', 'c_reply', 'c_reply_anon'] ::
+    it @ `${variant} address details`, @=>> ::
+
+      expect @ ns[variant].toJSON()
+      .to.deep.equal @: '\u03E0': '$unit$ $src$'
+      .to.deep.equal @: 'Ϡ': '$unit$ $src$'
+
+      expect @ JSON.stringify @ ns[variant]
+      .to.deep.equal @ '{"\u03E0":"$unit$ $src$"}'
+      .to.deep.equal @ '{"Ϡ":"$unit$ $src$"}'
+
+
+  it @ 'source address details', @=>> ::
+    expect(ns.src.toJSON())
+    .to.deep.equal @: '\u03E0': '$unit$ $src$'
+    .to.deep.equal @: 'Ϡ': '$unit$ $src$'
+
+    expect(JSON.stringify(ns.src))
+    .to.deep.equal @ '{"\u03E0":"$unit$ $src$"}'
+    .to.deep.equal @ '{"Ϡ":"$unit$ $src$"}'
+
+  it @ 'src target logs messages ', @=>> ::
+    expect(ns.log.calls).to.be.empty
+
+    const ts = new Date()
+    await ns.hub.send @: id_route: '$unit$', id_target: '$src$', body: {ts}
+
+    await ns.log.expectOneLogOf @
+      '_recv_ json', [], {}, @{} ts: ts.toJSON()
+
 
 
 async function setup_msgs_test() ::

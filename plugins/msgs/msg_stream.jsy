@@ -5,41 +5,53 @@ export function msg_stream(msgapi, opo, op_method, meta) ::
   const {id_route, id_target} = msgapi._mx_
 
   let seq=0
+  return @{}
+    __proto__: msg_stream_base
 
-  const self = @{} __proto__: null
-    writeMeta: (body, meta) => ::
-      const obj = @{} id_route, id_target, body, meta
-
-      const pkt = op_method @ obj,
-        o_assign({seq: seq++}, opo)
-      msgapi._send_pkt(pkt)
-
-    write: body => ::
-      const obj = @{} id_route, id_target, body
-
+    write(body) ::
       if undefined !== meta && null !== meta ::
-        obj.meta = meta
+        const p = this._writeRaw @: body, meta
         meta = undefined
+        return p
 
+      return this._writeRaw @: body
+
+    _writeRaw(obj) ::
+      o_assign @ obj, {id_route, id_target}
       const pkt = op_method @ obj,
         o_assign({seq: seq++}, opo)
+      if seq <= 0 :: seq = null
+
+      return _send_pkt_with_backpressure @ pkt
+
+    _lastPacket() :: seq = -seq
+
+  function _send_pkt_with_backpressure(pkt) ::
+    return new Promise @ resolve =>
+      pkt.on_sent = resolve
       msgapi._send_pkt(pkt)
 
-    writeAll: (body, close) => ::
-      let cur, next
-      for next of body ::
-        if undefined !== cur ::
-          self.write(cur)
-        cur = next
 
+export const msg_stream_base = @{}
+  __proto__: null
+
+  writeMeta(body, meta) ::
+    return this._writeRaw @: body, meta
+
+  async writeAll(bodyParts, close) ::
+    let cur, next
+    for next of bodyParts ::
       if undefined !== cur ::
-        return close
-          ? self.end(cur)
-          : self.write(cur)
+        this.write(cur)
+      cur = next
 
-    end: body => ::
-      seq = -seq
-      self.write(body)
-      seq = null
+    if close :: this._lastPacket()
+    return this.write(cur)
 
-  return self 
+  writeAllEnd(bodyParts) ::
+    return this.writeAll(bodyParts, true)
+
+  end(body) ::
+    this._lastPacket()
+    return this.write(body)
+
