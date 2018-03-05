@@ -35,6 +35,14 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     expect(peer_info.routes).to.have.lengthOf(1)
     expect(peer_info.routes[0]).to.be.oneOf @# '$one$', '$two$'
 
+  if undefined !== chan.when_opened ::
+    expect(chan.when_opened).to.be.a('promise')
+
+  if undefined !== chan.when_closed ::
+    expect(chan.when_closed).to.be.a('promise')
+
+  if test_api.channel ::
+    test_api.channel(chan)
 
   expect(log.calls).to.be.empty
 

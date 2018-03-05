@@ -32,6 +32,9 @@ export default function() ::
       connect(hub_a, hub_b) ::
         return hub_b.tcp @ this.a_conn_info
 
+      channel(chan) ::
+        expect(chan.when_closed).to.be.a('promise')
+
 
   it @ 'hub.tcp is a channel', @=>> ::
     await testChannelConnection @:

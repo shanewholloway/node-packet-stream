@@ -158,6 +158,10 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
           const {address, port} = svr.address()
           resolve @ `${tls_opt ? 'wss' : 'ws'}://${address}:${port}`
 
+    channel(chan) ::
+      expect(chan.when_opened).to.be.a('promise')
+      expect(chan.when_closed).to.be.a('promise')
+
     ws_cleanup: []
     async after() ::
       this.svr_a.unref().close()
