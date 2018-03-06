@@ -5,7 +5,7 @@ import { k_data, k_split_data, k_json, k_split_json, sym_split } from './common.
 import { PktSplitJson, PktSplitData } from './common.jsy'
 import { bind_packObjPacket, bind_unpackStringPacket } from './common.jsy'
 
-export { PktJson, PktDataBase } from './common.jsy'
+export { PktJsonBase, PktDataBase } from './common.jsy'
 
 export function bind_binaryCallPacket(options) ::
   const _common_ = bind_binaryPacketCommon(options)

@@ -1,5 +1,12 @@
 const isBuffer = Buffer.isBuffer
 
+export function base64() ::
+  return this._body_.toString('base64')
+
+export function encode_utf8(str) ::
+  if isBuffer(str) :: return str
+  return Buffer.from(str, 'utf-8')
+
 export function decode_utf8(buf) ::
   if ! isBuffer(buf) ::
     buf = Buffer.from(buf)

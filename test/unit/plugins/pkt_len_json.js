@@ -43,6 +43,9 @@ export default function () ::
     expect(pkt._meta_).to.be.equal('')
     expect(pkt.meta()).to.be.equal(null)
 
+    expect(pkt.buffer()).to.be.ok
+    expect(pkt.base64()).to.be.ok
+
 
   it @ `bin_len packPacket with json body and meta`, @=>> ::
     const pkt =
@@ -85,3 +88,6 @@ export default function () ::
       '{"kind":"$meta$"}'
     expect(pkt.meta()).to.be.deep.equal @:
       kind: "$meta$"
+
+    expect(pkt.buffer()).to.be.ok
+    expect(pkt.base64()).to.be.ok
