@@ -51,7 +51,7 @@ export function bind_packObjPacket({PktData, PktJson, packBody, as_pkt}, repack)
 
   return function fromObjBinaryPacket(obj) ::
     if 'function' === typeof obj.repack_pkt ::
-      return obj.repack_pkt(repack)
+      return obj // obj is already a packet
 
     const hdr=as_hdr(obj), {body, meta, on_sent}=obj
     const k_token = null!=body ? body[sym_split] : undefined
