@@ -33,10 +33,7 @@ export default function () ::
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
-    expect @
-      Buffer.compare @ pkt._body_,
-        Buffer.from @ '{"msg":"a test pkt"}'
-    .to.equal(0)
+    expect(pkt._body_).to.equal @ '{"msg":"a test pkt"}'
     expect(pkt.json()).to.be.deep.equal @:
       msg: "a test pkt"
 
@@ -77,10 +74,7 @@ export default function () ::
     expect(pkt._hdr_[0]).to.be.equal('$route$')
     expect(pkt._hdr_[1]).to.be.equal('$target$')
 
-    expect @
-      Buffer.compare @ pkt._body_,
-        Buffer.from @ '{"msg":"a test pkt"}'
-    .to.equal(0)
+    expect(pkt._body_).to.equal @ '{"msg":"a test pkt"}'
     expect(pkt.json()).to.be.deep.equal @:
       msg: "a test pkt"
 

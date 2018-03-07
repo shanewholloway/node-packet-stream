@@ -43,6 +43,10 @@ export function bind_binaryPacketCommon(options) ::
     PktData, PktJson
   = options
 
+  const decodeBodyByKind = @{}
+    [k_data]: as_data, [k_split_data]: as_data
+    [k_json]: decode_utf8, [k_split_json]: decode_utf8
+
   const pktByKind = @{}
     [k_data]: PktData, [k_split_data]: PktSplitData
     [k_json]: PktJson, [k_split_json]: PktSplitJson
@@ -80,7 +84,8 @@ export function bind_binaryPacketCommon(options) ::
       const hdr = decode_utf8 @ pkt_buf.slice(i0, i1)
       const kind = _fromCharCode @ pkt_buf[1+i1]
       const meta = decode_utf8 @ pkt_buf.slice(2+i1, i2)
-      const body = as_data @ pkt_buf.slice(1+i2)
+      const body_raw = pkt_buf.slice(1+i2)
+      const body = decodeBodyByKind[kind] @ body_raw
 
       return as_pkt0 @ hdr, meta, body, pktByKind[kind]
 

@@ -42,9 +42,7 @@ export const PktSplitData64 = @{} __proto__: PktBase
   pkt_kind: 'split_b64', is_pkt_split: true
 
 
-export function bind_packObjPacket({PktData, PktJson, packBody, as_pkt}, repack) ::
-  const _as_pkt = null != as_pkt ? as_pkt : as_pkt0
-
+export function bind_packObjPacket({PktData, PktJson, packBody}, repack) ::
   const pktByKind = @{}
     [k_data]: PktData, [k_split_data]: PktSplitData
     [k_json]: PktJson, [k_split_json]: PktSplitJson
@@ -57,20 +55,18 @@ export function bind_packObjPacket({PktData, PktJson, packBody, as_pkt}, repack)
     const k_token = null!=body ? body[sym_split] : undefined
     const pkt = undefined !== k_token
       ? @ undefined !== body.src
-          ? _as_pkt @ hdr, meta, body.src, pktByKind[k_token]
-          : _as_pkt @ hdr, meta, body.buf, pktByKind[k_token]
+          ? as_pkt0 @ hdr, meta, body.src, pktByKind[k_token]
+          : as_pkt0 @ hdr, meta, body.buf, pktByKind[k_token]
 
       : @ is_json_body(body)
-          ? _as_pkt @ hdr, json_stringify(meta)||'', json_stringify(body)||'', PktJson
-          : _as_pkt @ hdr, json_stringify(meta)||'', packBody(body), PktData
+          ? as_pkt0 @ hdr, json_stringify(meta)||'', json_stringify(body)||'', PktJson
+          : as_pkt0 @ hdr, json_stringify(meta)||'', packBody(body), PktData
 
     // Pass on on_sent for backpressure signaling
     if undefined !== on_sent :: pkt.on_sent = on_sent
     return pkt
 
 export function bind_unpackStringPacket(pktByKind, as_pkt) ::
-  const _as_pkt = null != as_pkt ? as_pkt : as_pkt0
-
   return function unpackStrPacket(pkt_str) ::
     const i1 = pkt_str.indexOf('\t', 0)
     const i2 = pkt_str.indexOf('\t', 1+i1)
@@ -82,4 +78,4 @@ export function bind_unpackStringPacket(pktByKind, as_pkt) ::
     const meta = pkt_str.slice(2+i1, i2)
     const body = pkt_str.slice(1+i2)
 
-    return _as_pkt @ hdr, meta, body, pktByKind[kind]
+    return as_pkt0 @ hdr, meta, body, pktByKind[kind]
