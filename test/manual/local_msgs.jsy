@@ -16,7 +16,7 @@ function addTarget(hub, id_target, api) ::
 
   async function on_msg(pkt) ::
     try ::
-      await tgt._recv_(pkt)
+      await tgt._recv_pkt_(pkt)
 
       if pkt.op.msgid ::
         pkt.op.resolve @ pkt.json()

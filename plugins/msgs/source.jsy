@@ -12,7 +12,7 @@ export function msg_source_api(shared) ::
 
     const mctx = pi_msgs.createMsgContext()
 
-    const source = @{} _recv_
+    const source = @{} _recv_pkt_, _send_pkt_: shared._send_pkt_
       toJSON() :: return @{} [sym_sampi]: `${from_route} ${from_target}`
 
       anon(id) :: return anon_api @ id, null, source
@@ -35,7 +35,7 @@ export function msg_source_api(shared) ::
 
     return source
 
-    function _recv_(pkt) ::
+    function _recv_pkt_(pkt) ::
       const op = op_unpack @ pkt, {__proto__: pkt_api}
       if pkt.is_pkt_split ::
         return mctx.on_split_pkt(pkt, op)

@@ -11,10 +11,12 @@ export function msg_anon_api(shared) ::
   const anon_mctx = @{} newToken, responseFor() {}, on_response() {}
 
   anon_api.root_source = pi_msgs => @:
+    _send_pkt_: shared._send_pkt_
   return shared.anon_api = anon_api
 
   function anon_api(to_id, pkt_op, source) ::
-    if null == source :: throw new TypeError('Invalid source')
+    if 'function' !== typeof source._send_pkt_ ::
+      throw new TypeError('Invalid source')
 
     const [id_route, id_target] = null !== to_id
       ? as_source_id(to_id) : as_reply_id(pkt_op)
@@ -23,7 +25,8 @@ export function msg_anon_api(shared) ::
       throw new Error @ `Invalid id`
 
     return mx_api @ pkt_op, @{}
-      id_route, id_target, mctx: anon_mctx, source, opo0: {}
+      id_route, id_target, mctx: anon_mctx, opo0: {}
+      _send_pkt_: source._send_pkt_
 
 
 function anon() :: return this

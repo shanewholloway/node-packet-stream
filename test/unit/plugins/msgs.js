@@ -4,6 +4,7 @@ import test_msgs_small from './msgs_small'
 import test_msgs_large from './msgs_large'
 import test_msgs_multipart from './msgs_multipart'
 import test_msgs_streaming from './msgs_streaming'
+import test_msgs_extensions from './msgs_extensions'
 
 
 describe @ 'Plugin msgs', @=> ::
@@ -12,6 +13,7 @@ describe @ 'Plugin msgs', @=> ::
   describe @ `large sends`, () => test_msgs_large(setup_msgs_test)
   describe @ `multipart`, () => test_msgs_multipart(setup_msgs_test)
   describe @ `streaming`, () => test_msgs_streaming(setup_msgs_test)
+  describe @ `extensions`, test_msgs_extensions
 
 
 
@@ -59,7 +61,6 @@ function test_msgs_address_details(setup_msgs_test) ::
       '_recv_ json', [], {}, @{} ts: ts.toJSON()
 
 
-
 async function setup_msgs_test() ::
   const log = newLog()
   const hub = Hub.create('$unit$')
@@ -88,7 +89,7 @@ async function setup_msgs_test() ::
   const src = pi_msgs.as(src_addr)
 
   hub.local.registerTarget @ '$src$', pkt => ::
-    const rpkt = src._recv_ @ pkt
+    const rpkt = src._recv_pkt_ @ pkt
     if null != rpkt ::
       log @ `_recv_ ${rpkt.pkt_kind}`
         rpkt._hdr_ ? rpkt._hdr_.slice(2) : null

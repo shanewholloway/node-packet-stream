@@ -54,7 +54,8 @@ const reply_msg_api = {
 
 ```javascript
 const source_api = {
-  _recv_(pkt) {}, // => rpkt
+  _recv_pkt_(pkt) {}, // => rpkt
+  _send_pkt_(pkt) {}, // => rpkt
   toJSON() {}, // => ({'Ϡ': '«id_route» «id_target»'})
 
   anon(id) {}, // => Send_Anon_API in Sender_Mode
@@ -64,9 +65,9 @@ const source_api = {
   reply(id) {}, // => Send_From_API in Reply_Mode
 }
 
-// `_recv_` is for using with `registerTarget`
+// `_recv_pkt_` is for using with `registerTarget`
 hub.local.registerTarget( id, pkt => {
-  const rpkt = _recv_(pkt)
+  const rpkt = _recv_pkt_(pkt)
 })
 ```
 

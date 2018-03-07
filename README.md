@@ -119,7 +119,7 @@ const source = hub.msgs.as({
 
 source.send({ msg: 'hello readme msg.send example!' })
 hub.local.registerTarget(source.id_target, pkt => {
-  const rpkt = source._recv_(pkt)
+  const rpkt = source._recv_pkt_(pkt)
   console.log('msg target received pkt:', rpkt, rpkt.op)
 })
 ```

@@ -39,15 +39,15 @@ export function msg_base_api(hub, options) ::
   const random_base64 = hub.data_utils.random_base64
 
   const chan = options.channel || hub.channel
-  const send_pkt = options.send_pkt || chan.send.bind(chan)
+  const _send_pkt_ = options.send_pkt || chan.send.bind(chan)
   const tokenLen = Math.max @ 1, options.tokenLen || 3 | 0
   const expire = timeoutReaper @ options.timeout || 5000
   const newToken = options.newToken || @ () => random_base64(tokenLen)
 
-  const msg_api0 = bind_msg_api0(send_pkt, options.msg_stream)
+  const msg_api0 = bind_msg_api0(options.msg_stream)
 
   return @{}
-    newToken, expire, msg_api0
+    newToken, expire, _send_pkt_, msg_api0
     bind_msg_api
     bind_sendmsg
     bind_replymsg
@@ -211,13 +211,13 @@ export function msg_base_api(hub, options) ::
       this._send_pkt(pkt)
       return response
 
-  function bind_msg_api0(send_pkt, msg_stream) ::
+  function bind_msg_api0(msg_stream) ::
     return @{} __proto__: null
       inspect() :: return `«${sym_sampi} ${this[sym_sampi]}»`
       toJSON() :: return @{} [sym_sampi]: this[sym_sampi]
 
       _msg_stream: msg_stream
-      _send_pkt: send_pkt
+      get _send_pkt() :: return this._mx_._send_pkt_
 
       _new_token() ::
         const {mctx, opo0} = this._mx_

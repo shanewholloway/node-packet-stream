@@ -17,12 +17,11 @@ export const sleep = ms =>
     setTimeout @ resolve, ms
 
 export function newLog() ::
-  const _log = []
   const log = (...args) =>
-    _log.push @ 1 === args.length
+    log.calls.push @ 1 === args.length
       ? args[0] : args
 
-  log.calls = _log
+  log.calls = []
   log.expectOneLogOf = expectOneLogOf
   log.expectLastLogOf = expectLastLogOf
   return log

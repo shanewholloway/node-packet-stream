@@ -108,7 +108,7 @@ async function setup_msgs_stream_test() ::
   const src = pi_msgs.as(src_addr)
 
   hub.local.registerTarget @ '$src$', pkt => ::
-    const rpkt = src._recv_ @ pkt
+    const rpkt = src._recv_pkt_ @ pkt
     if null != rpkt ::
       log @ `_recv_ ${rpkt.pkt_kind}`
         rpkt._hdr_ ? rpkt._hdr_.slice(2) : null
