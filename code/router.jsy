@@ -65,14 +65,21 @@ export class FabricRouter extends FabricBase ::
 
       routes_map.set @ id_route, route
       return route
-    function unregisterRoute(id_route) ::
+    function unregisterRoute(id_route, route) ::
+      if undefined != route && route !== routes_map.get(id_route) ::
+        return // remove only if route is currently at id_route
       return routes_map.delete @ id_route
 
 
   registerPeerRoute(id_route, channel, override) ::
-    return this.registerRoute @ id_route
-      pkt => :: channel.send(pkt)
-      override
+    let disp = channel.dispatch
+    if null == disp ::
+      disp = pkt => :: channel.send(pkt)
+      Object.defineProperty @ channel, 'dispatch', {value: disp}
+    if undefined !== channel.when_closed ::
+      channel.when_closed.then @=>
+        this.unregisterRoute @ id_route, disp
+    return this.registerRoute @ id_route, disp, override
 
 
   async discoverRoute(id_route, pktctx) ::
