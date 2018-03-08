@@ -4,7 +4,7 @@ const WebSocket = require('faye-websocket')
 import BasicHub from '../_setup'
 import web_plugin from '../../cjs/plugin-web'
 const WebFabricHub = BasicHub.plugin @ web_plugin()
-    
+
 const hub = WebFabricHub.create('$server$')
 
 hub.local.registerTarget @ 'hello-server'
@@ -14,24 +14,27 @@ hub.local.registerTarget @ 'hello-server'
 
 const http = require('http')
 const server = http.createServer()
- 
+
 server.listen @ 8000, '127.0.0.1', () =>
   console.log @ 'Listening', server.address()
- 
+
 server.on @ 'upgrade', (request, socket, body) => ::
   if WebSocket.isWebSocket(request) ::
     const ws = new WebSocket(request, socket, body)
     add_websocket(ws)
 
-function add_websocket(ws) ::
-  const channel = hub.web.connectWS(ws)
+async function add_websocket(ws) ::
+  hub.router.unregisterRoute('$browser$')
+
+  const channel = await hub.web.connectWS(ws)
   console.log @ 'Msg-Fabric faye-websocket connected', @{}
     version: ws.version, protocol: ws.protocol
     channel, send: channel.send
 
-  channel.peer_info.then @ peer_info => ::
-    console.log('peer_info:', peer_info)
-    hub.send @:
-      id_route: '$browser$', id_target: 'hello-browser',
-      body: @{} msg: 'hello from the faye-websocket server'
+  const peer_info = await channel.peer_info
+  console.log('peer_info:', peer_info)
+  hub.send @:
+    id_route: '$browser$', id_target: 'hello-browser',
+    body: @{} msg: 'hello from the faye-websocket server'
+
 

@@ -17,14 +17,14 @@
   if (1) {
     const ws_chan = window.ws_chan =
       hub.connect('ws://127.0.0.1:8000')
-
-    ws_chan.peer_info.then(peer_info => {
-      window.peer_info = peer_info
-      console.log('peer_info:', peer_info)
-      hub.send({
-        id_route: '$server$', id_target: 'hello-server',
-        body: {msg: 'hello from the browser'} })
-    })
+      .then(ws_chan => ws_chan.peer_info)
+      .then(peer_info => {
+        window.peer_info = peer_info
+        console.log('peer_info:', peer_info)
+        hub.send({
+          id_route: '$server$', id_target: 'hello-server',
+          body: {msg: 'hello from the browser'} })
+      })
   }
 
 </script>
