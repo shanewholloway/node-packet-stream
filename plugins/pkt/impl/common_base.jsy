@@ -34,7 +34,7 @@ export function as_pkt0(hdr, meta, body, aPktBase) ::
 
   return o_create @ aPktBase, @{}
     _hdr_: @{} value: hdr.split(' ')
-    _meta_: @{} value: meta
+    _meta_: @{} value: meta || ''
     _body_: @{} value: body
 
 

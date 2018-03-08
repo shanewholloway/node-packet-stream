@@ -90,6 +90,6 @@ export function bind_multiPacket({decode_utf8, unpack_base64, packBody, concatBo
       return o_create @ MultiPkt, @{}
         pkt0: @{} value: pkt0
         _parts_: @{} value: parts.length
-        _meta_: @{} value: pkt0._meta_
+        _meta_: @{} value: pkt0._meta_ || ''
         _body_: @{} value: _body_
 
