@@ -57,10 +57,10 @@ export class FabricRouter extends FabricBase ::
         : pq.then @=> dispatch_one @ pktArg, pktctx
 
 
-    function registerRoute(id_route, route) ::
+    function registerRoute(id_route, route, override) ::
       if 'function' !== typeof route ::
         throw new TypeError @ `Expected 'route' to be a function`
-      if routes_map.has @ id_route ::
+      if ! override && routes_map.has(id_route) ::
         return routes_map.get(id_route)
 
       routes_map.set @ id_route, route
@@ -69,9 +69,10 @@ export class FabricRouter extends FabricBase ::
       return routes_map.delete @ id_route
 
 
-  registerPeerRoute(id_route, channel) ::
+  registerPeerRoute(id_route, channel, override) ::
     return this.registerRoute @ id_route
       pkt => :: channel.send(pkt)
+      override
 
 
   async discoverRoute(id_route, pktctx) ::
@@ -87,8 +88,8 @@ export class FabricRouter extends FabricBase ::
     if route.ephemeral :: return route
 
     if 'function' !== typeof route ::
-      return this.registerPeerRoute(id_route, route)
-    return this.registerRoute(id_route, route)
+      return this.registerPeerRoute(id_route, route, true)
+    return this.registerRoute(id_route, route, true)
 
 
 export default FabricRouter

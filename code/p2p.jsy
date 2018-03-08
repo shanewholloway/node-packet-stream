@@ -54,18 +54,23 @@ export class P2PRouter extends TargetRouter ::
       body: @{} req_id: info.req_id,
         routes: this.public_routes
 
+    const override = this.trustChannel(channel)
     for const id_route of info.routes ::
-      hub_router.registerPeerRoute @ id_route, channel
+      hub_router.registerPeerRoute @ id_route, channel, override
 
   _tgt_olleh(pkt, pktctx) ::
     const {channel, hub_router} = pktctx
     const info = pkt.json()
+
+    const override = this.trustChannel(channel)
     for const id_route of info.routes ::
-      hub_router.registerPeerRoute @ id_route, channel
+      hub_router.registerPeerRoute @ id_route, channel, override
 
     const resolve = this._queries.get(info.req_id)
     if undefined !== resolve ::
       delete info.req_id
       resolve(info)
+
+  trustChannel(channel) :: return false
 
 export default P2PRouter

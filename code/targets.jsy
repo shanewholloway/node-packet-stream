@@ -46,11 +46,11 @@ export class TargetRouter extends FabricBase ::
       await target(pkt, pktctx)
 
 
-    function registerTarget(id_target, target) ::
+    function registerTarget(id_target, target, override) ::
       if 'function' !== typeof target ::
         throw new TypeError @ `Expected 'target' function`
 
-      if targets_map.has @ id_target ::
+      if ! override && targets_map.has(id_target) ::
         return targets_map.get(target)
       targets_map.set @ id_target, target
       return target
