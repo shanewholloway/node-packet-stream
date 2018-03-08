@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.5.15",
+  "version": "0.5.16-1",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -34,19 +34,11 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-jsy": "^0.10.1",
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
-    "ec-pem": "^0.17.0",
-    "faye-websocket": "^0.11.1",
-    "mocha": "^5.0.4",
     "rollup": "^0.56.5",
-    "rollup-plugin-commonjs": "^9.0.0",
     "rollup-plugin-gzip": "^1.3.0",
     "rollup-plugin-jsy-babel": "^2.0.0",
-    "rollup-plugin-node-resolve": "^3.2.0",
     "rollup-plugin-uglify": "^3.0.0",
-    "uglify-es": "^3.3.9",
-    "ws": "^5.0.0"
+    "uglify-es": "^3.3.9"
   },
   "babel": {
     "presets": "jsy/lean"
@@ -54,12 +46,12 @@
   "scripts": {
     "clean": "rm cjs/* esm/* umd/*",
     "build": "rollup --config",
-    "watch": "npm -s run build -- --watch",
+    "watch": "rollup --config --watch",
     "prepublish": "npm -s test",
     "pretest": "npm -s run build",
-    "test": "npm -s run test:one",
-    "test:one": "mocha --require babel-core/register test/unittest/node.js",
-    "test:watch": "mocha --reporter=min --watch --require babel-core/register test/unittest/node.js",
-    "demo": "babel-node test/manual/server.jsy"
+    "test": "cd test; npm -s run test",
+    "test:install": "cd test; npm -s install",
+    "test:one": "cd test; npm -s run test:one",
+    "test:watch": "cd test; npm -s run test:watch"
   }
 }

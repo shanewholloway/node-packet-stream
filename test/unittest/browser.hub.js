@@ -1,3 +1,3 @@
-import FabricHub from '../../code/index.browser.jsy'
+import FabricHub from 'msg-fabric-core/esm/core-browser'
 
 export default FabricHub

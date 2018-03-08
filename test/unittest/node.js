@@ -1,8 +1,8 @@
-import FabricBaseHub from '../../code/index.node.jsy'
-import pi_direct from '../../plugins/net/direct.jsy'
-import pi_tcp from '../../plugins/net/tcp.jsy'
-import pi_tls from '../../plugins/net/tls.jsy'
-import pi_web from '../../plugins/web/web.jsy'
+import FabricBaseHub from 'msg-fabric-core/esm/core-node'
+import pi_direct from 'msg-fabric-core/esm/plugin-net-direct'
+import pi_tcp from 'msg-fabric-core/esm/plugin-net-tcp'
+import pi_tls from 'msg-fabric-core/esm/plugin-net-tls'
+import pi_web from 'msg-fabric-core/esm/plugin-web'
 
 const FabricHub = FabricBaseHub
   .plugins( pi_direct(), pi_tcp(), pi_tls(), pi_web() )

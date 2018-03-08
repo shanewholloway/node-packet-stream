@@ -2,17 +2,11 @@ import pkg from './package.json'
 import {minify} from 'uglify-es'
 import rpi_uglify from 'rollup-plugin-uglify'
 import rpi_gzip from "rollup-plugin-gzip"
-import rpi_resolve from 'rollup-plugin-node-resolve'
-import rpi_commonjs from 'rollup-plugin-commonjs'
 import rpi_jsy from 'rollup-plugin-jsy-babel'
 
 
 const sourcemap = 'inline'
 const plugins = [rpi_jsy()]
-const test_plugins = plugins.concat([
-  rpi_resolve({ module: true, main: true }),
-  rpi_commonjs({ include: 'node_modules/**'}),
-])
 
 const ugly = { warnings: true, output: {comments: false, max_line_len: 256}}
 const prod_plugins = plugins.concat([
@@ -63,18 +57,6 @@ function package_core() {
           { file: pkg.browser, format: 'umd', name:'msg-fabric-core' },
         ],
         external: [], plugins: prod_plugins },
-
-    { input: 'test/unittest/browser.hub.js',
-      output: {
-        file: 'test/unittest/browser.hub.umd.js',
-        format: 'umd', name:'MsgFabricTestHub', sourcemap },
-      external: [], plugins: test_plugins },
-
-    { input: 'test/unittest/browser.js',
-      output: {
-        file: 'test/unittest/browser.iife.js',
-        format: 'iife', sourcemap },
-      external: [], plugins: test_plugins },
 
   ]}
 
