@@ -43,11 +43,11 @@ function test_msgs_address_details(setup_msgs_test) ::
 
 
   it @ 'source address details', @=>> ::
-    expect(ns.src.toJSON())
+    expect @ ns.src.toJSON()
     .to.deep.equal @: '\u03E0': '$unit$ $src$'
     .to.deep.equal @: 'Ϡ': '$unit$ $src$'
 
-    expect(JSON.stringify(ns.src))
+    expect @ JSON.stringify(ns.src)
     .to.deep.equal @ '{"\u03E0":"$unit$ $src$"}'
     .to.deep.equal @ '{"Ϡ":"$unit$ $src$"}'
 
@@ -64,7 +64,7 @@ function test_msgs_address_details(setup_msgs_test) ::
 async function setup_msgs_test() ::
   const log = newLog()
   const hub = Hub.create('$unit$')
-  hub.other = hub.createLocalRoute(undefined, '$cr$')
+  hub.other = hub.createLocalRoute('$cr$')
 
 
   let _token_counter = 1000

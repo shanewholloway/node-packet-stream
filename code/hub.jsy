@@ -21,7 +21,7 @@ export class FabricHub ::
     const dispatch = router.dispatch
 
     const p2p = this._initHubP2PRoute(router)
-    const local = this._initHubLocalRoute(router, options.id_route, p2p)
+    const local = this._initHubLocalRoute(options.id_route, router, p2p)
 
     const channel = this._bindSendLocal(dispatch)
     Object.defineProperties @ this, @{}
@@ -47,20 +47,20 @@ export class FabricHub ::
   _initHubP2PRoute(router) ::
     return this.createP2PRoute(router)
 
-  createP2PRoute(router=this.router) ::
+  createP2PRoute(router) ::
     const klass = this.constructor
-    return new klass.P2PRouter @ router
+    return new klass.P2PRouter @ router || this.router
 
-  _initHubLocalRoute(router, id_route, p2p) ::
-    const local = this.createLocalRoute(router, id_route)
+  _initHubLocalRoute(id_route, router, p2p) ::
+    const local = this.createLocalRoute(id_route, router)
     p2p.publishRoute(local)
     return local
 
-  createLocalRoute(router=this.router, id_route) ::
+  createLocalRoute(id_route, router) ::
     if null == id_route :: id_route = this.newRouteId()
     const klass = this.constructor
     return new klass.TargetRouter @
-      id_route, router
+      id_route, router || this.router
 
   newRouteId() ::
     const id = this.data_utils.random_base64(5).slice(0, 6)
@@ -81,8 +81,9 @@ export class FabricHub ::
   */
 
   newLocalRoute(privateRoute, id_route) ::
-    const route = this.createLocalRoute(this.router, id_route)
-    this.p2p.publishRoute(route)
+    const route = this.createLocalRoute(id_route, this.router)
+    if ! privateRoute ::
+      this.p2p.publishRoute(route)
     return route
 
 
