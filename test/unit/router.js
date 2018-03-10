@@ -153,3 +153,17 @@ describe @ 'Router', @=> ::
         @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
 
 
+  describe @ 'upstream', @=> ::
+
+    it @ 'should call router.upstream if route does not exist', @=>> ::
+      hub.router.upstream = pkt => ::
+        log @ 'upstream', pkt.id_route, pkt.id_target
+
+      await test_chan.send @:
+        id_route: 'dne-route'
+        id_target: 'dne-tgt'
+        body: @{} msg: 'a message'
+
+      expect(log.calls).to.be.deep.equal @#
+        @[] 'upstream', 'dne-route', 'dne-tgt'
+

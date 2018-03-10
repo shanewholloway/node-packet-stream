@@ -20,8 +20,8 @@ export class FabricRouter extends FabricBase ::
 
     Object.defineProperties @ this, @:
       _bindDispatchRoutes: @{} value: false
-      dispatch: @: value: dispatch
-      resolveRoute: @: value: resolveRoute
+      dispatch: @{} value: dispatch
+      resolveRoute: @{} value: resolveRoute
       registerRoute: @{} value: registerRoute
       unregisterRoute: @{} value: unregisterRoute
     return dispatch
@@ -40,6 +40,10 @@ export class FabricRouter extends FabricBase ::
           if undefined === route ::
             // the route could have been registered during discovery
             route = routes_map.get(id_route)
+
+            if undefined === route ::
+              route = await hub_router.upstreamRoute(id_route)
+
           if undefined === route ::
             const channel = pktctx.channel
             return channel && channel.undeliverable(pkt, 'route')
@@ -91,12 +95,17 @@ export class FabricRouter extends FabricBase ::
       @{} key: id_route, id_route, pktctx
       err => this._on_error @ 'router.discovery', err
 
+    return this.registerDynamicRoute @ id_route, route
+
+  upstreamRoute(id_route) ::
+    return this.registerDynamicRoute @ id_route, this.upstream
+
+  registerDynamicRoute(id_route, route) ::
     if null == route :: return
     if route.ephemeral :: return route
 
     if 'function' !== typeof route ::
       return this.registerPeerRoute(id_route, route, true)
     return this.registerRoute(id_route, route, true)
-
 
 export default FabricRouter
