@@ -16,10 +16,7 @@ export default function browser_pkt_plugin() ::
       bin_call
       pkt_multi(data_utils)
 
-    const _fromObjPacket =
-      _pkts_.fromObjPacket =
-        _pkts_.fromObjBinaryPacket
 
     Object.assign @ FabricHub.prototype, @{}
-      _pkts_, _fromObjPacket
+      _pkts_, _fromObjPacket: _pkts_.fromObjPacket
 

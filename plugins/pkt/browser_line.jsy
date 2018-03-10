@@ -14,10 +14,7 @@ export default function browser_line_pkt_plugin() ::
       line
       pkt_multi(data_utils)
 
-    const _fromObjPacket =
-      _pkts_.fromObjPacket =
-        _pkts_.fromObjLinePacket
 
     Object.assign @ FabricHub.prototype, @{}
-      _pkts_, _fromObjPacket
+      _pkts_, _fromObjPacket: _pkts_.fromObjPacket
 

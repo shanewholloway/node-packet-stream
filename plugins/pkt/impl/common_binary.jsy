@@ -59,7 +59,12 @@ export function bind_binaryPacketCommon(options) ::
     split_data: (pkt, hdr) => packParts @ `${hdr}\t${k_split_data}${pkt._meta_}\t`, pkt._body_
     split_b64: (pkt, hdr) => packParts @ `${hdr}\t${k_split_data}${pkt._meta_}\t`, unpack_base64(pkt._body_)
 
+
+  const fromObjBinaryPacket =  bind_packObjPacket(options, repack_binary)
+
   return @{}
+    fromObjBinaryPacket, fromObjPacket: fromObjBinaryPacket
+
     packBinaryPacket(obj) ::
       if 'function' === typeof obj.repack_pkt ::
         return obj.repack_pkt(repack_binary)
@@ -89,6 +94,5 @@ export function bind_binaryPacketCommon(options) ::
 
       return as_pkt0 @ hdr, meta, body, pktByKind[kind]
 
-    fromObjBinaryPacket: bind_packObjPacket(options, repack_binary)
     _unpackStrPacket: bind_unpackStringPacket(pktByKind)
 

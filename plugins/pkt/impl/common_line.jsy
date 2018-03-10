@@ -23,10 +23,11 @@ export function bind_linePacket(options) ::
     split_b64: (pkt, hdr) => `${hdr}\t${k_split_data}${pkt._meta_}\t${pkt._body_}`
 
   const unpackLinePacket = bind_unpackStringPacket(pktByKind)
+  const fromObjLinePacket = bind_packObjPacket(options, repack_line)
   return @{}
-    unpackLinePacket, packLinePacket
-    unpackPacket: unpackLinePacket, packPacket: packLinePacket
-    fromObjLinePacket: bind_packObjPacket(options, repack_line)
+    unpackLinePacket, unpackPacket: unpackLinePacket
+    packLinePacket, packPacket: packLinePacket
+    fromObjLinePacket, fromObjPacket: fromObjLinePacket
 
   function packLinePacket(obj) ::
     if 'function' === typeof obj.repack_pkt ::
