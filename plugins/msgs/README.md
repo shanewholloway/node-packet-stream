@@ -1,3 +1,32 @@
+# `msgs` plugin for msg-fabric-core 
+
+### Installation
+
+###### Built-in
+
+```javascript
+import FabricHub from 'msg-fabric-core'
+
+const hub = FabricHub.create()
+hub.msgs
+```
+
+###### Ground-up
+
+```javascript
+import FabricHubBase from 'msg-fabric-core/esm/'
+import fhpi_platform from 'msg-fabric-core/esm/plugin-platform-node'
+import fhpi_pkts from 'msg-fabric-core/esm/plugin-pkt-node'
+import fhpi_msgs from 'msg-fabric-core/esm/plugin-msgs-node'
+
+const FabricHub = FabricHubBase
+  .plugin(fhpi_platform(), fhpi_pkts(), fhpi_msgs())
+
+const hub = FabricHub.create()
+hub.msgs
+```
+
+
 ### Plugin API
 
 ```javascript
