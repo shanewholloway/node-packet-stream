@@ -90,7 +90,7 @@ export function standard_frames(_as_op_frame) ::
 
   return @[]
     // control datagram:
-    _as_op_frame @: kind: 'ctrl', action: '?', frames: @# frm.token
+    _as_op_frame @: kind: 'ctrl', action: '?', frames: @# frm.from_route, frm.from_target, frm.token
     _as_op_frame @: kind: 'ctrl', action: '!', frames: @# frm.msgid
 
     // datagram:
