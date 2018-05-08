@@ -17,6 +17,7 @@
     "rollup-plugin-commonjs": "^9.0.0",
     "rollup-plugin-jsy-babel": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.2.0",
+    "sinon": "^5.0.7",
     "ws": "^5.0.0"
   },
   "babel": {

@@ -6,8 +6,10 @@ export class P2PRouter extends TargetRouter ::
     super('', router)
 
     this.public_routes = []
+    this.hello_body = {}
     Object.defineProperties @ this, @{}
       _queries: @{} value: this._createQueryMap()
+      peerChannelDiscovery: @{} value: []
 
     this.initP2P()
 
@@ -29,7 +31,7 @@ export class P2PRouter extends TargetRouter ::
 
   hello(hub, channel, timeout=1000) ::
     const req_id = hub.data_utils.random_base64(3)
-    channel.send @ this.helloHandshake(req_id)
+    channel.send @ this._helloHandshake('hello', req_id)
 
     const ans = new Promise @ (resolve, reject) => ::
       this._queries.set(req_id, resolve)
@@ -39,37 +41,40 @@ export class P2PRouter extends TargetRouter ::
     ans.then(cleanup, cleanup)
     return ans
 
-  helloHandshake(req_id) ::
-    return @{}
-      id_target: 'hello', id_route: ''
-      body: @{} req_id
-        routes: this.public_routes
+  _helloHandshake(id_target, req_id) ::
+    const body = Object.assign @ {}, this.hello_body,
+      @{} req_id, routes: this.public_routes
+
+    return @{} id_target, id_route: '', body
 
   _tgt_hello(pkt, pktctx) ::
-    const {channel, hub_router} = pktctx
     const info = pkt.json()
+    pktctx.channel.send @
+      this._helloHandshake('olleh', info.req_id)
 
-    channel.send @:
-      id_target: 'olleh', id_route: ''
-      body: @{} req_id: info.req_id,
-        routes: this.public_routes
-
-    const override = this.trustChannel(channel)
-    for const id_route of info.routes ::
-      hub_router.registerPeerRoute @ id_route, channel, override
+    this._applyHelloInfo(info, pkt, pktctx)
 
   _tgt_olleh(pkt, pktctx) ::
-    const {channel, hub_router} = pktctx
     const info = pkt.json()
 
-    const override = this.trustChannel(channel)
-    for const id_route of info.routes ::
-      hub_router.registerPeerRoute @ id_route, channel, override
+    this._applyHelloInfo(info, pkt, pktctx)
 
     const resolve = this._queries.get(info.req_id)
     if undefined !== resolve ::
       delete info.req_id
       resolve(info)
+
+  _applyHelloInfo(info, pkt, pktctx) ::
+    const {channel, hub_router} = pktctx
+
+    const override = this.trustChannel(channel)
+    for const id_route of info.routes ::
+      hub_router.registerPeerRoute @ id_route, channel, override
+
+    for const cb of this.peerChannelDiscovery || [] ::
+      try :: cb(info, pkt, pktctx)
+      catch err ::
+        this._on_error @ 'peer_discovery_notification', err
 
   trustChannel(channel) :: return false
 

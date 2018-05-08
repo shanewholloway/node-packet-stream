@@ -12,6 +12,8 @@ chai.use @ chaiAsPromised
 export const assert = chai.assert
 export const expect = chai.expect
 
+export const sinon = require('sinon')
+
 export const sleep = ms =>
   new Promise @ resolve =>
     setTimeout @ resolve, ms
