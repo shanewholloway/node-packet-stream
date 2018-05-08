@@ -27,22 +27,28 @@ export class FabricRouter extends FabricBase ::
     return dispatch
 
 
-    function resolveRoute(id_route) ::
-      return routes_map.get(id_route) ||
-        hub_router.discoverRoute(id_route)
+    async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
+      let route = routes_map.get(id_route)
+      if undefined !== route :: return route
+
+      if allowDiscover ::
+        route = await hub_router.discoverRoute(id_route)
+        if undefined !== route :: return route
+
+      // the route could have been registered during discovery
+      route = routes_map.get(id_route)
+      if undefined !== route :: return route
+
+      if allowUpstream ::
+        route = await hub_router.upstreamRoute(id_route)
+      return route
 
     async function dispatch_one(pkt, pktctx) ::
       try ::
         const id_route = pkt.id_route || ''
         let route = routes_map.get(id_route)
         if undefined === route ::
-          route = await hub_router.discoverRoute(id_route, pktctx)
-          if undefined === route ::
-            // the route could have been registered during discovery
-            route = routes_map.get(id_route)
-
-            if undefined === route ::
-              route = await hub_router.upstreamRoute(id_route)
+          route = await resolveRoute(id_route, true, true)
 
           if undefined === route ::
             const channel = pktctx.channel
@@ -86,13 +92,13 @@ export class FabricRouter extends FabricBase ::
     return this.registerRoute @ id_route, disp, override
 
 
-  async discoverRoute(id_route, pktctx) ::
+  async discoverRoute(id_route) ::
     let lstDiscovery = this.routeDiscovery
     if 0 === lstDiscovery.length :: return
 
     const route = await this._discoverFirst @
       lstDiscovery.concat @# this._discoveryTimeout()
-      @{} key: id_route, id_route, pktctx
+      @{} key: id_route, id_route
       err => this._on_error @ 'router.discovery', err
 
     return this.registerDynamicRoute @ id_route, route
