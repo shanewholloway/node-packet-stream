@@ -24,6 +24,8 @@ export class FabricRouter extends FabricBase ::
       resolveRoute: @{} value: resolveRoute
       registerRoute: @{} value: registerRoute
       unregisterRoute: @{} value: unregisterRoute
+      registerRouteObj: @{} value: registerRouteObj
+      unregisterRouteObj: @{} value: unregisterRouteObj
     return dispatch
 
 
@@ -45,6 +47,7 @@ export class FabricRouter extends FabricBase ::
 
     async function dispatch_one(pkt, pktctx) ::
       try ::
+        pkt = await pkt
         const id_route = pkt.id_route || ''
         let route = routes_map.get(id_route)
         if undefined === route ::
@@ -80,6 +83,12 @@ export class FabricRouter extends FabricBase ::
         return // remove only if route is currently at id_route
       return routes_map.delete @ id_route
 
+    function registerRouteObj(kw_route) ::
+      const {id_route, route, override} = kw_route
+      return registerRoute @ id_route, route || kw_route, override
+    function unregisterRouteObj(kw_route) ::
+      return unregisterRoute @ kw_route.id_route
+
 
   registerPeerRoute(id_route, channel, override) ::
     let disp = channel.dispatch
@@ -113,5 +122,9 @@ export class FabricRouter extends FabricBase ::
     if 'function' !== typeof route ::
       return this.registerPeerRoute(id_route, route, true)
     return this.registerRoute(id_route, route, true)
+
+  registerDynamicRouteObj(kw_route) ::
+    const {id_route, route} = kw_route
+    return this.registerDynamicRouteObj @ id_route, route || kw_route
 
 export default FabricRouter

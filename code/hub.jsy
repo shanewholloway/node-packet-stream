@@ -114,6 +114,17 @@ export class FabricHub ::
   _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
 
 
+  livePlugin(...livePluginList) ::
+    return this.livePlugins(...livePluginList)
+  livePlugins(...livePluginList) ::
+    livePluginList = livePluginList
+      .sort @ (a, b) => (0 | a.order) - (0 | b.order)
+
+    applyPlugins @ 'live', livePluginList, this
+    applyPlugins @ null, livePluginList, this
+    applyPlugins @ 'post', livePluginList, this
+    return this
+
   static plugin(...pluginFunctions) ::
     return this.plugins(...pluginFunctions)
   static plugins(...pluginFunctions) ::

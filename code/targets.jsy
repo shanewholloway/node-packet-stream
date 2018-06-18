@@ -20,6 +20,8 @@ export class TargetRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       registerTarget: @{} value: registerTarget
       unregisterTarget: @{} value: unregisterTarget
+      registerTargetObj: @{} value: registerTargetObj
+      unregisterTargetObj: @{} value: unregisterTargetObj
       _bindDispatchTarget: @{} value: false
 
     dispatch_target.id_route = id_route
@@ -53,10 +55,17 @@ export class TargetRouter extends FabricBase ::
       if ! override && targets_map.has(id_target) ::
         return targets_map.get(target)
       targets_map.set @ id_target, target
-      return target
+      return @{} id_target, id_route
 
     function unregisterTarget(id_target) ::
       return targets_map.delete @ id_target
+
+    function registerTargetObj(kw_target) ::
+      const {id_target, target, override} = kw_target
+      return registerTarget(id_target, target || kw_target, override)
+
+    function unregisterTargetObj(kw_target) ::
+      return unregisterTarget(kw_target.id_target)
 
 
   async discoverTarget(id_target, pktctx) ::
