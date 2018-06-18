@@ -7,7 +7,7 @@ Object.assign(global, {URL, TextDecoder, TextEncoder})
 const BasicHub = require('..')
 
 const tcp = require('../cjs/plugin-net-tcp')
-const tls = require('../cjs/plugin-net-tls')
+const tls = require('../cjs/plugin-shadow')
 
 const TestNetHub = BasicHub.plugin( tcp(), tls() )
 

@@ -5,7 +5,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-preset-jsy": "^0.10.1",
+    "babel-preset-jsy": "^0.11.2",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chokidar-cli": "^1.2.0",

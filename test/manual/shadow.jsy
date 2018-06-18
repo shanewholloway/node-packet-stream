@@ -1,0 +1,69 @@
+import Hub from '../_setup'
+const pi_shadow = require('../../cjs/plugin-shadow')
+const TestHub = Hub.plugin @
+  pi_shadow @:
+    shadow_id(id_target) ::
+      if /^h[a-z]_/.test @ id_target ::
+        return `z::${id_target}`
+    encode(pkt, ua8, id_shadow) ::
+      const mask = Math.random() * 256
+      return @{} op: ['xor', mask.toString(36)]
+        body: ua8.map @ v => v ^ mask
+    decode(enc_pkt, ua8, id_shadow) ::
+      const mask = parseInt(enc_pkt._hdr_[3], 36)
+      return ua8.map @ v => v ^ mask
+
+const ha = TestHub.create('$ha$')
+const hb = TestHub.create('$hb$')
+const hc = TestHub.create('$hc$')
+
+const msg_apple = addTarget @ 'ha_apple', ha, ha.local
+const msg_orange = addTarget @ 'ha_orange', ha, ha.local
+
+const msg_snake = addTarget @ 'hb_snake', hb, hb.local
+const msg_turtle = addTarget @ 'hb_turtle', hb, hb.local
+
+const msg_crow = addTarget @ 'hc_crow', hc, hc.local
+const msg_hawk = addTarget @ 'hc_hawk', hc, hc.local
+
+function addTarget(id_target, hub, {id_route, registerTargetObj}) ::
+  registerTargetObj @ hub.shadow @ id_target, pkt => ::
+    console.log @ `"${id_target}" recieved packet`, pkt
+    console.dir @ pkt.json(), {colors:true}
+    console.log()
+
+  return body => @: id_target, id_route, body
+    on_sent() :: console.log @ 'on sent:', @{} id_target, id_route, body
+
+
+console.log()
+
+Promise.resolve()
+.then @ do_ha_local
+//.then @ do_ha_remote // will not work before do_connect
+.then @ do_connect
+.then @ do_ha_remote
+
+async function do_connect() ::
+  await ha.direct.connect(hb)
+  await ha.direct.connect(hc)
+
+  ha.send @ msg_turtle @: hello: 'soup', mode: 'channel'
+  ha.send @ msg_snake @: hello: 'bites', mode: 'channel'
+
+  hc.send @ msg_crow @: look: 'shiny', mode: 'channel'
+  hc.send @ msg_hawk @: look: 'a bunny!', mode: 'channel'
+
+
+async function do_ha_local() ::
+  ha.send @ msg_apple @: goodbye: 'doctor', mode: 'local'
+  ha.send @ msg_orange @: goodbye: 'scurvy', mode: 'local'
+
+
+async function do_ha_remote() ::
+  ha.send @ msg_turtle @: hello: 'soup', mode: 'remote'
+  ha.send @ msg_snake @: hello: 'bites', mode: 'remote'
+
+  ha.send @ msg_crow @: look: 'shiny!', mode: 'remote'
+  ha.send @ msg_hawk @: look: 'a bunny!', mode: 'remote'
+

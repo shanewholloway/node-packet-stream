@@ -19,6 +19,7 @@ export default [].concat(
   package_plugin_platform(),
   package_plugin_pkt(),
   package_plugin_msgs(),
+  package_plugin_shadow(),
   package_plugin_direct(),
   package_plugin_net(),
   package_plugin_web(),
@@ -91,6 +92,14 @@ function package_plugin_msgs() {
   }
 
   return bundleForPlugin(bundles, 'msgs') }
+
+
+function package_plugin_shadow() {
+  const bundles = {
+    'index': ['plugin-shadow', []],
+  }
+
+  return bundleForPlugin(bundles, 'shadow') }
 
 
 function package_plugin_direct() {
