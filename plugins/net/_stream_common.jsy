@@ -5,9 +5,10 @@ export function stream_common(hub) ::
 
 
 export function bind_channel(hub) ::
-  const createChannel = hub._pkts_node_.bin_len.createChannel
+  const createChannel = hub._pkts_.bin_call.createChannel
 
   return function (rstream, wstream) ::
+    const pkt_hdr = Buffer.alloc(2)
     const [recv, channel] = createChannel @ hub.dispatch, send_packed
     recvPacketStream @ rstream, recv
 
@@ -18,11 +19,10 @@ export function bind_channel(hub) ::
         on_drain()
         on_drain = null
 
-    function next_drain(resolve) ::
-      if undefined === resolve ::
-        on_drain = resolve
-      else if null === p_drain ::
-        p_drain = new Promise(next_drain)
+    function next_drain() ::
+      if null === p_drain ::
+        p_drain = new Promise @
+          resolve => :: on_drain = resolve
       return p_drain
 
     channel.when_closed = new Promise @ resolve => ::
@@ -32,15 +32,18 @@ export function bind_channel(hub) ::
     return channel
 
     function send_packed(d_pkt) ::
-      if null !== d_pkt ::
-        if wstream.write(d_pkt) ::
-          return // sent immediate, no backpressure promise
-        // backpressure as promise for next drain event
-        return set_drain()
-      else ::
+      if null === d_pkt ::
         wstream.end()
         return new Promise @ resolve =>
           wstream.once @ 'finish', resolve
+
+      d_pkt = Buffer.from(d_pkt)
+      pkt_hdr.writeUInt16LE(2 + d_pkt.byteLength, 0)
+      const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
+      if wstream.write(s_pkt) ::
+        return // sent immediate, no backpressure promise
+      // backpressure as promise for next drain event
+      return next_drain()
 
 
 
@@ -98,5 +101,5 @@ export function binaryLenPrefixFeedUint16LE(shutdown, dispatchCallback) ::
       q = [buf_q.slice(tipLen)]
       byteLen -= tipLen
       tipLen = null
-      return buf
+      return buf.slice(2)
 

@@ -11,7 +11,7 @@ export default function browser_pkt_plugin() ::
     const line = pkt_line(data_utils)
     mixinCreateChannel @ bin_call, line
 
-    const _pkts_ = Object.assign @ {}
+    const _pkts_ = Object.assign @
       @{} bin_call, line
       bin_call
       pkt_multi(data_utils)

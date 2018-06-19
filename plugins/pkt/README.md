@@ -30,7 +30,6 @@ hub._pkts_
 
 ```javascript
 hub._pkts_ = {
-  bin_len, // a binary_pkts_api instance or undefined
   bin_call, // a binary_pkts_api instance or undefined
   line, // a line_pkts_api instance or undefined
 
@@ -38,7 +37,7 @@ hub._pkts_ = {
   joinPackets(pktList) {}, // => MultiPkt
 }
 
-Object.assign(hub._pkts_, defaultFrom(bin_len, bin_call, line))
+Object.assign(hub._pkts_, defaultFrom(bin_call, line))
 ```
 
 
