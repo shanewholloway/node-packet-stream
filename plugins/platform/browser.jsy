@@ -49,7 +49,7 @@ function unpack_base64(str_b64) ::
 
   const res = new Uint8Array(len)
   for (let i=0; i<len; i++)
-    res[i] += _charCodeAt.call(sz, i)
+    res[i] = _charCodeAt.call(sz, i)
   return res
 
 function decode_utf8(u8) ::
