@@ -70,7 +70,8 @@ export class P2PRouter extends TargetRouter ::
 
     const override = this.trustChannel(channel)
     for const id_route of info.routes ::
-      hub_router.registerPeerRoute @ id_route, channel, override
+      if 'string' === typeof id_route ::
+        hub_router.registerPeerRoute @ id_route, channel, override
 
     for const cb of this.peerChannelDiscovery || [] ::
       try :: cb(info, pkt, pktctx)

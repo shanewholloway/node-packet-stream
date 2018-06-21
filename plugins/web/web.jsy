@@ -4,6 +4,7 @@ export default function web_plugin(plugin_options={}) ::
   return hub => ::
     const _global_ = hub.data_utils._global_
     let WebSocket = plugin_options.WebSocket
+    const protocols = plugin_options.protocols || ['msg-fabric']
 
     const _api_ = @{} hub
       createChannel: hub._pkts_.bin_call.createChannel
@@ -26,7 +27,7 @@ export default function web_plugin(plugin_options={}) ::
 
     function createWebSocket(ws_or_wss_url) ::
       const l_WebSocket = this.WebSocket || _global_.WebSocket
-      return new l_WebSocket(ws_or_wss_url+'')
+      return new l_WebSocket(ws_or_wss_url+'', protocols)
 
     function connectSend(...args) ::
       const channel = createSendChannel(...args)
