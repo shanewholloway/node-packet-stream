@@ -13,7 +13,6 @@ export default function tls_plugin(plugin_options={}) ::
     return hub[protocol] = plugin
 
     function connect(...args) ::
-      args = _common_.unpackConnectArgs(args)
       return _common_.createClient @
         handler => _tls_connect @ ...args, handler
 

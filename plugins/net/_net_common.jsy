@@ -3,7 +3,15 @@ import stream_common from './_stream_common.jsy'
 export default function net_common(hub, plugin, protocol, asURL) ::
   var _common_
   if null == asURL ::
-    asURL = function () :: return `${protocol}://${this.address}:${this.port}`
+    const path_prefix = {'.':'/', '/':''}
+    asURL = function () ::
+      let {address, port, path} = this
+      if address ::
+        return `${protocol}://${address}:${port}`
+      else if path ::
+        const pre = path_prefix[path[0]] || '/./'
+        return `${protocol}://${pre}${path}`
+          
 
   const conn_info_base = @{} toString: asURL, asURL, protocol
   const sock_conn_info = sock => @:
@@ -49,7 +57,11 @@ export default function net_common(hub, plugin, protocol, asURL) ::
         const addr = svr.address()
         if null != addr ::
           const res = @{} __proto__: conn_info_base
-            address: addr.address, port: addr.port
+          if 'string' === typeof addr ::
+            res.path = addr
+          else if addr.address ::
+            res.address = addr.address
+            res.port = addr.port
           return asPromise ? Promise.resolve(res) : res
 
         else if asPromise ::
@@ -68,17 +80,23 @@ export default function net_common(hub, plugin, protocol, asURL) ::
         return channel => svr.emit @ onPeer, channel
       return () => null
 
-    unpackConnectArgs(args) ::
-      if 1 === args.length ::
-        if 'string' === typeof args[0].href ::
-          const {hostname:host, port} = args[0]
-          args[0] = @{} host, port
-      return args
+    unpackConnectURL(conn_url) ::
+      if 'string' === typeof conn_url.href ::
+        conn_url = this.unpackURLParams(conn_url)
 
-    unpackConnectURL(url) ::
-      const {hostname:host, port} = url
-      const options = Object.assign @ {host, port}, plugin.url_options
+      const options = Object.assign @ {}, conn_url, plugin.url_options
       return plugin.on_url_connect
         ? plugin.on_url_connect(options, url)
         : options
+
+    unpackURLParams(url) ::
+      if 'string' !== typeof url.href :: return
+
+      const {hostname:host, port, pathname: path} = url
+      if host ::
+        return @{} host, port
+      else if path ::
+        if path.startsWith('/.') ::
+          path = path.slice(1)
+        return @{} path
 
