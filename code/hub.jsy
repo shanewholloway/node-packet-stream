@@ -49,7 +49,7 @@ export class FabricHub ::
 
   createP2PRoute(router) ::
     const klass = this.constructor
-    return new klass.P2PRouter @ router || this.router
+    return new klass.P2PRouter @ router || this.router, this
 
   _initHubLocalRoute(id_route, router, p2p) ::
     const local = this.createLocalRoute(id_route, router)
@@ -60,7 +60,7 @@ export class FabricHub ::
     if null == id_route :: id_route = this.newRouteId()
     const klass = this.constructor
     return new klass.TargetRouter @
-      id_route, router || this.router
+      id_route, router || this.router, this
 
   newRouteId() ::
     const id = this.data_utils.random_base64(5).slice(0, 6)

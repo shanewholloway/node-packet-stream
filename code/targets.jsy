@@ -3,7 +3,7 @@ import {FabricBase} from './utils.jsy'
 export class TargetRouter extends FabricBase ::
   _createTargetsMap() :: return new Map()
 
-  constructor(id_route, router) ::
+  constructor(id_route, router, hub) ::
     super()
     Object.defineProperties @ this, @{}
       id_route: @{} value: id_route, enumerable: true
