@@ -13,7 +13,7 @@ export async function add_websocket(ws, url_path, headers) ::
   console.log @ 'ADD WS:', @[] url_path, headers
   hub.router.unregisterRoute('$browser$')
 
-  const channel = await hub.web.connectWS @ ws, @[] true, url_path
+  const channel = await hub.web.connectWS @ ws, @[] false, url_path
 
   const peer_info = await channel.peer_info
   console.log('peer_info:', peer_info)

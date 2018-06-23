@@ -1,4 +1,4 @@
-import {add_websocket, bind_handle_request} from './common-websocket.jsy'
+import {add_websocket, bind_handle_request} from './websocket-common.jsy'
 
 const WebSocket = require('ws')
 const http = require('http')
