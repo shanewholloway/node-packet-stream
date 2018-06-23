@@ -3,11 +3,13 @@ const yes = () => true
 export function bind_sendChannel(_api_) ::
   const { hub, createChannel } = _api_
 
-  return _api_.createSendChannel = function (tgt_recv, tgt_send, accept) ::
+  return _api_.createSendChannel = function (tgt_recv, tgt_send, options) ::
     if null == tgt_send :: tgt_send = tgt_recv
-    if null == accept :: accept = yes
+    if null == options :: options = {}
+    const accept = options.accept || yes
+    send_packed.channel_id = options.channel_id || 'web_send'
 
-    const [recv, channel] = createChannel @ hub.dispatch, send_packed
+    const [recv, channel] = createChannel @ hub.router.dispatch, send_packed
 
     tgt_recv.addEventListener @ 'message'
       m => :: if accept(m) :: recv @# m.data
@@ -25,11 +27,13 @@ export function bind_sendChannel(_api_) ::
 export function bind_postMessageChannel(_api_) ::
   const { hub, createChannel } = _api_
 
-  return _api_.createPostMessageChannel = function (tgt_recv, tgt_send, accept) ::
+  return _api_.createPostMessageChannel = function (tgt_recv, tgt_send, options) ::
     if null == tgt_send :: tgt_send = tgt_recv
-    if null == accept :: accept = yes
+    if null == options :: options = {}
+    const accept = options.accept || yes
+    send_packed.channel_id = options.channel_id || 'web_postmsg'
 
-    const [recv, channel] = createChannel @ hub.dispatch, send_packed
+    const [recv, channel] = createChannel @ hub.router.dispatch, send_packed
 
     tgt_recv.addEventListener @ 'message'
       m => :: if accept(m) :: recv @# m.data
@@ -54,8 +58,12 @@ export function bind_webSocketChannel(_api_) ::
 
   const {hub, createSendChannel} = _api_
   
-  return _api_.createWebSocketChannel = function (websock) ::
-    const channel = createSendChannel(websock)
+  return _api_.createWebSocketChannel = function (websock, options) ::
+    if null == options :: options = {}
+    if ! options.channel_id ::
+      options.channel_id = 'websocket'
+
+    const channel = createSendChannel @ websock, websock, options
 
     channel.when_opened = new Promise @ resolve => ::
       websock.addEventListener @ 'open'
@@ -76,11 +84,11 @@ export function bind_webSocketChannel(_api_) ::
           @{} passive: true, once: true
 
         websock.addEventListener @ 'open'
-          () => :: hub.p2p.hello(hub, channel).then(resolve, reject)
+          () => :: hub.p2p.hello(channel).then(resolve, reject)
           @{} passive: true, once: true
 
       else if 1 === readyState :: // open state
-        hub.p2p.hello(hub, channel).then(resolve, reject)
+        hub.p2p.hello(channel).then(resolve, reject)
 
       else reject @ new Error @ 'WebSocket closed'
 

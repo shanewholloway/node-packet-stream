@@ -13,11 +13,17 @@ export default function tls_plugin(plugin_options={}) ::
     return hub[protocol] = plugin
 
     function connect(...args) ::
-      return _common_.createClient @
+      return connectId(protocol, ...args)
+
+    function createServer(onPeer) ::
+      return createServerId(protocol, onPeer)
+
+    function connectId(channel_id, ...args) ::
+      return _common_.createClient @ channel_id,
         handler => _tls_connect @ ...args, handler
 
-    function createServer(tls_options, onPeer) ::
-      return _common_.createServer @ onPeer,
+    function createServerId(channel_id, tls_options, onPeer) ::
+      return _common_.createServer @ channel_id, onPeer,
         handler => _tls_server @ tls_options, handler
 
     function with_url_options(options) ::

@@ -4,7 +4,7 @@ export default function web_plugin(plugin_options={}) ::
   return hub => ::
     const _global_ = hub.data_utils._global_
     let WebSocket = plugin_options.WebSocket
-    const protocols = plugin_options.protocols || ['msg-fabric']
+    const protocols = plugin_options.protocols
 
     const _api_ = @{} hub
       createChannel: hub._pkts_.bin_call.createChannel
@@ -18,7 +18,7 @@ export default function web_plugin(plugin_options={}) ::
       connectWS, createWebSocket, customWebSocket
 
     hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],
-      url => plugin.connectWS(url)
+      url => plugin.connectWS(url, true)
     return hub.web = plugin
 
     function customWebSocket(WebSocket) ::
@@ -31,15 +31,15 @@ export default function web_plugin(plugin_options={}) ::
 
     function connectSend(...args) ::
       const channel = createSendChannel(...args)
-      channel.peer_info = hub.p2p.hello(hub, channel)
+      channel.peer_info = hub.p2p.hello(channel)
       return Promise.resolve(channel)
 
     function connectPostMessage(...args) ::
       const channel = createPostMessageChannel(...args)
-      channel.peer_info = hub.p2p.hello(hub, channel)
+      channel.peer_info = hub.p2p.hello(channel)
       return Promise.resolve(channel)
 
-    function connectWS(ws_or_wss_url) ::
+    function connectWS(ws_or_wss_url, channel_id) ::
       let websock
       if ws_or_wss_url ::
         websock = 'function' !== typeof ws_or_wss_url.send
@@ -49,6 +49,10 @@ export default function web_plugin(plugin_options={}) ::
       if undefined === websock ::
         throw new TypeError @ `Invalid websocket connection`
 
-      const channel = createWebSocketChannel(websock)
+      if true === channel_id ::
+        const id = new URL(ws_or_wss_url).pathname
+        channel_id = @[] id, false
+
+      const channel = createWebSocketChannel(websock, {channel_id})
       return Promise.resolve(channel)
 

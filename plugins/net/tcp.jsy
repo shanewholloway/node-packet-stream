@@ -13,11 +13,17 @@ export default function tcp_plugin(plugin_options={}) ::
     return hub[protocol] = plugin
 
     function connect(...args) ::
-      return _common_.createClient @
-        handler => _tcp_connect @ ...args, handler
+      return connectId(protocol, ...args)
 
     function createServer(onPeer) ::
-      return _common_.createServer @ onPeer,
+      return createServerId(protocol, onPeer)
+
+    function connectId(channel_id, ...args) ::
+      return _common_.createClient @ channel_id,
+        handler => _tcp_connect @ ...args, handler
+
+    function createServerId(channel_id, onPeer) ::
+      return _common_.createServer @ channel_id, onPeer,
         handler => _tcp_server @ handler
 
     function with_url_options(options) ::

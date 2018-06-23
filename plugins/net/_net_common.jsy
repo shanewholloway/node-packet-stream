@@ -25,30 +25,32 @@ export default function net_common(hub, plugin, protocol, asURL) ::
 
   // shared implementation between net/tcp and tls implementations
   return _common_ = @{} __proto__: stream_common(hub)
-    createSocketChannel(sock) ::
+    createSocketChannel(sock, channel_id) ::
       sock.setNoDelay(true)
       return Object.defineProperties @ 
-        this.createRWChannel(sock, sock)
+        this.createRWChannel(sock, sock, channel_id || protocol)
         @{} conn_info: @{} value() :: return sock_conn_info(sock)
 
 
-    bindChannel(sock) ::
-      const channel = this.createSocketChannel(sock)
-      channel.peer_info = hub.p2p.hello(hub, channel)
+    bindChannel(...args) ::
+      const channel = this.createSocketChannel(...args)
+      channel.peer_info = hub.p2p.hello(channel)
       return channel
 
-    createClient(_impl_) ::
+    createClient(channel_id, _impl_) ::
+      channel_id = @[] channel_id, false
       return new Promise @ (resolve, reject) => ::
         _impl_ @ function() ::
           const sock = this.unref().setKeepAlive(true)
-          const channel = _common_.bindChannel(sock)
+          const channel = _common_.bindChannel(sock, channel_id)
           resolve(channel)
         .on @ 'error', reject
 
-    createServer(onPeer, _impl_) ::
+    createServer(channel_id, onPeer, _impl_) ::
+      channel_id = @[] false, channel_id
       const svr = _impl_ @ sock => ::
         sock = sock.unref().setKeepAlive(false)
-        const channel = this.bindChannel(sock)
+        const channel = this.bindChannel(sock, channel_id)
         on_peer(channel)
 
       const on_peer = this.bindOnPeer(svr, onPeer)

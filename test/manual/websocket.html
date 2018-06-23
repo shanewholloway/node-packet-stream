@@ -3,6 +3,7 @@
 <title>Msg-Fabric-Endpoint WebSocket Tests</title>
 <script src='./browser.umd.js'></script>
 
+<h1>Msg-Fabric-Endpoint WebSocket Tests</h1>
 <script>
   const FabricHub = window.FabricHub = window['msg-fabric-core']
   const hub = window.hub = FabricHub.create('$browser$')
@@ -11,12 +12,12 @@
     (...args) => console.log('RECV in hello-browser:', args) )
 
 
-  console.log({hub})
-  console.log("hub.connect('ws://127.0.0.1:8000')")
+  console.log('WebSocket manual test:', {hub})
+  console.log("hub.connect('ws://127.0.0.1:8000/fantastic')")
 
   if (1) {
     const ws_chan = window.ws_chan =
-      hub.connect('ws://127.0.0.1:8000')
+      hub.connect('ws://127.0.0.1:8000/fantastic')
       .then(ws_chan => ws_chan.peer_info)
       .then(peer_info => {
         window.peer_info = peer_info

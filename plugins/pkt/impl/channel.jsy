@@ -41,7 +41,23 @@ export function bindCreateChannel(packPacket, unpackPacket) ::
     if null == channel_base ::
       channel_base = _channel_base_
 
-    const props = @{} send: @{} value: send
+
+    const channel_id = send_packed.channel_id
+    if null == channel_id ::
+      throw new TypeError @ 'Expected send_packed.channel_id'
+
+    let id_local, id_remote
+    if 'string' === typeof channel_id ::
+      id_local = id_remote = channel_id
+    else ::
+      id_local = channel_id[0] || channel_id[1]
+      id_remote = channel_id[1] || channel_id[0]
+
+    const props = @{}
+      send: @{} value: send
+      id_local: @{} value: id_local
+      id_remote: @{} value: id_remote
+
     if undefined === channel_base.undeliverable ::
       props.undeliverable = @{} value: undeliverable
     if undefined === channel_base.on_send_error ::

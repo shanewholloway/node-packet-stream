@@ -7,9 +7,10 @@ export function stream_common(hub) ::
 export function bind_channel(hub) ::
   const createChannel = hub._pkts_.bin_call.createChannel
 
-  return function (rstream, wstream) ::
+  return function (rstream, wstream, channel_id) ::
     const pkt_hdr = Buffer.alloc(2)
-    const [recv, channel] = createChannel @ hub.dispatch, send_packed
+    send_packed.channel_id = channel_id
+    const [recv, channel] = createChannel @ hub.router.dispatch, send_packed
     recvPacketStream @ rstream, recv
 
     let p_drain=null, on_drain
