@@ -34,10 +34,10 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-jsy": "^0.11.2",
-    "rollup": "^0.58.2",
+    "rollup": "^0.61.2",
     "rollup-plugin-gzip": "^1.3.0",
-    "rollup-plugin-jsy-babel": "^2.0.0",
-    "rollup-plugin-uglify": "^3.0.0",
+    "rollup-plugin-jsy-babel": "^2.1.2",
+    "rollup-plugin-uglify": "^4.0.0",
     "uglify-es": "3.3.9"
   },
   "babel": {

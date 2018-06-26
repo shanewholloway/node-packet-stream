@@ -1,9 +1,8 @@
 import pkg from './package.json'
 import {minify} from 'uglify-es'
-import rpi_uglify from 'rollup-plugin-uglify'
+import {uglify as rpi_uglify} from 'rollup-plugin-uglify'
 import rpi_gzip from "rollup-plugin-gzip"
 import rpi_jsy from 'rollup-plugin-jsy-babel'
-
 
 const sourcemap = 'inline'
 const plugins = [rpi_jsy()]

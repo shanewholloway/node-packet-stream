@@ -4,12 +4,13 @@ const {URL} = require('url')
 const {TextEncoder, TextDecoder} = require('util')
 Object.assign(global, {URL, TextDecoder, TextEncoder})
 
-const BasicHub = require('..')
+const BasicHub = require('msg-fabric-core')
 
-const tcp = require('../cjs/plugin-net-tcp')
-const tls = require('../cjs/plugin-shadow')
+const tcp = require('msg-fabric-core/cjs/plugin-net-tcp')
+const tls = require('msg-fabric-core/cjs/plugin-net-tls')
+const shadow = require('msg-fabric-core/cjs/plugin-shadow')
 
-const TestNetHub = BasicHub.plugin( tcp(), tls() )
+const TestNetHub = BasicHub.plugin( tcp(), tls(), shadow() )
 
 module.exports = exports = BasicHub
 Object.assign(exports, {
