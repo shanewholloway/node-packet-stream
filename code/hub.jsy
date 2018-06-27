@@ -2,7 +2,7 @@ import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'
 
-import {applyPlugins} from './utils.jsy'
+import {applyPlugins, cmpPlugins} from './utils.jsy'
 
 export class FabricHub ::
   static create(...args) :: return new this(...args)
@@ -119,8 +119,7 @@ export class FabricHub ::
   livePlugin(...livePluginList) ::
     return this.livePlugins(...livePluginList)
   livePlugins(...livePluginList) ::
-    livePluginList = livePluginList
-      .sort @ (a, b) => (0 | a.order) - (0 | b.order)
+    livePluginList = livePluginList.sort(cmpPlugins)
 
     applyPlugins @ 'live', livePluginList, this
     applyPlugins @ null, livePluginList, this
@@ -131,13 +130,17 @@ export class FabricHub ::
     return this.plugins(...pluginFunctions)
   static plugins(...pluginFunctions) ::
     const pluginList = Object.freeze @
-      this.prototype.pluginList
+      this.pluginList
         .concat @ pluginFunctions
-        .sort @ (a, b) => (0 | a.order) - (0 | b.order)
+        .sort @ cmpPlugins
+
+    const instPluginList = pluginList.slice()
 
     class FabricHub extends this ::
-    Object.defineProperties @ FabricHub.prototype, @{}
+    Object.defineProperties @ FabricHub, @{}
       pluginList: @{} value: pluginList
+    Object.defineProperties @ FabricHub.prototype, @{}
+      pluginList: @{} value: instPluginList
 
     class FabricRouter extends this.FabricRouter ::
     class TargetRouter extends this.TargetRouter ::
@@ -145,7 +148,8 @@ export class FabricHub ::
     Object.assign @ FabricHub, @{}
       FabricRouter, TargetRouter, P2PRouter
 
-    applyPlugins @ 'subclass', pluginList, FabricHub
+    applyPlugins @ 'subclass', pluginList, FabricHub, instPluginList
+    instPluginList.sort @ cmpPlugins
     return FabricHub
 
 
@@ -160,6 +164,9 @@ Object.defineProperties @ FabricHub.prototype, @{}
   is_fabric_hub: @{} value: true
   pluginList: @{} value: Object.freeze([])
   _hub_channel_: @{} value: Object.create(_hub_channel_)
+
+Object.defineProperties @ FabricHub, @{}
+  pluginList: @{} value: Object.freeze([])
 
 Object.assign @ FabricHub, @{}
   FabricRouter: FabricRouter_Base

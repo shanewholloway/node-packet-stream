@@ -39,6 +39,7 @@ export const timeoutResolve = (ms, answer) =>
     if tid.unref :: tid.unref()
 
 
+export const cmpPlugins = (a, b) => (0 | a.order) - (0 | b.order)
 export function applyPlugins(key, pluginList, ...args) ::
   if ! key :: key = null
   for let plugin of pluginList ::
