@@ -6,11 +6,13 @@ export class P2PRouter extends TargetRouter ::
     super('', router)
 
     this.public_routes = []
+    this.signed_routes = []
     this.hello_body = {}
     Object.defineProperties @ this, @{}
       _random_base64: @{} value: hub.data_utils.random_base64
       _queries: @{} value: this._createQueryMap()
       peerChannelDiscovery: @{} value: []
+      verifyRouteAlgs: @{} value: {}
 
     this.initP2P()
 
@@ -25,6 +27,19 @@ export class P2PRouter extends TargetRouter ::
     if ! id :: throw new Error @ 'Invalid route identifier'
     this.public_routes.push(id)
     return this
+
+  async publishSignedRoute(route) ::
+    if 'function' !== typeof route.signRouteId ::
+      throw new TypeError @ `Expected route with signRouteId()`
+
+    await route.ready
+    this.signed_routes[route.id_route] =
+      (...args) => route.signRouteId(...args)
+
+  registerVerifyRoute(alg, verify) ::
+    if 'function' !== typeof verify ::
+      throw new TypeError @ `Expected route with signRouteId()`
+    this.verifyRouteAlgs[`alg::${alg}`] = verify
 
 
   initP2P() ::
@@ -45,45 +60,78 @@ export class P2PRouter extends TargetRouter ::
     ans.then(cleanup, cleanup)
     return ans
 
-  _helloHandshake(id_target, req_id, id0, id1) ::
+  _helloHandshake(id_target, req_id, signed) ::
     const body = Object.assign @ {}, this.hello_body,
-      @{} req_id, routes: this.public_routes
+      @{} req_id, routes: this.public_routes, signed
 
     return @{} id_target, id_route: '', body
 
-  _tgt_hello(pkt, pktctx) ::
+  async _tgt_hello(pkt, pktctx) ::
     const channel = pktctx.channel
+    const info = pkt.json(), req_id = info.req_id
+
+    channel.send @ this._helloHandshake @
+      'olleh', req_id, await this._sign_routes(req_id, channel)
+
+    await this._applyHelloInfo(info, pkt, pktctx)
+
+  async _tgt_olleh(pkt, pktctx) ::
     const info = pkt.json()
-
-    //console.log @ 'TODO: use channel id to sign routes to prove ownership:', channel.id_local, channel.id_remote
-    channel.send @ this._helloHandshake @ 'olleh', info.req_id
-
-    this._applyHelloInfo(info, pkt, pktctx)
-
-  _tgt_olleh(pkt, pktctx) ::
-    const info = pkt.json()
-
-    this._applyHelloInfo(info, pkt, pktctx)
-
     const resolve = this._queries.get(info.req_id)
     if undefined !== resolve ::
+      await this._applyHelloInfo(info, pkt, pktctx)
+
       delete info.req_id
       resolve(info)
 
-  _applyHelloInfo(info, pkt, pktctx) ::
-    const {channel, hub_router} = pktctx
+  async _applyHelloInfo(info, pkt, pktctx) ::
+    if info.routes && this.allowUnsigned(pktctx.channel) ::
+      this._applyUnsignedRoutes(info, pktctx)
 
-    //console.log @ 'TODO: verify using channel id:', channel.id_local, channel.id_remote
-    const override = this.trustChannel(channel)
-    for const id_route of info.routes ::
-      if 'string' === typeof id_route ::
-        hub_router.registerPeerRoute @ id_route, channel, override
+    if info.signed ::
+      await this._applySignedRoutes(info, pktctx)
 
     for const cb of this.peerChannelDiscovery || [] ::
       try :: cb(info, pkt, pktctx)
       catch err ::
         this._on_error @ 'peer_discovery_notification', err
 
-  trustChannel(channel) :: return false
+
+  allowUnsigned(channel) :: return false !== channel.trusted
+  trustChannel(channel) :: return true === channel.trusted
+
+  _applyUnsignedRoutes(info, pktctx) ::
+    const {channel, hub_router} = pktctx
+    const override = this.trustChannel(channel)
+    for const id_route of info.routes ::
+      if 'string' === typeof id_route ::
+        hub_router.registerPeerRoute @ id_route, channel, override
+
+
+  async _applySignedRoutes(info, pktctx) ::
+    const {channel, hub_router} = pktctx, {req_id} = info
+    const verifyRouteAlgs = this.verifyRouteAlgs
+
+    const q = []
+    for const [id_route, rec] of info.signed ::
+      const verify = verifyRouteAlgs[`alg::${rec.alg}`]
+      if ! verify :: continue
+
+      q.push @ 
+        Promise.resolve @
+          verify @ req_id, channel, id_route, rec
+        .then @ valid => ! valid ? false : @
+          hub_router.registerPeerRoute @ id_route, channel, true
+
+      if q.length > 3 :: await Promise.all(q)
+
+    await Promise.all(q)
+
+  async _sign_routes(req_id, channel) ::
+    const signed = []
+    for const [id_route, signRouteId] of Object.entries(this.signed_routes) ::
+      signed.push @# id_route, await signRouteId(req_id, channel)
+    if signed.length :: return signed
+
 
 export default P2PRouter
