@@ -153,7 +153,7 @@ describe @ 'Router', @=> ::
         @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
 
 
-  describe @ 'upstream', @=> ::
+  describe @ 'upstream and hierarchical', @=> ::
 
     it @ 'should call router.upstream if route does not exist', @=>> ::
       hub.router.upstream = pkt => ::
@@ -167,3 +167,21 @@ describe @ 'Router', @=> ::
       expect(log.calls).to.be.deep.equal @#
         @[] 'upstream', 'dne-route', 'dne-tgt'
 
+
+    it @ 'should call hierarchical parent route if route does not exist', @=>> ::
+      hub.router.registerRoute @ 'a', pkt => log @ `route a :: ${pkt.id_route}`
+      hub.router.registerRoute @ 'c.d', pkt => log @ `route c.d :: ${pkt.id_route}`
+
+      await test_chan.send @: id_route: 'a.b', id_target: 'tgt', body: {}
+      await test_chan.send @: id_route: 'c', id_target: 'tgt', body: {}
+      await test_chan.send @: id_route: 'c.d', id_target: 'tgt', body: {}
+      await test_chan.send @: id_route: 'c.d.e', id_target: 'tgt', body: {}
+      await test_chan.send @: id_route: 'a.e', id_target: 'tgt', body: {}
+      
+      expect(log.calls).to.be.deep.equal @#
+        'route a :: a.b'
+        @[] 'undeliverable', @{} id_route: 'c', id_target: 'tgt', mode: 'route'
+        'route c.d :: c.d'
+        @[] 'undeliverable', @{} id_route: 'c.d.e', id_target: 'tgt', mode: 'route'
+        'route a :: a.e'
+        

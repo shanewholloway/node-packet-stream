@@ -33,6 +33,11 @@ export class FabricRouter extends FabricBase ::
       let route = routes_map.get(id_route)
       if undefined !== route :: return route
 
+      const parts = id_route.split('.', 2)
+      if 2 === parts.length ::
+        route = routes_map.get(parts[0])
+        if undefined !== route :: return route
+
       if allowDiscover ::
         route = await hub_router.discoverRoute(id_route)
         if undefined !== route :: return route
