@@ -6,16 +6,19 @@ export class TargetRouter extends FabricBase ::
   constructor(id_route, router, hub) ::
     super()
     Object.defineProperties @ this, @{}
-      id_route: @{} value: id_route, enumerable: true
       targetDiscovery: @{} value: this._discoveryDefault.slice()
 
     this._bindDispatchTarget(id_route, router)
 
-  _bindDispatchTarget(id_route, router) ::
+  _bindDispatchTarget(id_route, router, hub) ::
     // as closures over private variables (targets_map)
 
     const tgt_router = this
     const targets_map = this._createTargetsMap()
+
+    const ready = 'string' === typeof id_route
+      ? Promise.resolve @ registerRoute @ id_route
+      : id_route.then @ registerRoute
 
     Object.defineProperties @ this, @{}
       registerTarget: @{} value: registerTarget
@@ -23,9 +26,8 @@ export class TargetRouter extends FabricBase ::
       registerTargetObj: @{} value: registerTargetObj
       unregisterTargetObj: @{} value: unregisterTargetObj
       _bindDispatchTarget: @{} value: false
+      ready: @{} value: ready
 
-    dispatch_target.id_route = id_route
-    router.registerRoute @ id_route, dispatch_target
     return this
 
     async function dispatch_target(pkt, pktctx) ::
@@ -47,6 +49,14 @@ export class TargetRouter extends FabricBase ::
       pktctx.tgt_router = tgt_router
       await target(pkt, pktctx)
 
+
+    function registerRoute(id_route) ::
+      Object.defineProperties @ tgt_router, @{}
+        id_route: @{} value: id_route, enumerable: true
+
+      dispatch_target.id_route = id_route
+      router.registerRoute @ id_route, dispatch_target
+      return true
 
     function registerTarget(id_target, target, override) ::
       if 'function' !== typeof target ::
