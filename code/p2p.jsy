@@ -6,13 +6,11 @@ export class P2PRouter extends TargetRouter ::
     super('', router)
 
     this.public_routes = []
-    this.signed_routes = []
     this.hello_body = {}
     Object.defineProperties @ this, @{}
       _random_base64: @{} value: hub.data_utils.random_base64
       _queries: @{} value: this._createQueryMap()
       peerChannelDiscovery: @{} value: []
-      verifyRouteAlgs: @{} value: {}
 
     this.initP2P()
 
@@ -32,13 +30,20 @@ export class P2PRouter extends TargetRouter ::
     if 'function' !== typeof route.signRouteId ::
       throw new TypeError @ `Expected route with signRouteId()`
 
+    let signed_routes = this.signed_routes || []
+    if 0 === signed_routes.length ::
+      this.signed_routes = signed_routes
+
     await route.ready
-    this.signed_routes[route.id_route] =
+    signed_routes[route.id_route] =
       (...args) => route.signRouteId(...args)
 
   registerVerifyRoute(alg, verify) ::
     if 'function' !== typeof verify ::
       throw new TypeError @ `Expected route with signRouteId()`
+    if undefined === this.verifyRouteAlgs ::
+      Object.defineProperties @ this, @{}
+        verifyRouteAlgs: @{} value: {}
     this.verifyRouteAlgs[`alg::${alg}`] = verify
 
 
@@ -61,8 +66,12 @@ export class P2PRouter extends TargetRouter ::
     return ans
 
   _helloHandshake(id_target, req_id, signed) ::
+    let algs
+    if ! signed && undefined !== this.verifyRouteAlgs ::
+      algs = Object.keys @ this.verifyRouteAlgs
+
     const body = Object.assign @ {}, this.hello_body,
-      @{} req_id, routes: this.public_routes, signed
+      @{} req_id, routes: this.public_routes, algs, signed
 
     return @{} id_target, id_route: '', body
 
@@ -70,8 +79,9 @@ export class P2PRouter extends TargetRouter ::
     const channel = pktctx.channel
     const info = pkt.json(), req_id = info.req_id
 
+    const signed = info.algs && await this._sign_routes(req_id, channel)
     channel.send @ this._helloHandshake @
-      'olleh', req_id, await this._sign_routes(req_id, channel)
+      'olleh', req_id, signed
 
     await this._applyHelloInfo(info, pkt, pktctx)
 
@@ -109,9 +119,10 @@ export class P2PRouter extends TargetRouter ::
 
 
   async _applySignedRoutes(info, pktctx) ::
-    const {channel, hub_router} = pktctx, {req_id} = info
     const verifyRouteAlgs = this.verifyRouteAlgs
+    if undefined === verifyRouteAlgs :: return
 
+    const {channel, hub_router} = pktctx, {req_id} = info
     const q = []
     for const [id_route, rec] of info.signed ::
       const verify = verifyRouteAlgs[`alg::${rec.alg}`]

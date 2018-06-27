@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.6.0-2",
+  "version": "0.6.0-3",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
