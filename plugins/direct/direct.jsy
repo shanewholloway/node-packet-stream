@@ -4,10 +4,10 @@ export default function direct_plugin(plugin_options={}) ::
   return hub => ::
     const _createRWChannel = hub._pkts_.bin_call.createChannel
     return hub[pi_name] = Object.assign @ connect, @{}
-      connect, connectDirectPair, connectDirectChannel
+      connect, pair, connectDirectPair, connectDirectChannel
 
-    function connect(peer) ::
-      return connectDirectPair(peer)[0]
+    function connect(peer) :: return connectDirectPair(peer)[0]
+    function pair(peer) :: return Promise.all @ connectDirectPair(peer)
 
     function connectDirectPair(peer) ::
       if peer[pi_name] && 'function' === typeof peer[pi_name].connectDirectChannel ::
@@ -23,11 +23,12 @@ export default function direct_plugin(plugin_options={}) ::
 
       return @[] chan_self, chan_peer
 
-    function connectDirectChannel(send, channel_id) ::
+    function connectDirectChannel(send, channel_id, no_hello) ::
       send_packed.channel_id = channel_id || 'direct'
       const [recv, channel] = _createRWChannel @ hub.dispatch, send_packed
-      channel.peer_info = Promise.resolve().then @=>
-        hub.p2p.hello(channel)
+      if ! no_hello ::
+        channel.peer_info = Promise.resolve().then @=>
+          hub.p2p.hello(channel)
       return @[] recv, Promise.resolve(channel)
 
       function send_packed(d_pkt) ::
