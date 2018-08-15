@@ -59,24 +59,24 @@ function as_op_frame(op_frame) ::
 
 // unroll looping over the functions
 const _as_pack_fn = @[]
-  () => hdr => @#
-  (f0) => hdr => @# f0(hdr)
-  (f0, f1) => hdr => @# f0(hdr), f1(hdr)
-  (f0, f1, f2) => hdr => @# f0(hdr), f1(hdr), f2(hdr)
-  (f0, f1, f2, f3) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr)
-  (f0, f1, f2, f3, f4) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr), f4(hdr)
+    () => hdr => @#
+  , (f0) => hdr => @# f0(hdr)
+  , (f0, f1) => hdr => @# f0(hdr), f1(hdr)
+  , (f0, f1, f2) => hdr => @# f0(hdr), f1(hdr), f2(hdr)
+  , (f0, f1, f2, f3) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr)
+  , (f0, f1, f2, f3, f4) => hdr => @# f0(hdr), f1(hdr), f2(hdr), f3(hdr), f4(hdr)
 
 const _as_packN_fn = (...fns) =>
   hdr => fns.map @ f => f(hdr)
 
 // unroll looping over the functions
 const _as_unpack_fn = @[]
-  () => (hdr, op) => @ op
-  (f0) => (hdr, op) => @ f0(hdr[2], op), op
-  (f0, f1) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), op
-  (f0, f1, f2) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), op
-  (f0, f1, f2, f3) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), op
-  (f0, f1, f2, f3, f4) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), f4(hdr[6], op), op
+    () => (hdr, op) => @ op
+  , (f0) => (hdr, op) => @ f0(hdr[2], op), op
+  , (f0, f1) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), op
+  , (f0, f1, f2) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), op
+  , (f0, f1, f2, f3) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), op
+  , (f0, f1, f2, f3, f4) => (hdr, op) => @ f0(hdr[2], op), f1(hdr[3], op), f2(hdr[4], op), f3(hdr[5], op), f4(hdr[6], op), op
 
 const _as_unpackN_fn = (...fns) =>
   (hdr, op) => ::
