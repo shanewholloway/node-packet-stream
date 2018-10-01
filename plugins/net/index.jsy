@@ -1,5 +1,5 @@
 export * from './_stream_common.jsy'
 export * from './_net_common.jsy'
-export {default as direct} from './direct.jsy'
+export {default as direct, default as direct_stream} from './direct.jsy'
 export {default as tls} from './tls.jsy'
 export {default as tcp} from './tcp.jsy'
