@@ -43,6 +43,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
         _impl_ @ function() ::
           const sock = this.unref().setKeepAlive(true)
           const channel = _common_.bindChannel(sock, channel_id)
+          Object.defineProperty @ channel, 'sock', {value: sock}
           resolve(channel)
         .on @ 'error', reject
 
@@ -51,6 +52,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
       const svr = _impl_ @ sock => ::
         sock = sock.unref().setKeepAlive(false)
         const channel = this.bindChannel(sock, channel_id)
+        Object.defineProperty @ channel, 'sock', {value: sock}
         on_peer(channel)
 
       const on_peer = this.bindOnPeer(svr, onPeer)

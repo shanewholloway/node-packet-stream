@@ -3,7 +3,7 @@ import TargetRouter from './targets.jsy'
 
 export class P2PRouter extends TargetRouter ::
   constructor(router, hub) ::
-    super('', router)
+    super('', router, hub)
 
     this.public_routes = []
     this.hello_body = {}

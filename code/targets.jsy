@@ -8,7 +8,7 @@ export class TargetRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       targetDiscovery: @{} value: this._discoveryDefault.slice()
 
-    this._bindDispatchTarget(id_route, router)
+    this._bindDispatchTarget(id_route, router, hub)
 
   _bindDispatchTarget(id_route, router, hub) ::
     // as closures over private variables (targets_map)
@@ -21,11 +21,13 @@ export class TargetRouter extends FabricBase ::
       : id_route.then @ registerRoute
 
     Object.defineProperties @ this, @{}
+      hasTarget: @{} value: hasTarget
       registerTarget: @{} value: registerTarget
       unregisterTarget: @{} value: unregisterTarget
       registerTargetObj: @{} value: registerTargetObj
       unregisterTargetObj: @{} value: unregisterTargetObj
       _bindDispatchTarget: @{} value: false
+      data_utils: @{} value: hub.data_utils
       ready: @{} value: ready
 
     return this
@@ -58,6 +60,9 @@ export class TargetRouter extends FabricBase ::
       router.registerRoute @ id_route, dispatch_target
       return true
 
+    function hasTarget(id_target) ::
+      return targets_map.has(id_target)
+
     function registerTarget(id_target, target, override) ::
       if 'function' !== typeof target ::
         throw new TypeError @ `Expected 'target' function`
@@ -77,6 +82,10 @@ export class TargetRouter extends FabricBase ::
     function unregisterTargetObj(kw_target) ::
       return unregisterTarget(kw_target.id_target)
 
+  newTargetId() ::
+    return this.data_utils.random_base64(6)
+  createTarget(target) ::
+    return this.registerTarget(this.newTargetId(), target)
 
   async discoverTarget(id_target, pktctx) ::
     let lstDiscovery = this.targetDiscovery

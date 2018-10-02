@@ -22,6 +22,7 @@ export class FabricRouter extends FabricBase ::
       _bindDispatchRoutes: @{} value: false
       dispatch: @{} value: dispatch
       resolveRoute: @{} value: resolveRoute
+      hasRoute: @{} value: hasRoute
       registerRoute: @{} value: registerRoute
       unregisterRoute: @{} value: unregisterRoute
       registerRouteObj: @{} value: registerRouteObj
@@ -46,7 +47,12 @@ export class FabricRouter extends FabricBase ::
       route = routes_map.get(id_route)
       if undefined !== route :: return route
 
+      if 2 === parts.length ::
+        route = routes_map.get(parts[0])
+        if undefined !== route :: return route
+
       if allowUpstream ::
+        // otherwise just send upstream
         route = await hub_router.upstreamRoute(id_route)
       return route
 
@@ -74,6 +80,9 @@ export class FabricRouter extends FabricBase ::
             pq.then @=> dispatch_one @ pkt, pktctx
         : pq.then @=> dispatch_one @ pktArg, pktctx
 
+
+    function hasRoute(id_route) ::
+      return routes_map.has(id_route)
 
     function registerRoute(id_route, route, override) ::
       if 'function' !== typeof route ::
@@ -130,6 +139,6 @@ export class FabricRouter extends FabricBase ::
 
   registerDynamicRouteObj(kw_route) ::
     const {id_route, route} = kw_route
-    return this.registerDynamicRouteObj @ id_route, route || kw_route
+    return this.registerDynamicRoute @ id_route, route || kw_route
 
 export default FabricRouter
