@@ -1,5 +1,5 @@
-import {inspect} from 'util'
-import Hub from '../_setup'
+const { inspect } = require('util')
+const Hub = require('./_setup')
 
 const hub = Hub.create('hub')
 const {id_route} = hub.local

@@ -1,4 +1,6 @@
-import {TestNetHub as Hub} from '../_setup'
+const BasicHub = require('./_setup')
+const tcp_stream_plugin = require('msg-fabric-core/cjs/plugin-net-tcp')
+const Hub = BasicHub.plugin @ tcp_stream_plugin()
 
 const ha = Hub.create('$ha$')
 const hb = Hub.create('$hb$')

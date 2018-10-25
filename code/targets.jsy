@@ -1,4 +1,4 @@
-import {FabricBase} from './utils.jsy'
+import { FabricBase } from './utils.jsy'
 
 export class TargetRouter extends FabricBase ::
   _createTargetsMap() :: return new Map()

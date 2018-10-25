@@ -1,144 +1,113 @@
-import pkg from './package.json'
-import { terser as rpi_terser } from 'rollup-plugin-terser'
-import rpi_gzip from "rollup-plugin-gzip"
 import rpi_jsy from 'rollup-plugin-jsy-lite'
 
-const sourcemap = 'inline'
-const plugins = [rpi_jsy()]
+import pkg from './package.json'
+const pkg_name = pkg.name.replace('-', '_')
 
-const ugly = { warnings: true, output: {comments: false, max_line_len: 256}}
-const prod_plugins = plugins.concat([
-  rpi_terser({ }),
-  rpi_gzip({ gzipOptions: {level: 9 } }),
+const configs = []
+export default configs
+
+const sourcemap = true
+
+const plugins_base = []
+const plugins_generic = [ rpi_jsy() ].concat(plugins_base)
+const plugins_nodejs = [ rpi_jsy({defines: {PLAT_NODEJS: true}}) ].concat(plugins_base)
+const plugins_web = [ rpi_jsy({defines: {PLAT_WEB: true}}) ].concat(plugins_base)
+
+import { terser as rpi_terser } from 'rollup-plugin-terser'
+//import rpi_gzip from "rollup-plugin-gzip"
+const min_plugins = false //true
+const plugins_min = plugins_web.concat([
+  rpi_terser({}),
+  //rpi_gzip({ gzipOptions: {level: 9 } }),
 ])
 
-export default [].concat(
-  package_core(),
-  package_plugin_platform(),
-  package_plugin_pkt(),
-  package_plugin_msgs(),
-  package_plugin_shadow(),
-  package_plugin_direct(),
-  package_plugin_net(),
-  package_plugin_web(),
-).filter(e => e)
+
+add_core_jsy('core', null)
+add_core_jsy('index', true, {module_name: pkg_name})
+
+plugin_pkt()
+plugin_msgs()
+plugin_shadow()
+
+plugin_direct()
+plugin_net()
+plugin_web()
 
 
-function package_core() {
-  return [
-    { input: 'code/index.jsy',
+function plugin_pkt() {
+  add_plugin_jsy('pkt/index', 'plugin-pkt-all', {exports: 'named'})
+  add_plugin_jsy('pkt/node', 'plugin-pkt-node', {plat_web: false})
+  add_plugin_jsy('pkt/browser', 'plugin-pkt-browser', {plat_nodejs: false})
+  add_plugin_jsy('pkt/browser_line', 'plugin-pkt-browser-line', {plat_nodejs: false})
+}
+function plugin_msgs() {
+  add_plugin_jsy('msgs/index', 'plugin-msgs-all', {exports: 'named'})
+  add_plugin_jsy('msgs/node', 'plugin-msgs-node', {plat_web: false})
+  add_plugin_jsy('msgs/plugin', 'plugin-msgs', {})
+}
+
+function plugin_shadow() {
+  add_plugin_jsy('shadow/index', 'plugin-shadow', {})
+}
+
+
+function plugin_direct() {
+  add_plugin_jsy('direct/index', 'plugin-direct-all', {exports: 'named'})
+}
+function plugin_net() {
+  const external_nodejs = ['net', 'tls', 'stream']
+
+  add_plugin_jsy('net/index', 'plugin-net-all', {plat_web: false, external_nodejs, exports: 'named'})
+  add_plugin_jsy('net/tcp', 'plugin-net-tcp', {plat_web: false, external_nodejs})
+  add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs})
+  add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
+}
+function plugin_web() {
+  add_plugin_jsy('web/index', 'plugin-web-all', {exports: 'named'})
+  add_plugin_jsy('web/web', 'plugin-web', {out_name: 'plugin-web'})
+}
+
+
+
+
+function add_core_jsy(src_name, inc_min, kw) {
+  return _add_jsy('code', src_name, src_name, inc_min, kw) }
+function add_plugin_jsy(src_name, module_name, kw) {
+  const out_name = kw.out_name || ('plugin-'+src_name.replace(/\//g,'-')).replace('-index', '')
+  return _add_jsy('plugins', src_name, out_name, min_plugins, {module_name, ... kw}) }
+
+function _add_jsy(src_root, src_name, out_name, inc_min, {module_name, plat_nodejs, plat_web, exports, external, external_nodejs, external_web}={}) {
+  if (null == plat_nodejs) plat_nodejs = true
+  if (null == plat_web) plat_web = true
+
+  if (null == external) external = []
+  if (null == external_web) external_web = external.concat([])
+  if (null == external_nodejs) external_nodejs = external.concat(['url', 'crypto', 'stream', 'net', 'tls'])
+
+  if (plat_nodejs && plugins_nodejs)
+    configs.push({
+      input: `${src_root}/${src_name}.jsy`,
+      plugins: plugins_nodejs, external: external_nodejs,
       output: [
-        { file: 'esm/index.js', format: 'es', sourcemap },
-        { file: 'cjs/index.js', format: 'cjs', sourcemap, exports: 'named' },
-      ],
-      external: [], plugins },
+        null !== inc_min &&
+          { file: `cjs/${out_name}.js`, format: 'cjs', exports, sourcemap },
+        { file: `esm/${out_name}.js`, format: 'es', sourcemap },
+      ].filter(Boolean)})
 
-    { input: 'code/index.node.jsy',
+  if (plat_web && plugins_web)
+    configs.push({
+      input: `${src_root}/${src_name}.jsy`,
+      plugins: plugins_web, external: external_web,
       output: [
-        { file: 'esm/core-node.js', format: 'es', sourcemap },
-        { file: pkg.module, format: 'es', sourcemap },
-        { file: pkg.main, format: 'cjs', sourcemap },
-      ],
-      external: ['crypto', 'url', 'stream'], plugins },
+        null !== inc_min &&
+          { file: `umd/${out_name}${inc_min ? '.dbg' : ''}.js`, format: 'umd', name:module_name, exports, sourcemap },
+        { file: `esm/web/${out_name}.js`, format: 'es', sourcemap },
+      ].filter(Boolean)})
 
-    { input: 'code/index.browser.jsy',
-      output: [
-        { file: 'cjs/core-browser.js', format: 'cjs', sourcemap },
-        { file: 'esm/core-browser.js', format: 'es', sourcemap },
-        { file: 'umd/msg-fabric-core.js', format: 'umd', sourcemap, name:'msg-fabric-core' },
-        { file: 'test/manual/browser.umd.js', format: 'umd', sourcemap, name:'msg-fabric-core' },
-      ],
-      external: [], plugins },
+  if (plat_web && inc_min && 'undefined' !== typeof plugins_min)
+    configs.push({
+      input: `${src_root}/${src_name}.jsy`,
+      plugins: plugins_min, external: external_web,
+      output: { file: `umd/${out_name}.min.js`, format: 'umd', name:module_name, exports }})
+}
 
-    prod_plugins &&
-      { input: 'code/index.browser.jsy',
-        output: [
-          { file: pkg.browser, format: 'umd', name:'msg-fabric-core' },
-        ],
-        external: [], plugins: prod_plugins },
-
-  ]}
-
-
-function package_plugin_platform() {
-  const external_node=['crypto', 'url']
-  const bundles = {
-    'index': ['plugin-platform-all', external_node, {exports: 'named'}],
-    'node': ['plugin-platform-node', external_node],
-    'browser': ['plugin-platform-browser', []],
-  }
-
-  return bundleForPlugin(bundles, 'platform') }
-
-
-function package_plugin_pkt() {
-  const bundles = {
-    'index': ['plugin-pkt-all', [], {exports: 'named'}],
-    'node': ['plugin-pkt-node', []],
-    'browser': ['plugin-pkt-browser', []],
-    'browser_line': ['plugin-pkt-browser-line', []],
-  }
-
-  return bundleForPlugin(bundles, 'pkt') }
-
-
-function package_plugin_msgs() {
-  const bundles = {
-    'index': ['plugin-msgs-all', ['stream'], {exports: 'named'}],
-    'node': ['plugin-msgs-node', ['stream']],
-    'plugin': ['plugin-msgs', []],
-  }
-
-  return bundleForPlugin(bundles, 'msgs') }
-
-
-function package_plugin_shadow() {
-  const bundles = {
-    'index': ['plugin-shadow', []],
-  }
-
-  return bundleForPlugin(bundles, 'shadow') }
-
-
-function package_plugin_direct() {
-  const bundles = {
-    'index': ['plugin-js-direct-all', [], {exports: 'named'}],
-    'direct': ['plugin-js-direct', []],
-  }
-
-  return bundleForPlugin(bundles, 'direct') }
-
-
-function package_plugin_net() {
-  const bundles = {
-    'index': ['plugin-net-all', ['net', 'tls', 'stream'], {exports: 'named'}],
-    'tcp': ['plugin-net-tcp', ['net']],
-    'tls': ['plugin-net-tls', ['tls']],
-    'direct': ['plugin-net-direct', ['stream']],
-  }
-
-  return bundleForPlugin(bundles, 'net') }
-
-
-function package_plugin_web() {
-  const bundles = {
-    'index': ['plugin-web-all', [], {exports: 'named'}],
-    'web': ['plugin-web', []],
-  }
-
-  return bundleForPlugin(bundles, 'web') }
-
-
-
-function bundleForPlugin(bundles, plugin_name) {
-  const as_bundle = (filename, out, external, {exports}) => (
-    { input: `plugins/${plugin_name}/${filename}.jsy`,
-      output: [
-        { file: `cjs/${out}.js`, format: 'cjs', sourcemap, exports },
-        { file: `esm/${out}.js`, format: 'es', sourcemap },
-      ],
-      external, plugins } )
-
-  return Object.entries(bundles)
-    .map(([filename, [out, external, kw]]) =>
-      as_bundle( filename, out, external||[], kw||{} ) )}

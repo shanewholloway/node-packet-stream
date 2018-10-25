@@ -4,7 +4,9 @@ export * from './send_anon.jsy'
 export * from './source.jsy'
 export * from './send_from.jsy'
 export * from './msg_stream.jsy'
-export * from './msg_stream.node.jsy'
+
+#IF PLAT_NODEJS
+  export * from './msg_stream.node.jsy'
+  export {default as node_plugin} from './node.jsy'
 
 export {default as plugin, default as default} from './plugin.jsy'
-export {default as node_plugin} from './node.jsy'

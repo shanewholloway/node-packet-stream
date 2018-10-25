@@ -1,5 +1,5 @@
 const isArray = Array.isArray
-import {FabricBase} from './utils.jsy'
+import { FabricBase } from './utils.jsy'
 
 export class FabricRouter extends FabricBase ::
   _createRoutesMap() :: return new Map()

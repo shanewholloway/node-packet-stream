@@ -1,2 +1,0 @@
-export {default as browser} from './browser.jsy'
-export {default as node, default as default} from './node.jsy'

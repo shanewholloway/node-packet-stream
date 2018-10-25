@@ -1,5 +1,6 @@
-import Hub from '../_setup'
-const pi_shadow = require('../../cjs/plugin-shadow')
+const Hub = require('./_setup')
+const pi_shadow = require('msg-fabric-core/cjs/plugin-shadow')
+
 const TestHub = Hub.plugin @
   pi_shadow @:
     shadow_id(id_target) ::

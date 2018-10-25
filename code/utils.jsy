@@ -1,3 +1,5 @@
+import data_utils from './platform.jsy'
+
 export function promiseQueue(src) ::
   let tip = null
   return function () ::
@@ -52,6 +54,7 @@ export function applyPlugins(key, pluginList, ...args) ::
 export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
+  data_utils
   _promiseQueue: promiseQueue
   _discoverFirst: discoverFirst
   _discoveryDefault: []

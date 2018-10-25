@@ -1,4 +1,4 @@
-import Hub from '../_setup'
+const Hub = require('./_setup')
 
 const ha = Hub.create('$ha$')
 const hb = Hub.create('$hb$')

@@ -25,7 +25,7 @@ export default function direct_plugin(plugin_options={}) ::
 
     function connectDirectChannel(send, channel_id, no_hello) ::
       send_packed.channel_id = channel_id || 'direct'
-      const [recv, channel] = _createRWChannel @ hub.dispatch, send_packed
+      const [recv, channel] = _createRWChannel @ hub.router.dispatch, send_packed
       if ! no_hello ::
         channel.peer_info = Promise.resolve().then @=>
           hub.p2p.hello(channel)

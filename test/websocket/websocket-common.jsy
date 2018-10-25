@@ -1,7 +1,8 @@
 const fs = require('fs')
 
-import BasicHub from '../_setup'
-import web_plugin from '../../cjs/plugin-web'
+const BasicHub = require('msg-fabric-core')
+const web_plugin = require('msg-fabric-core/cjs/plugin-web')
+
 const WebFabricHub = BasicHub.plugin @ web_plugin()
 export const hub = WebFabricHub.create('$server$')
 

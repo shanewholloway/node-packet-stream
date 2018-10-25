@@ -1,8 +1,9 @@
+import data_utils from './platform.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'
 
-import {applyPlugins, cmpPlugins} from './utils.jsy'
+import { applyPlugins, cmpPlugins } from './utils.jsy'
 
 export class FabricHub ::
   static create(...args) :: return new this(...args)
@@ -160,15 +161,14 @@ const _hub_channel_ = @{}
     console.warn @ '~~ undeliverable «hub»', @{}
       mode, id_route, id_target
 
-Object.defineProperties @ FabricHub.prototype, @{}
-  is_fabric_hub: @{} value: true
-  pluginList: @{} value: Object.freeze([])
-  _hub_channel_: @{} value: Object.create(_hub_channel_)
-
-Object.defineProperties @ FabricHub, @{}
-  pluginList: @{} value: Object.freeze([])
+Object.assign @ FabricHub.prototype, @{}
+  data_utils
+  is_fabric_hub: true
+  pluginList: Object.freeze([])
+  _hub_channel_: Object.create(_hub_channel_)
 
 Object.assign @ FabricHub, @{}
+  pluginList: Object.freeze([])
   FabricRouter: FabricRouter_Base
   TargetRouter: TargetRouter_Base
   P2PRouter: P2PRouter_Base

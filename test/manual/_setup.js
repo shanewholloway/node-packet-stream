@@ -1,8 +1,8 @@
 require('source-map-support').install()
 
-const {URL} = require('url')
-const {TextEncoder, TextDecoder} = require('util')
-Object.assign(global, {URL, TextDecoder, TextEncoder})
+const { URL } = require('url')
+const { TextEncoder, TextDecoder } = require('util')
+Object.assign(global, { URL, TextDecoder, TextEncoder })
 
 const BasicHub = require('msg-fabric-core')
 
@@ -15,6 +15,7 @@ const TestNetHub = BasicHub.plugin( tcp(), tls(), shadow() )
 module.exports = exports = BasicHub
 Object.assign(exports, {
   default: BasicHub,
+  Hub: BasicHub,
   BasicHub,
   TestNetHub,
 })

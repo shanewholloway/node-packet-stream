@@ -6,30 +6,23 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "chokidar-cli": "^1.2.1",
     "ec-pem": "^0.18.0",
     "faye-websocket": "^0.11.1",
+    "jsy-node": "^1.3.5",
     "mocha": "^5.2.0",
-    "npm-run-all": "^4.1.3",
     "rollup": "^0.66.6",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "sinon": "^7.1.0",
     "ws": "^6.1.0"
   },
-  "babel": {
-    "presets": "jsy/lean"
-  },
   "scripts": {
-    "prebuild": "test -d ./node_modules || npm -s install",
-    "pretest:one": "npm -s run build",
+    "prebuild": "test -d ./node_modules || npm ci",
+    "pretest": "npm -s run build",
     "build": "rollup --config",
-    "build:watch": "rollup --config --watch",
+    "watch": "rollup --config --watch",
     "test": "npm -s run test:one",
-    "test:one": "mocha --require babel-core/register ./unittest/node.js",
-    "test:min": "mocha --reporter=min --require babel-core/register ./unittest/node.js",
-    "test:watch": "run-p  build:watch  :test:chokidar",
-    "watch": "run-p  build:watch  :test:chokidar",
-    ":test:chokidar": "chokidar -d 1200 -t 15000 '../esm/**' './unittest/**' './unit/**' -c 'npm -s run test:min'"
+    "test:one": "mocha ./__unittest.cjs.js",
+    "test:min": "mocha --reporter=min ./__unittest.cjs.js"
   }
 }
