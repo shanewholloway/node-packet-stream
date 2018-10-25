@@ -1,6 +1,5 @@
 import pkg from './package.json'
-import {minify} from 'uglify-es'
-import {uglify as rpi_uglify} from 'rollup-plugin-uglify'
+import { terser as rpi_terser } from 'rollup-plugin-terser'
 import rpi_gzip from "rollup-plugin-gzip"
 import rpi_jsy from 'rollup-plugin-jsy-lite'
 
@@ -9,7 +8,7 @@ const plugins = [rpi_jsy()]
 
 const ugly = { warnings: true, output: {comments: false, max_line_len: 256}}
 const prod_plugins = plugins.concat([
-  rpi_uglify(ugly, minify),
+  rpi_terser({ }),
   rpi_gzip({ gzipOptions: {level: 9 } }),
 ])
 
