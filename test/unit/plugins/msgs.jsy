@@ -1,10 +1,10 @@
-import { Hub, expect, sleep, newLog } from '../_setup'
+import { Hub, expect, sleep, newLog } from '../_setup.jsy'
 
-import test_msgs_small from './msgs_small'
-import test_msgs_large from './msgs_large'
-import test_msgs_multipart from './msgs_multipart'
-import test_msgs_streaming from './msgs_streaming'
-import test_msgs_extensions from './msgs_extensions'
+import test_msgs_small from './msgs_small.jsy'
+import test_msgs_large from './msgs_large.jsy'
+import test_msgs_multipart from './msgs_multipart.jsy'
+import test_msgs_streaming from './msgs_streaming.jsy'
+import test_msgs_extensions from './msgs_extensions.jsy'
 
 
 describe @ 'Plugin msgs', @=> ::

@@ -7,8 +7,8 @@ const FayeWebSocket = require('faye-websocket')
 const { generate: generateEC } = require('ec-pem')
 const { createSelfSignedCertificate } = require('ec-pem/cert')
 
-import { expect } from '../_setup'
-import { testChannelConnection } from './_chan_tests'
+import { expect } from '../_setup.jsy'
+import { testChannelConnection } from './_chan_tests.jsy'
 
 export default function () ::
   describe @ 'using "faye-websockets" WebSocket library', @=> ::

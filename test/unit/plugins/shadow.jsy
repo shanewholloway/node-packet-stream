@@ -1,4 +1,4 @@
-import { Hub, expect, newLog } from '../_setup'
+import { Hub, expect, newLog } from '../_setup.jsy'
 import pi_shadow from 'msg-fabric-core/esm/plugin-shadow'
 
 const xor_shadow = @{}

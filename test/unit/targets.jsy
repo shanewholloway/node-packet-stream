@@ -1,4 +1,4 @@
-import { Hub, expect, newLog } from './_setup'
+import { Hub, expect, newLog } from './_setup.jsy'
 
 describe @ 'Target Router', @=> ::
   var hub, log

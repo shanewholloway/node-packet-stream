@@ -1,5 +1,5 @@
-import { Hub, expect, newLog } from '../_setup'
-import { testChannelConnection } from './_chan_tests'
+import { Hub, expect, newLog } from '../_setup.jsy'
+import { testChannelConnection } from './_chan_tests.jsy'
 
 describe @ 'Plugin direct', @=> ::
 

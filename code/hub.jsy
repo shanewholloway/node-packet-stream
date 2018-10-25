@@ -1,4 +1,4 @@
-import data_utils from './platform.jsy'
+import data_utils from './data_utils.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'

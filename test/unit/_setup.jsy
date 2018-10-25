@@ -5,9 +5,8 @@ export { Hub }
 export function _init(FabricHub) :: Hub = FabricHub
 
 const chai = require('chai')
-
-import chaiAsPromised from 'chai-as-promised'
-chai.use @ chaiAsPromised
+import p_chai from 'chai-as-promised'
+chai.use @ p_chai
 
 export const assert = chai.assert
 export const expect = chai.expect

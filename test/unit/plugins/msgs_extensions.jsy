@@ -1,4 +1,4 @@
-import { Hub, expect, sleep, newLog } from '../_setup'
+import { Hub, expect, sleep, newLog } from '../_setup.jsy'
 
 export default function () ::
   let hub, log

@@ -1,0 +1,29 @@
+import './smoke.jsy'
+import './hub_create.jsy'
+import './router.jsy'
+import './p2p.jsy'
+import './targets.jsy'
+import './data_utils.jsy'
+
+import './plugins/pkt.jsy'
+import './plugins/msgs.jsy'
+import './plugins/shadow.jsy'
+import './plugins/direct.jsy'
+
+#IF PLAT_WEB
+  import test_web from './plugins/web.jsy'
+
+  describe @ 'Browser Plugins', @=> ::
+    describe @ 'web', test_web
+
+#IF PLAT_NODEJS
+
+  import test_net from './plugins/net.jsy'
+  import test_web_node from './plugins/web_node.jsy'
+  import test_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
+
+  describe @ 'NodeJS Plugins', @=> ::
+    describe @ 'msgs streaming with NodeJS', test_msgs_streaming_node
+    describe @ 'net', test_net
+    describe @ 'web (node side)', test_web_node
+

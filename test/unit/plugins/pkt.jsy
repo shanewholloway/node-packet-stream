@@ -1,8 +1,8 @@
-import { Hub, expect, newLog } from '../_setup'
+import { Hub, expect, newLog } from '../_setup.jsy'
 
-import pkts_json from './pkt_json'
-import pkts_line_binary from './pkt_line_binary'
-import pkts_call_binary from './pkt_call_binary'
+import pkts_json from './pkt_json.jsy'
+import pkts_line_binary from './pkt_line_binary.jsy'
+import pkts_call_binary from './pkt_call_binary.jsy'
 
 describe @ 'Plugin pkt', @=> ::
 

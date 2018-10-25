@@ -1,4 +1,4 @@
-import data_utils from './platform.jsy'
+import data_utils from './data_utils.jsy'
 
 export function promiseQueue(src) ::
   let tip = null

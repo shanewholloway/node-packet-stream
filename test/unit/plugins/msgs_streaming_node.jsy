@@ -1,7 +1,7 @@
 import { createGzip } from 'zlib'
 import { createHash } from 'crypto'
 import { Writable } from 'stream'
-import { Hub, expect, sleep, newLog } from '../_setup'
+import { Hub, expect, sleep, newLog } from '../_setup.jsy'
 
 export default function(setup_msgs_test) ::
 

@@ -1,4 +1,4 @@
-import { Hub, expect, newLog, createTestHub, sinon } from './_setup'
+import { Hub, expect, newLog, createTestHub, sinon } from './_setup.jsy'
 
 describe @ 'P2P Target Router', @=> ::
   it @ 'basics', @=>> :: 

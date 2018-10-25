@@ -1,20 +1,23 @@
 
 #IF PLAT_WEB
-  import FabricHub from './browser.hub.js'
+  import FabricHub from 'msg-fabric-core/esm/web/index.js'
 
 #IF PLAT_NODEJS
-  import FabricBaseHub from 'msg-fabric-core/esm/index'
-  import pi_direct from 'msg-fabric-core/esm/plugin-net-direct'
-  import pi_tcp from 'msg-fabric-core/esm/plugin-net-tcp'
-  import pi_tls from 'msg-fabric-core/esm/plugin-net-tls'
-  import pi_web from 'msg-fabric-core/esm/plugin-web'
+  import FabricBaseHub from 'msg-fabric-core/esm/index.js'
+  import pi_direct from 'msg-fabric-core/esm/plugin-net-direct.js'
+  import pi_tcp from 'msg-fabric-core/esm/plugin-net-tcp.js'
+  import pi_tls from 'msg-fabric-core/esm/plugin-net-tls.js'
+  import pi_web from 'msg-fabric-core/esm/plugin-web.js'
 
-  const FabricHub = FabricBaseHub
-    .plugins( pi_direct(), pi_tcp(), pi_tls(), pi_web() )
+  const FabricHub = FabricBaseHub.plugins @
+    pi_direct()
+    pi_tcp()
+    pi_tls()
+    pi_web()
 
 
-import { _init } from './unit/_setup'
+import { _init } from './unit/_setup.jsy'
 _init(FabricHub)
 
-export * from './unit/all'
+export * from './unit/all.jsy'
 

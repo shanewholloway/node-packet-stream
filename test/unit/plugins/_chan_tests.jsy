@@ -1,4 +1,4 @@
-import { sleep, expect, newLog, createTestHub } from '../_setup'
+import { sleep, expect, newLog, createTestHub } from '../_setup.jsy'
 
 export const testChannelConnection = testDoubleSidedChannelConnection
 export async function testDoubleSidedChannelConnection(test_api) ::

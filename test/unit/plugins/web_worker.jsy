@@ -1,5 +1,5 @@
-import { expect, sleep, newLog } from '../_setup'
-import { testDoubleSidedChannelConnection, testSingleSidedChannelConnection } from './_chan_tests'
+import { expect, sleep, newLog } from '../_setup.jsy'
+import { testDoubleSidedChannelConnection, testSingleSidedChannelConnection } from './_chan_tests.jsy'
 
 export default function () ::
 

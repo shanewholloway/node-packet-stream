@@ -1,7 +1,7 @@
-import { expect, sleep, newLog } from '../_setup'
-import { testChannelConnection } from './_chan_tests'
+import { expect, sleep, newLog } from '../_setup.jsy'
+import { testChannelConnection } from './_chan_tests.jsy'
 
-import test_web_worker from './web_worker'
+import test_web_worker from './web_worker.jsy'
 
 export default function () ::
   describe @ 'MessageChannel and MessagePort', @=> ::

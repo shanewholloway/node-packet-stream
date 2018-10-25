@@ -1,6 +1,6 @@
-import test_net_direct from './net_direct'
-import test_net_tcp from './net_tcp'
-import test_net_tls from './net_tls'
+import test_net_direct from './net_direct.jsy'
+import test_net_tcp from './net_tcp.jsy'
+import test_net_tls from './net_tls.jsy'
 
 export default function () ::
   describe @ 'hub.tcp', test_net_tcp
