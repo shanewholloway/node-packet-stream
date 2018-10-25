@@ -1,2 +1,1 @@
-export * from './_web_channel.jsy'
-export {default as web} from './web.jsy'
+export { default } from './web.jsy'

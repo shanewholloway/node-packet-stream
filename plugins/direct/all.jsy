@@ -1,1 +1,3 @@
+export * from './direct.jsy'
 export { default } from './direct.jsy'
+

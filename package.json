@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.6.0-8",
+  "version": "0.6.0-9",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -34,7 +34,6 @@
   "devDependencies": {
     "jsy-transpile": "^0.5.3",
     "rollup": "^0.66.6",
-    "rollup-plugin-gzip": "^2.0.0",
     "rollup-plugin-jsy-lite": "^1.2.0",
     "rollup-plugin-terser": "^3.0.0"
   },

@@ -1,7 +1,7 @@
-export * from './impl/index.jsy'
+#IF PLAT_NODEJS
+  export * from './node.jsy'
+  export { default } from './node.jsy'
 
-export {default as browser_call_binary} from './impl/browser/call_binary.jsy'
-export {default as browser_line} from './impl/browser/line.jsy'
-
-export {default as node_call_binary} from './impl/node/call_binary.jsy'
-export {default as node_line} from './impl/node/line.jsy'
+#IF PLAT_WEB
+  export * from './browser.jsy'
+  export { default } from './browser.jsy'

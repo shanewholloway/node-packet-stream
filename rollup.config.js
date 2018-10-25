@@ -14,12 +14,8 @@ const plugins_nodejs = [ rpi_jsy({defines: {PLAT_NODEJS: true}}) ].concat(plugin
 const plugins_web = [ rpi_jsy({defines: {PLAT_WEB: true}}) ].concat(plugins_base)
 
 import { terser as rpi_terser } from 'rollup-plugin-terser'
-//import rpi_gzip from "rollup-plugin-gzip"
-const min_plugins = false //true
-const plugins_min = plugins_web.concat([
-  rpi_terser({}),
-  //rpi_gzip({ gzipOptions: {level: 9 } }),
-])
+const min_plugins = true
+const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 
 
 add_core_jsy('core', null)
@@ -35,15 +31,13 @@ plugin_web()
 
 
 function plugin_pkt() {
-  add_plugin_jsy('pkt/index', 'plugin-pkt-all', {exports: 'named'})
-  add_plugin_jsy('pkt/node', 'plugin-pkt-node', {plat_web: false})
-  add_plugin_jsy('pkt/browser', 'plugin-pkt-browser', {plat_nodejs: false})
+  add_plugin_jsy('pkt/all', 'plugin-pkt-all', {exports: 'named'})
+  add_plugin_jsy('pkt/index', 'plugin-pkt', {exports: 'named'})
   add_plugin_jsy('pkt/browser_line', 'plugin-pkt-browser-line', {plat_nodejs: false})
 }
 function plugin_msgs() {
-  add_plugin_jsy('msgs/index', 'plugin-msgs-all', {exports: 'named'})
-  add_plugin_jsy('msgs/node', 'plugin-msgs-node', {plat_web: false})
-  add_plugin_jsy('msgs/plugin', 'plugin-msgs', {})
+  add_plugin_jsy('msgs/all', 'plugin-msgs-all', {exports: 'named'})
+  add_plugin_jsy('msgs/index', 'plugin-msgs', {})
 }
 
 function plugin_shadow() {
@@ -52,7 +46,8 @@ function plugin_shadow() {
 
 
 function plugin_direct() {
-  add_plugin_jsy('direct/index', 'plugin-direct-all', {exports: 'named'})
+  add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
+  add_plugin_jsy('direct/index', 'plugin-direct', {})
 }
 function plugin_net() {
   const external_nodejs = ['net', 'tls', 'stream']
@@ -63,8 +58,8 @@ function plugin_net() {
   add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
 }
 function plugin_web() {
-  add_plugin_jsy('web/index', 'plugin-web-all', {exports: 'named'})
-  add_plugin_jsy('web/web', 'plugin-web', {out_name: 'plugin-web'})
+  add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
+  add_plugin_jsy('web/index', 'plugin-web', {out_name: 'plugin-web'})
 }
 
 

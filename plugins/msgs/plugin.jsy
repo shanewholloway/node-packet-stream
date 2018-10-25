@@ -1,5 +1,10 @@
 import base_api from './base.jsy'
-import msg_stream from './msg_stream.jsy'
+
+#IF PLAT_NODEJS
+  import msg_stream from './msg_stream.node.jsy'
+#ELSE
+  import msg_stream from './msg_stream.jsy'
+
 import framing_api from './framing.jsy'
 import send_anon_api from './send_anon.jsy'
 import source_api from './source.jsy'
