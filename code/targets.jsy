@@ -39,17 +39,17 @@ export class TargetRouter extends FabricBase ::
 
   /* // from bindCoreTargetAPI
 
-  addRoute(id_route, route, override) : route function
-  addRoute({id_route, route, override}) : route function
-  addRoute(route function with id_route property) : route function
+  ready : Promise<Boolean>
 
-  removeRoute(id_route, route) : route function
-  removeRoute(route function with id_route property) : route function
+  addTarget(id_target, target, override) : {id_target, id_route}
+  addTarget({id_target, target, override}) : {id_target, id_route}
+  addTarget(target function with id_target property) : {id_target, id_route}
 
-  hasRoute(id_route) : Boolean
+  removeTarget(id_target) : Boolean
+  removeTarget({id_target}) : Boolean
+  removeTarget(target function with id_target property) : Boolean
 
-  dispatch(pkt, channel) : Promise
-  resolveRoute(id_route, allowDiscover, allowUpstream) : route function
+  hasTarget(id_target) : Boolean
 
   */
 

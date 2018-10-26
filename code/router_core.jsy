@@ -86,6 +86,7 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
       if null == route || route === routes_map.get(id_route) ::
         // remove only if route is currently at id_route
         return routes_map.delete @ id_route
+      return false
 
     hasRoute(id_route) ::
       return routes_map.has(id_route)

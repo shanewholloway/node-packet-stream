@@ -41,9 +41,6 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
   const targets_api = @{}
-    hasTarget(id_target) ::
-      return targets_map.has(id_target)
-
     addTarget(id_target, target, override) ::
       if 1 === arguments.length ::
         target = id_target.target || id_target
@@ -60,7 +57,11 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
       return @{} id_target, id_route
 
     removeTarget(id_target) ::
-      return targets_map.delete @ id_target
+      return targets_map.delete @ id_target.id_target || id_target
+
+    hasTarget(id_target) ::
+      return targets_map.has(id_target)
+
 
   return Object.assign @ targets_api,
     bindCoreDispatchTarget @

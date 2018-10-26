@@ -59,8 +59,8 @@ export class FabricRouter extends FabricBase ::
   addRoute({id_route, route, override}) : route function
   addRoute(route function with id_route property) : route function
 
-  removeRoute(id_route, route) : route function
-  removeRoute(route function with id_route property) : route function
+  removeRoute(id_route, route) : Boolean
+  removeRoute(route function with id_route property) : Boolean
 
   hasRoute(id_route) : Boolean
 
