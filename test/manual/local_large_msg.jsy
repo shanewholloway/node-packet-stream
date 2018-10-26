@@ -7,7 +7,7 @@ const apple = @{} id_route, id_target: 'apple'
 
 ::
   const {_recv_} = hub.msgs.as(apple)
-  hub.local.registerTarget @ apple.id_target, pkt => ::
+  hub.local.addTarget @ apple.id_target, pkt => ::
     const rpkt = _recv_(pkt)
     if null == rpkt :: 
       console.log @ 'Part:', pkt, inspect(pkt.op, {colors:true})

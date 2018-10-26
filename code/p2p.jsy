@@ -38,7 +38,7 @@ export class P2PRouter extends TargetRouter ::
     signed_routes[route.id_route] =
       (...args) => route.signRouteId(...args)
 
-  registerVerifyRoute(alg, verify) ::
+  addVerifyRoute(alg, verify) ::
     if 'function' !== typeof verify ::
       throw new TypeError @ `Expected route with signRouteId()`
     if undefined === this.verifyRouteAlgs ::
@@ -48,8 +48,8 @@ export class P2PRouter extends TargetRouter ::
 
 
   initP2P() ::
-    this.registerTarget @ 'hello', this._tgt_hello.bind(this)
-    this.registerTarget @ 'olleh', this._tgt_olleh.bind(this)
+    this.addTarget @ 'hello', this._tgt_hello.bind(this)
+    this.addTarget @ 'olleh', this._tgt_olleh.bind(this)
 
   hello(channel, timeout=1000) ::
     const req_id = this._random_base64(3)
@@ -115,7 +115,7 @@ export class P2PRouter extends TargetRouter ::
     const override = this.trustChannel(channel)
     for const id_route of info.routes ::
       if 'string' === typeof id_route ::
-        hub_router.registerPeerRoute @ id_route, channel, override
+        hub_router.addPeer @ id_route, channel, override
 
 
   async _applySignedRoutes(info, pktctx) ::
@@ -132,7 +132,7 @@ export class P2PRouter extends TargetRouter ::
         Promise.resolve @
           verify @ req_id, channel, id_route, rec
         .then @ valid => ! valid ? false : @
-          hub_router.registerPeerRoute @ id_route, channel, true
+          hub_router.addPeer @ id_route, channel, true
 
       if q.length > 3 :: await Promise.all(q)
 

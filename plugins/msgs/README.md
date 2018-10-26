@@ -94,8 +94,8 @@ const source_api = {
   reply(id) {}, // => Send_From_API in Reply_Mode
 }
 
-// `_recv_pkt_` is for using with `registerTarget`
-hub.local.registerTarget( id, pkt => {
+// `_recv_pkt_` is for using with `addTarget`
+hub.local.addTarget( id, pkt => {
   const rpkt = _recv_pkt_(pkt)
 })
 ```

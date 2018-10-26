@@ -9,7 +9,7 @@
   import pi_tls from 'msg-fabric-core/esm/plugin-net-tls.js'
   import pi_web from 'msg-fabric-core/esm/plugin-web.js'
 
-  const FabricHub = FabricBaseHub.plugins @
+  const FabricHub = FabricBaseHub.plugin @
     pi_direct()
     pi_tcp()
     pi_tls()

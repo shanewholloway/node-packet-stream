@@ -16,7 +16,7 @@ export default function () ::
       src._send_pkt_ = pkt => @ log('src._send_pkt_'), _send_pkt_(pkt)
       src._recv_pkt_ = pkt => @ log('src._recv_pkt_'), _recv_pkt_(pkt)
 
-    hub.local.registerTarget @ 'a_source', async pkt => ::
+    hub.local.addTarget @ 'a_source', async pkt => ::
       expect(pkt.op).to.be.undefined
       await src._recv_pkt_(pkt)
       expect(pkt.op).to.be.an('object')
@@ -131,7 +131,7 @@ export default function () ::
     const src = pi_msgs.as @:
       id_route: '$unit$', id_target: 'a_source'
 
-    hub.local.registerTarget @ 'a_source', async pkt => ::
+    hub.local.addTarget @ 'a_source', async pkt => ::
       expect(pkt.op).to.be.undefined
       await src._recv_pkt_(pkt)
       expect(pkt.op).to.be.an('object')

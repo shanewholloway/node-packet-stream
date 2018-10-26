@@ -33,7 +33,7 @@ const FabricHub = FabricHubBase.plugin(
 
 const hub = FabricHub.create()
 
-hub.local.registerTargetObj(
+hub.local.addTarget(
   hub.shadow('a-hidden_target_id', (pkt, pktctx) => {
     // handler
   } ))

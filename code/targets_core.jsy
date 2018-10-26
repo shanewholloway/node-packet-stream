@@ -1,0 +1,68 @@
+
+export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
+  // as closures over private variables (targets_map)
+  const ready = 'string' === typeof id_route
+    ? Promise.resolve @ addRoute @ id_route
+    : id_route.then @ addRoute
+
+  return @{} ready
+
+  async function target_route(pkt, pktctx) ::
+    const id_target = pkt.id_target || ''
+    let target = targets_map.get(id_target)
+
+    if undefined === target ::
+      target = await tgt_router.discoverTarget(id_target, pktctx)
+
+      if undefined === target ::
+        // the target could have been added during discovery
+        target = targets_map.get(id_target)
+
+      if undefined === target ::
+        const channel = pktctx.channel
+        return channel && channel.undeliverable(pkt, 'target')
+
+    // Trigger on_sent for internal hub routing
+    if undefined !== pkt.on_sent ::
+      Promise.resolve().then(pkt.on_sent)
+
+    pktctx.tgt_router = tgt_router
+    await target(pkt, pktctx)
+
+
+  function addRoute(id_route) ::
+    Object.defineProperties @ tgt_router, @{}
+      id_route: @{} value: id_route, enumerable: true
+
+    target_route.id_route = id_route
+    router.addRoute @ id_route, target_route, true
+    return true
+
+
+export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
+  const targets_api = @{}
+    hasTarget(id_target) ::
+      return targets_map.has(id_target)
+
+    addTarget(id_target, target, override) ::
+      if 1 === arguments.length ::
+        target = id_target.target || id_target
+        override = id_target.override
+        id_target = id_target.id_target
+
+      if 'function' !== typeof target ::
+        throw new TypeError @ `Expected 'target' function`
+
+      if ! override && targets_map.has(id_target) ::
+        return targets_map.get(target)
+
+      targets_map.set @ id_target, target
+      return @{} id_target, id_route
+
+    removeTarget(id_target) ::
+      return targets_map.delete @ id_target
+
+  return Object.assign @ targets_api,
+    bindCoreDispatchTarget @
+      tgt_router, targets_map,
+      id_route, router

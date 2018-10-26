@@ -28,7 +28,7 @@ export default function () ::
 
       const hub = self.MsgFabricTestHub.create('$remote$')
 
-      hub.local.registerTarget @ `tgt_remote`, pkt => ::
+      hub.local.addTarget @ `tgt_remote`, pkt => ::
         const {id_route, id_target} = pkt
         hub.send @:
           id_route: '$one$', id_target: 'tgt_one',

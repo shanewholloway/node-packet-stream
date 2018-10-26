@@ -6,8 +6,8 @@ const msg_apple = addTarget @ 'ha_apple', ha.local
 const msg_orange = addTarget @ 'ha_orange', ha.local
 
 
-function addTarget(id_target, {id_route, registerTarget}) ::
-  registerTarget @ id_target, pkt => ::
+function addTarget(id_target, {id_route, addTarget}) ::
+  addTarget @ id_target, pkt => ::
     console.log @ `"${id_target}" recieved packet`, pkt
     console.dir @ pkt.json(), {colors:true}
     console.log()

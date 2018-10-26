@@ -42,7 +42,7 @@ export function createTestHub(name, log) ::
   const hub = Hub.create @ `$${name}$`
 
   if log ::
-    hub.local.registerTarget @ `tgt_${name}`
+    hub.local.addTarget @ `tgt_${name}`
       pkt => log @ `recv [${pkt.id_route} ${pkt.id_target}]`, pkt.json()
 
   expect(hub.p2p.public_routes)

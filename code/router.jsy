@@ -1,119 +1,22 @@
-const isArray = Array.isArray
 import { FabricBase } from './utils.jsy'
+import { bindCoreRouterAPI } from './router_core.jsy'
 
 export class FabricRouter extends FabricBase ::
-  _createRoutesMap() :: return new Map()
-
   constructor() ::
     super()
     Object.defineProperties @ this, @{}
       routeDiscovery: @{} value: this._discoveryDefault.slice()
 
-    this._bindDispatchRoutes()
+    const self = Object.create(this)
+    if ! this._skip_bind_api ::
+      Object.assign @ this,
+        bindCoreRouterAPI @ self, this._initRoutes()
+    return self
 
+  _initRoutes() :: return new Map()
 
-  _bindDispatchRoutes() ::
-    // as closures over private variables (routes_map)
-    const hub_router = this
-    const routes_map = this._createRoutesMap()
-    const pqueue = this._promiseQueue()
-
-    Object.defineProperties @ this, @:
-      _bindDispatchRoutes: @{} value: false
-      dispatch: @{} value: dispatch
-      resolveRoute: @{} value: resolveRoute
-      hasRoute: @{} value: hasRoute
-      registerRoute: @{} value: registerRoute
-      unregisterRoute: @{} value: unregisterRoute
-      registerRouteObj: @{} value: registerRouteObj
-      unregisterRouteObj: @{} value: unregisterRouteObj
-    return dispatch
-
-
-    async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
-      let route = routes_map.get(id_route)
-      if undefined !== route :: return route
-
-      const parts = id_route.split('.', 2)
-      if 2 === parts.length ::
-        route = routes_map.get(parts[0])
-        if undefined !== route :: return route
-
-      if allowDiscover ::
-        route = await hub_router.discoverRoute(id_route)
-        if undefined !== route :: return route
-
-      // the route could have been registered during discovery
-      route = routes_map.get(id_route)
-      if undefined !== route :: return route
-
-      if 2 === parts.length ::
-        route = routes_map.get(parts[0])
-        if undefined !== route :: return route
-
-      if allowUpstream ::
-        // otherwise just send upstream
-        route = await hub_router.upstreamRoute(id_route)
-      return route
-
-    async function dispatch_one(pkt, pktctx) ::
-      try ::
-        pkt = await pkt
-        const id_route = pkt.id_route || ''
-        let route = routes_map.get(id_route)
-        if undefined === route ::
-          route = await resolveRoute(id_route, true, true)
-
-          if undefined === route ::
-            const channel = pktctx.channel
-            return channel && channel.undeliverable(pkt, 'route')
-
-        await route(pkt, pktctx)
-      catch err ::
-        hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
-
-    function dispatch(pktArg, channel) ::
-      const pktctx = @{} channel, hub_router, redispatch: dispatch_one
-      const pq = pqueue() // pq will dispatch during Promise resolutions
-      return isArray(pktArg)
-        ? pktArg.map @ pkt =>
-            pq.then @=> dispatch_one @ pkt, pktctx
-        : pq.then @=> dispatch_one @ pktArg, pktctx
-
-
-    function hasRoute(id_route) ::
-      return routes_map.has(id_route)
-
-    function registerRoute(id_route, route, override) ::
-      if 'function' !== typeof route ::
-        throw new TypeError @ `Expected 'route' to be a function`
-      if ! override && routes_map.has(id_route) ::
-        return routes_map.get(id_route)
-
-      routes_map.set @ id_route, route
-      return route
-    function unregisterRoute(id_route, route) ::
-      if undefined != route && route !== routes_map.get(id_route) ::
-        return // remove only if route is currently at id_route
-      return routes_map.delete @ id_route
-
-    function registerRouteObj(kw_route) ::
-      const {id_route, route, override} = kw_route
-      return registerRoute @ id_route, route || kw_route, override
-    function unregisterRouteObj(kw_route) ::
-      return unregisterRoute @ kw_route.id_route
-
-
-  registerPeerRoute(id_route, channel, override) ::
-    let disp = channel.dispatch
-    if null == disp ::
-      disp = pkt => :: channel.send(pkt)
-      Object.defineProperty @ channel, 'dispatch', {value: disp}
-    if undefined !== channel.when_closed ::
-      channel.when_closed.then @=>
-        this.unregisterRoute @ id_route, disp
-    return this.registerRoute @ id_route, disp, override
-
+  upstreamRoute(id_route) ::
+    return this.addDynamic @ id_route, this.upstream
 
   async discoverRoute(id_route) ::
     let lstDiscovery = this.routeDiscovery
@@ -124,21 +27,46 @@ export class FabricRouter extends FabricBase ::
       @{} key: id_route, id_route
       err => this._on_error @ 'router.discovery', err
 
-    return this.registerDynamicRoute @ id_route, route
+    return this.addDynamic @ id_route, route
 
-  upstreamRoute(id_route) ::
-    return this.registerDynamicRoute @ id_route, this.upstream
 
-  registerDynamicRoute(id_route, route) ::
+  addPeer(id_route, channel, override) ::
+    let disp = channel.dispatch
+    if null == disp ::
+      disp = pkt => :: channel.send(pkt)
+      Object.defineProperty @ channel, 'dispatch', {value: disp}
+    if undefined !== channel.when_closed ::
+      channel.when_closed.then @=>
+        this.removeRoute @ id_route, disp
+    return this.addRoute @ id_route, disp, override
+
+  addDynamic(id_route, route) ::
+    if 1 === arguments.length ::
+      route = id_route.route || id_route
+      id_route = id_route.id_route
+
     if null == route :: return
     if route.ephemeral :: return route
 
-    if 'function' !== typeof route ::
-      return this.registerPeerRoute(id_route, route, true)
-    return this.registerRoute(id_route, route, true)
+    return 'function' === typeof route
+      ? this.addRoute(id_route, route, true)
+      : this.addPeer(id_route, route, true)
 
-  registerDynamicRouteObj(kw_route) ::
-    const {id_route, route} = kw_route
-    return this.registerDynamicRoute @ id_route, route || kw_route
+
+  /* // from bindCoreRouterAPI
+
+  addRoute(id_route, route, override) : route function
+  addRoute({id_route, route, override}) : route function
+  addRoute(route function with id_route property) : route function
+
+  removeRoute(id_route, route) : route function
+  removeRoute(route function with id_route property) : route function
+
+  hasRoute(id_route) : Boolean
+
+  dispatch(pkt, channel) : Promise
+  resolveRoute(id_route, allowDiscover, allowUpstream) : route function
+
+  */
 
 export default FabricRouter

@@ -107,7 +107,7 @@ async function setup_msgs_stream_test() ::
   const c_anon = pi_msgs.to(src_addr)
   const src = pi_msgs.as(src_addr)
 
-  hub.local.registerTarget @ '$src$', pkt => ::
+  hub.local.addTarget @ '$src$', pkt => ::
     const rpkt = src._recv_pkt_ @ pkt
     if null != rpkt ::
       log @ `_recv_ ${rpkt.pkt_kind}`

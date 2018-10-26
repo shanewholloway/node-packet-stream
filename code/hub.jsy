@@ -18,7 +18,7 @@ export class FabricHub ::
 
     applyPlugins @ 'pre', this.pluginList, this
 
-    const router = this._init_fabricRouter()
+    const router = this._initFabricRouter()
     const dispatch = router.dispatch
 
     const p2p = this._initHubP2PRoute(router)
@@ -40,17 +40,14 @@ export class FabricHub ::
     applyPlugins @ 'post', this.pluginList, this
     return this
 
-
-  _init_fabricRouter() ::
-    const klass = this.constructor
-    return new klass.FabricRouter()
+  _initFabricRouter() ::
+    return new this.constructor.FabricRouter()
 
   _initHubP2PRoute(router) ::
     return this.createP2PRoute(router)
 
   createP2PRoute(router) ::
-    const klass = this.constructor
-    return new klass.P2PRouter @ router || this.router, this
+    return new this.constructor.P2PRouter @ router || this.router, this
 
   _initHubLocalRoute(id_route, router, p2p) ::
     const local = this.createLocalRoute(id_route, router)
@@ -59,27 +56,13 @@ export class FabricHub ::
 
   createLocalRoute(id_route, router) ::
     if null == id_route :: id_route = this.newRouteId()
-    const klass = this.constructor
-    return new klass.TargetRouter @
+    return new this.constructor.TargetRouter @
       id_route, router || this.router, this
 
   newRouteId() ::
     const id = this.data_utils.random_base64(5).slice(0, 6)
     const prefix = this.options.id_prefix
     return undefined === prefix ? id : prefix+id
-
-  /* data_utils is provided by router plugins
-
-  data_utils = @{}
-    parse_url(str) ::
-    random(n, asBase64) ::
-    random_base64(n, asBase64) ::
-    pack_base64(data) ::
-    unpack_base64(str_b64) ::
-    decode_utf8(u8) ::
-    encode_utf8(str) ::
-
-  */
 
   newLocalRoute(privateRoute, id_route) ::
     const route = this.createLocalRoute(id_route, this.router)
@@ -89,10 +72,9 @@ export class FabricHub ::
 
 
   connect(conn_url) ::
-    if 'string' === typeof conn_url ::
-      conn_url = this.data_utils.parse_url(conn_url)
-    else if ! conn_url.protocol ::
-      conn_url = this.data_utils.parse_url(conn_url.asURL())
+    if ! conn_url.protocol ::
+      conn_url = this.data_utils.parse_url @
+        conn_url.asURL ? conn_url.asURL() : ''+conn_url
 
     const connect = this._connectByProtocol[conn_url.protocol]
     if ! connect ::
@@ -118,8 +100,6 @@ export class FabricHub ::
 
 
   livePlugin(...livePluginList) ::
-    return this.livePlugins(...livePluginList)
-  livePlugins(...livePluginList) ::
     livePluginList = livePluginList.sort(cmpPlugins)
 
     applyPlugins @ 'live', livePluginList, this
@@ -128,8 +108,6 @@ export class FabricHub ::
     return this
 
   static plugin(...pluginFunctions) ::
-    return this.plugins(...pluginFunctions)
-  static plugins(...pluginFunctions) ::
     const pluginList = Object.freeze @
       this.pluginList
         .concat @ pluginFunctions

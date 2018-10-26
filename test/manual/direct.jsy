@@ -13,8 +13,8 @@ const msg_turtle = addTarget @ 'hb_turtle', hb.local
 const msg_crow = addTarget @ 'hc_crow', hc.local
 const msg_hawk = addTarget @ 'hc_hawk', hc.local
 
-function addTarget(id_target, {id_route, registerTarget}) ::
-  registerTarget @ id_target, pkt => ::
+function addTarget(id_target, {id_route, addTarget}) ::
+  addTarget @ id_target, pkt => ::
     console.log @ `"${id_target}" recieved packet`, pkt
     console.dir @ pkt.json(), {colors:true}
     console.log()

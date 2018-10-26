@@ -27,8 +27,8 @@ const msg_turtle = addTarget @ 'hb_turtle', hb, hb.local
 const msg_crow = addTarget @ 'hc_crow', hc, hc.local
 const msg_hawk = addTarget @ 'hc_hawk', hc, hc.local
 
-function addTarget(id_target, hub, {id_route, registerTargetObj}) ::
-  registerTargetObj @ hub.shadow @ id_target, pkt => ::
+function addTarget(id_target, hub, {id_route, addTarget}) ::
+  addTarget @ hub.shadow @ id_target, pkt => ::
     console.log @ `"${id_target}" recieved packet`, pkt
     console.dir @ pkt.json(), {colors:true}
     console.log()

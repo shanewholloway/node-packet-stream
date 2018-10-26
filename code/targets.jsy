@@ -1,91 +1,25 @@
+import { random_base64 } from './data_utils.jsy'
 import { FabricBase } from './utils.jsy'
+import { bindCoreTargetAPI } from './targets_core.jsy'
 
 export class TargetRouter extends FabricBase ::
-  _createTargetsMap() :: return new Map()
 
   constructor(id_route, router, hub) ::
     super()
     Object.defineProperties @ this, @{}
       targetDiscovery: @{} value: this._discoveryDefault.slice()
 
-    this._bindDispatchTarget(id_route, router, hub)
+    const self = Object.create(this)
+    if ! this._skip_bind_api ::
+      Object.assign @ this,
+        bindCoreTargetAPI @ self, this._initTargets(), id_route, router
+    return self
 
-  _bindDispatchTarget(id_route, router, hub) ::
-    // as closures over private variables (targets_map)
+  _initTargets() :: return new Map()
 
-    const tgt_router = this
-    const targets_map = this._createTargetsMap()
-
-    const ready = 'string' === typeof id_route
-      ? Promise.resolve @ registerRoute @ id_route
-      : id_route.then @ registerRoute
-
-    Object.defineProperties @ this, @{}
-      hasTarget: @{} value: hasTarget
-      registerTarget: @{} value: registerTarget
-      unregisterTarget: @{} value: unregisterTarget
-      registerTargetObj: @{} value: registerTargetObj
-      unregisterTargetObj: @{} value: unregisterTargetObj
-      _bindDispatchTarget: @{} value: false
-      data_utils: @{} value: hub.data_utils
-      ready: @{} value: ready
-
-    return this
-
-    async function dispatch_target(pkt, pktctx) ::
-      const id_target = pkt.id_target || ''
-      let target = targets_map.get(id_target)
-      if undefined === target ::
-        target = await tgt_router.discoverTarget(id_target, pktctx)
-        if undefined === target ::
-          // the target could have been registered during discovery
-          target = targets_map.get(id_target)
-        if undefined === target ::
-          const channel = pktctx.channel
-          return channel && channel.undeliverable(pkt, 'target')
-
-      // Trigger on_sent for internal hub routing
-      if undefined !== pkt.on_sent ::
-        Promise.resolve().then(pkt.on_sent)
-
-      pktctx.tgt_router = tgt_router
-      await target(pkt, pktctx)
-
-
-    function registerRoute(id_route) ::
-      Object.defineProperties @ tgt_router, @{}
-        id_route: @{} value: id_route, enumerable: true
-
-      dispatch_target.id_route = id_route
-      router.registerRoute @ id_route, dispatch_target
-      return true
-
-    function hasTarget(id_target) ::
-      return targets_map.has(id_target)
-
-    function registerTarget(id_target, target, override) ::
-      if 'function' !== typeof target ::
-        throw new TypeError @ `Expected 'target' function`
-
-      if ! override && targets_map.has(id_target) ::
-        return targets_map.get(target)
-      targets_map.set @ id_target, target
-      return @{} id_target, id_route
-
-    function unregisterTarget(id_target) ::
-      return targets_map.delete @ id_target
-
-    function registerTargetObj(kw_target) ::
-      const {id_target, target, override} = kw_target
-      return registerTarget(id_target, target || kw_target, override)
-
-    function unregisterTargetObj(kw_target) ::
-      return unregisterTarget(kw_target.id_target)
-
-  newTargetId() ::
-    return this.data_utils.random_base64(6)
+  newTargetId() :: return random_base64(6)
   createTarget(target) ::
-    return this.registerTarget(this.newTargetId(), target)
+    return this.addTarget(this.newTargetId(), target)
 
   async discoverTarget(id_target, pktctx) ::
     let lstDiscovery = this.targetDiscovery
@@ -99,7 +33,24 @@ export class TargetRouter extends FabricBase ::
     if null == target :: return
 
     if ! target.ephemeral ::
-      this.registerTarget(id_target, target)
+      this.addTarget(id_target, target)
     return target
+
+
+  /* // from bindCoreTargetAPI
+
+  addRoute(id_route, route, override) : route function
+  addRoute({id_route, route, override}) : route function
+  addRoute(route function with id_route property) : route function
+
+  removeRoute(id_route, route) : route function
+  removeRoute(route function with id_route property) : route function
+
+  hasRoute(id_route) : Boolean
+
+  dispatch(pkt, channel) : Promise
+  resolveRoute(id_route, allowDiscover, allowUpstream) : route function
+
+  */
 
 export default TargetRouter

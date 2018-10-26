@@ -7,7 +7,7 @@ describe @ 'Target Router', @=> ::
     hub = Hub.create('$unit$')
 
   it @ 'simple message send', @=>> ::
-    hub.local.registerTarget @ 'a-tgt', (pkt, pktctx) => ::
+    hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
       const {id_route, id_target} = pkt
       log @ 'tgt recv', @{} id_route, id_target, body: pkt.json()
 

@@ -18,7 +18,7 @@ describe @ 'Router', @=> ::
   describe @ 'messages to targets', @=> ::
 
     it @ 'should call handler if target does exist', @=>> ::
-      hub.local.registerTarget @ 'a-tgt', (pkt, pktctx) => ::
+      hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
         const {id_route, id_target} = pkt
         log @ 'tgt recv', @{} id_route, id_target, body: pkt.json()
 
@@ -36,14 +36,14 @@ describe @ 'Router', @=> ::
       const logical = @{}
         'a-logical-tgt': @{} id_route: '$unit$', id_target: tgt_id
 
-      hub.router.registerRoute @ '$dynamic$', async (pkt, pktctx) => ::
+      hub.router.addRoute @ '$dynamic$', async (pkt, pktctx) => ::
         const dyn = logical[pkt.id_target]
         log @ 'dynamic route', pkt.id_target, dyn.id_target
         pkt._hdr_[0] = dyn.id_route
         pkt._hdr_[1] = dyn.id_target
         await pktctx.redispatch(pkt, pktctx)
 
-      hub.local.registerTarget @ tgt_id, (pkt, pktctx) => ::
+      hub.local.addTarget @ tgt_id, (pkt, pktctx) => ::
         const {id_route, id_target} = pkt
         log @ 'tgt recv', @{} id_route, id_target, body: pkt.json()
 
@@ -169,8 +169,8 @@ describe @ 'Router', @=> ::
 
 
     it @ 'should call hierarchical parent route if route does not exist', @=>> ::
-      hub.router.registerRoute @ 'a', pkt => log @ `route a :: ${pkt.id_route}`
-      hub.router.registerRoute @ 'c.d', pkt => log @ `route c.d :: ${pkt.id_route}`
+      hub.router.addRoute @ 'a', pkt => log @ `route a :: ${pkt.id_route}`
+      hub.router.addRoute @ 'c.d', pkt => log @ `route c.d :: ${pkt.id_route}`
 
       await test_chan.send @: id_route: 'a.b', id_target: 'tgt', body: {}
       await test_chan.send @: id_route: 'c', id_target: 'tgt', body: {}

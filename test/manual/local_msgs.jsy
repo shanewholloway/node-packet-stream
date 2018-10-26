@@ -6,7 +6,7 @@ function addTarget(hub, id_target, api) ::
   console.log @ 'create', @{} id_route, id_target
   const tgt = hub.msgs.as({id_route, id_target})
 
-  hub.local.registerTarget(id_target, on_msg)
+  hub.local.addTarget(id_target, on_msg)
   if api.on_init ::
     Promise.resolve()
       .then @=> api.on_init(tgt)

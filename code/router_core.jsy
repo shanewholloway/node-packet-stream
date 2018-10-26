@@ -1,0 +1,95 @@
+import { promiseQueue } from './utils.jsy'
+
+const isArray = Array.isArray
+
+export function bindCoreDispatchRouter(hub_router, routes_map) ::
+  // as closures over private variables (routes_map)
+  const pqueue = promiseQueue()
+  const pktctx0 = @{} __proto__: null, hub_router, redispatch: dispatch_one
+
+  return @{} dispatch, resolveRoute
+
+  function dispatch(pktArg, channel) ::
+    const pktctx = @{} channel, __proto__: pktctx0
+    const pq = pqueue() // pq will dispatch during Promise resolutions
+    return isArray(pktArg)
+      ? pktArg.map @ pkt =>
+          pq.then @=> dispatch_one @ pkt, pktctx
+      : pq.then @=> dispatch_one @ pktArg, pktctx
+
+
+  async function dispatch_one(pkt, pktctx) ::
+    try ::
+      pkt = await pkt
+      const id_route = pkt.id_route || ''
+      let route = routes_map.get(id_route)
+      if undefined === route ::
+        route = await resolveRoute(id_route, true, true)
+
+        if undefined === route ::
+          const channel = pktctx.channel
+          return channel && channel.undeliverable(pkt, 'route')
+
+      await route(pkt, pktctx)
+    catch err ::
+      hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
+
+
+  async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
+    let route = routes_map.get(id_route)
+    if undefined !== route :: return route
+
+    const parts = id_route.split('.', 2)
+    if 2 === parts.length ::
+      route = routes_map.get(parts[0])
+      if undefined !== route :: return route
+
+    if allowDiscover ::
+      route = await hub_router.discoverRoute(id_route)
+      if undefined !== route :: return route
+
+    // the route could have been added during discovery
+    route = routes_map.get(id_route)
+    if undefined !== route :: return route
+
+    if 2 === parts.length ::
+      route = routes_map.get(parts[0])
+      if undefined !== route :: return route
+
+    if allowUpstream ::
+      // otherwise just send upstream
+      route = await hub_router.upstreamRoute(id_route)
+    return route
+
+
+export function bindCoreRouterAPI(hub_router, routes_map) ::
+  const router_api = @{}
+    addRoute(id_route, route, override) ::
+      if 1 === arguments.length ::
+        route = id_route.route || id_route
+        override = id_route.override
+        id_route = id_route.id_route
+
+      if 'function' !== typeof route ::
+        throw new TypeError @ `Expected 'route' to be a function`
+      if ! override && routes_map.has(id_route) ::
+        return routes_map.get(id_route)
+
+      routes_map.set @ id_route, route
+      return route
+
+    removeRoute(id_route, route) ::
+      if 1 === arguments.length ::
+        route = id_route.route || id_route
+        id_route = id_route.id_route
+
+      if null == route || route === routes_map.get(id_route) ::
+        // remove only if route is currently at id_route
+        return routes_map.delete @ id_route
+
+    hasRoute(id_route) ::
+      return routes_map.has(id_route)
+
+  return Object.assign @ router_api,
+    bindCoreDispatchRouter @
+      hub_router, routes_map
