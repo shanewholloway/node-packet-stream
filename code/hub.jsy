@@ -1,7 +1,9 @@
-import data_utils from './data_utils.jsy'
+import { random_base64, parse_url, data_utils } from './data_utils.jsy'
+
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'
+import { local_channel } from './channel.jsy'
 
 import { applyPlugins, cmpPlugins } from './utils.jsy'
 
@@ -9,36 +11,29 @@ export class FabricHub ::
   static create(...args) :: return new this(...args)
 
   constructor(options) ::
+    const self = Object.create(this)
+
     if null == options :: options = {}
     else if 'string' === typeof options ::
       options = @{} id_route: options
+    this.options = options
 
-    Object.defineProperties @ this, @{}
-      options: {value: options}
 
-    applyPlugins @ 'pre', this.pluginList, this
+    applyPlugins @ 'pre', this._plugins_, self
 
-    const router = this._initFabricRouter()
-    const dispatch = router.dispatch
+    const router = self._initFabricRouter()
+    const p2p = self._initHubP2PRoute(router)
+    const local = self._initHubLocalRoute(options.id_route, router, p2p)
 
-    const p2p = this._initHubP2PRoute(router)
-    const local = this._initHubLocalRoute(options.id_route, router, p2p)
+    const channel = local_channel(router, this)
+    Object.assign @ this, @{}
+      router, p2p, local,
+      channel, send: channel.send
+      _url_protos: {}
 
-    const channel = this._bindSendLocal(dispatch)
-    Object.defineProperties @ this, @{}
-      router: @{} value: router
-      dispatch: @{} value: dispatch
-      channel: @{} value: channel
-      send: @{} value: channel.send
-
-      p2p: @{} value: p2p
-      local: @{} value: local
-
-      _connectByProtocol: @{} value: {}
-
-    applyPlugins @ null, this.pluginList, this
-    applyPlugins @ 'post', this.pluginList, this
-    return this
+    applyPlugins @ null, this._plugins_, self
+    applyPlugins @ 'post', this._plugins_, self
+    return self
 
   _initFabricRouter() ::
     return new this.constructor.FabricRouter()
@@ -60,7 +55,7 @@ export class FabricHub ::
       id_route, router || this.router, this
 
   newRouteId() ::
-    const id = this.data_utils.random_base64(5).slice(0, 6)
+    const id = random_base64(5).slice(0, 6)
     const prefix = this.options.id_prefix
     return undefined === prefix ? id : prefix+id
 
@@ -73,80 +68,62 @@ export class FabricHub ::
 
   connect(conn_url) ::
     if ! conn_url.protocol ::
-      conn_url = this.data_utils.parse_url @
+      conn_url = parse_url @
         conn_url.asURL ? conn_url.asURL() : ''+conn_url
 
-    const connect = this._connectByProtocol[conn_url.protocol]
+    const connect = this._url_protos[conn_url.protocol]
     if ! connect ::
-      throw new Error @ `Connection protocol "${conn_url.protocol}" not registered`
+      throw new Error @ `Connection protocol "${conn_url.protocol}" not found`
     return connect(conn_url)
 
   registerProtocols(protocolList, cb_connect) ::
     if 'function' !== typeof cb_connect ::
-      throw new TypeError @ `Expected 'cb_connect' function`
+      throw new TypeError()
     for const protocol of protocolList ::
-      this._connectByProtocol[protocol] = cb_connect
+      this._url_protos[protocol] = cb_connect
     return this
 
 
-  _bindSendLocal(dispatch) ::
-    const {_fromObjPacket, _hub_channel_} = this
-    return Object.create @ _hub_channel_, @{} send: {value: hub_send}
+  // --- plugin support ---
 
-    function hub_send(obj) ::
-      const pkt = _fromObjPacket(obj)
-      return dispatch @ pkt, _hub_channel_
-  _fromObjPacket(obj) :: return obj // plugin (pkt) responsiblity
+  livePlugin(... _plugins_) ::
+    _plugins_.sort(cmpPlugins)
 
-
-  livePlugin(...livePluginList) ::
-    livePluginList = livePluginList.sort(cmpPlugins)
-
-    applyPlugins @ 'live', livePluginList, this
-    applyPlugins @ null, livePluginList, this
-    applyPlugins @ 'post', livePluginList, this
+    applyPlugins @ 'live', _plugins_, this
+    applyPlugins @ null, _plugins_, this
+    applyPlugins @ 'post', _plugins_, this
     return this
 
-  static plugin(...pluginFunctions) ::
-    const pluginList = Object.freeze @
-      this.pluginList
-        .concat @ pluginFunctions
+  static plugin(... _plugins_) ::
+    _plugins_ = Object.freeze @
+      this._plugins_
+        .concat @ _plugins_
         .sort @ cmpPlugins
 
-    const instPluginList = pluginList.slice()
-
-    class FabricHub extends this ::
-    Object.defineProperties @ FabricHub, @{}
-      pluginList: @{} value: pluginList
-    Object.defineProperties @ FabricHub.prototype, @{}
-      pluginList: @{} value: instPluginList
+    const inst_plugins = _plugins_.slice()
 
     class FabricRouter extends this.FabricRouter ::
     class TargetRouter extends this.TargetRouter ::
     class P2PRouter extends this.P2PRouter ::
-    Object.assign @ FabricHub, @{}
+
+    class FabricHub extends this ::
+    FabricHub.prototype._plugins_ = inst_plugins
+
+    Object.assign @ FabricHub, @{} _plugins_,
       FabricRouter, TargetRouter, P2PRouter
 
-    applyPlugins @ 'subclass', pluginList, FabricHub, instPluginList
-    instPluginList.sort @ cmpPlugins
+    applyPlugins @ 'subclass', _plugins_, FabricHub, inst_plugins
+    inst_plugins.sort @ cmpPlugins
     return FabricHub
 
 
-const _hub_channel_ = @{}
-  is_local: true
-  undeliverable(pkt, mode) ::
-    const {id_route, id_target} = pkt
-    console.warn @ '~~ undeliverable «hub»', @{}
-      mode, id_route, id_target
-
 Object.assign @ FabricHub.prototype, @{}
-  data_utils
+  _plugins_: Object.freeze([])
   is_fabric_hub: true
-  pluginList: Object.freeze([])
-  _hub_channel_: Object.create(_hub_channel_)
+  data_utils
 
 Object.assign @ FabricHub, @{}
-  pluginList: Object.freeze([])
+  _plugins_: Object.freeze([])
   FabricRouter: FabricRouter_Base
   TargetRouter: TargetRouter_Base
   P2PRouter: P2PRouter_Base

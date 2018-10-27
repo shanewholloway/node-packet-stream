@@ -9,10 +9,11 @@ export class TargetRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       targetDiscovery: @{} value: this._discoveryDefault.slice()
 
+    if this._skip_bind_api :: return this
+
     const self = Object.create(this)
-    if ! this._skip_bind_api ::
-      Object.assign @ this,
-        bindCoreTargetAPI @ self, this._initTargets(), id_route, router
+    Object.assign @ this,
+      bindCoreTargetAPI @ self, this._initTargets(), id_route, router
     return self
 
   _initTargets() :: return new Map()

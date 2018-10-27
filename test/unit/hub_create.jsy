@@ -7,9 +7,8 @@ describe @ 'Hub creation', @=> ::
     expect @ hub.local.id_route
     .to.be.a('string')
 
-    expect(hub.dispatch).to.be.a @ 'function'
+    expect(hub.dispatch).to.be.undefined
     expect(hub.router.dispatch).to.be.a @ 'function'
-    expect(hub.router.dispatch).to.be.equal @ hub.dispatch
 
     expect(hub.send).to.be.a @ 'function'
     expect(hub.channel.send).to.be.a @ 'function'
@@ -23,9 +22,8 @@ describe @ 'Hub creation', @=> ::
     expect @ hub.local.id_route
     .to.be.a('string')
 
-    expect(hub.dispatch).to.be.a @ 'function'
+    expect(hub.dispatch).to.be.undefined
     expect(hub.router.dispatch).to.be.a @ 'function'
-    expect(hub.router.dispatch).to.be.equal @ hub.dispatch
 
     expect(hub.send).to.be.a @ 'function'
     expect(hub.channel.send).to.be.a @ 'function'

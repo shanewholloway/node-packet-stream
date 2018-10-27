@@ -1,0 +1,97 @@
+const channel_base = @{}
+  __proto__: null
+
+  toJSON() :: throw new Error @ 'Not serializable'
+
+  undeliverable(pkt, mode) ::
+    const {id_route, id_target} = pkt
+    console.warn @ '~~ undeliverable',
+      @{} mode, id_route, id_target
+
+  on_dispatch_error(pkt, err) ::
+    const {id_route, id_target} = pkt
+    console.warn @ '~~ channel dispatch error',
+      @{} id_route, id_target
+      err
+
+  on_send_error(err) ::
+    console.warn @ '~~ channel send error', err
+
+  //shutdown() ::
+
+
+export function local_channel(router, {_fromObjPacket}) ::
+  if ! _fromObjPacket :: _fromObjPacket = v=>v
+  const { dispatch } = router
+  const chan = @{}
+    __proto__: channel_base
+    is_local: true
+    send
+
+  return chan
+
+  function send(obj) ::
+    const pkt = _fromObjPacket(obj)
+    return dispatch @ pkt, chan
+
+
+#IF PLAT_NODEJS
+  // use V8's serialize & deserialize for Structured Clone
+  const { serialize, deserialize } = require('v8')
+
+  export function _local_channel(router, {_fromObjPacket}) ::
+    if ! _fromObjPacket :: _fromObjPacket = v=>v
+    const { dispatch } = router
+    const chan = @{}
+      __proto__: channel_base
+      is_local: true
+      send
+
+    return chan
+
+    function send(obj) ::
+      return _send_ex @ serialize @ obj
+    async function _send_ex(obj) ::
+      try ::
+        obj = deserialize @ await obj
+        var pkt = _fromObjPacket @ obj
+        return dispatch(pkt, chan)
+      catch err ::
+        chan.on_dispatch_error @ pkt || obj, err
+
+#ELSE
+  // use MessageChannel for Structured Clone
+  export function _local_channel(router, {_fromObjPacket}) ::
+    if ! _fromObjPacket :: _fromObjPacket = v=>v
+    const { dispatch } = router
+    const { port1, port2 } = new MessageChannel()
+    port2.onmessage = _send_ex
+
+    const map = new Map()
+    let q=[], msg_id=1
+
+    const chan = @{}
+      __proto__: channel_base
+      is_local: true
+      send
+
+    return chan
+
+    function send(obj) ::
+      return new Promise @ resolve => ::
+        const id = q.pop() || msg_id++
+        map.set @ id, resolve
+        port1.postMessage @# id, obj
+
+    function _send_ex(evt) ::
+      const [id, obj] = evt.data
+      const resolve = map.get(id)
+      map.delete(id)
+      q.push(id)
+
+      try ::
+        var pkt = _fromObjPacket @ obj
+        return resolve @ dispatch(pkt, chan)
+      catch err ::
+        chan.on_dispatch_error @ pkt || obj, err
+

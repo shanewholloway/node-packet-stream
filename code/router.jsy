@@ -7,10 +7,11 @@ export class FabricRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       routeDiscovery: @{} value: this._discoveryDefault.slice()
 
+    if this._skip_bind_api :: return this
+
     const self = Object.create(this)
-    if ! this._skip_bind_api ::
-      Object.assign @ this,
-        bindCoreRouterAPI @ self, this._initRoutes()
+    Object.assign @ this,
+      bindCoreRouterAPI @ self, this._initRoutes()
     return self
 
   _initRoutes() :: return new Map()

@@ -12,7 +12,7 @@ describe @ 'Router', @=> ::
 
       send(obj) ::
         const pkt = hub._fromObjPacket(obj)
-        return hub.dispatch @ pkt, this
+        return hub.router.dispatch @ pkt, this
 
 
   describe @ 'messages to targets', @=> ::

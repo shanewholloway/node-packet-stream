@@ -1,3 +1,5 @@
+(require('source-map-support') || {install(){}}).install()
+
 
 #IF PLAT_WEB
   import FabricHub from 'msg-fabric-core/esm/web/index.js'
