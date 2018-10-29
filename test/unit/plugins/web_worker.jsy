@@ -3,7 +3,7 @@ import { testDoubleSidedChannelConnection, testSingleSidedChannelConnection } fr
 
 export default function () ::
 
-  it @ 'hub.web.connectPostMessage is a channel', async function() ::
+  it @ 'hub.web.connect is a channel', async function() ::
     this.slow(300)
 
     const src_wkr = asIIFEString('self', webWorkerActual)
@@ -16,7 +16,7 @@ export default function () ::
     await testSingleSidedChannelConnection @:
       from_tag: 'webworker'
       connect(hub) ::
-        return hub.web.connectPostMessage @ wkr_actual
+        return hub.web.connect @ wkr_actual
 
     function webWorkerActual(self) ::
       // Make UMD file work by making "global" global self-referencing.
@@ -34,10 +34,9 @@ export default function () ::
           id_route: '$one$', id_target: 'tgt_one',
           body: @{}
             from: 'webworker'
-            pkt_hdr: pkt._hdr_
-            echo: pkt.json()
+            echo: pkt.body
 
-      hub.web.connectPostMessage(self)
+      hub.web.connect(self)
 
 
 
@@ -58,7 +57,7 @@ export default function () ::
       relay_port.postMessage @ evt.data
 
 
-  it @ 'hub.web.connectPostMessage is a channel (using relay)', async function() ::
+  it @ 'hub.web.connect is a channel (using relay)', async function() ::
     this.slow(300)
 
     const url_wkr_relay = asIIFEWebWorkerURL @ webWorkerRelay
@@ -73,8 +72,8 @@ export default function () ::
         const wrk_b = new Worker @ url_wkr_relay
         wrk_b.postMessage @ null, [mc.port2]
 
-        hub_a.web.connectPostMessage @ wrk_a
-        return hub_b.web.connectPostMessage @ wrk_b
+        hub_a.web.connect @ wrk_a
+        return hub_b.web.connect @ wrk_b
 
 
   it @ 'validate webWorkerRelay', async function() ::

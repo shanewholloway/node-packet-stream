@@ -1,30 +1,32 @@
 export default function direct_plugin(plugin_options={}) ::
-  const pi_name = plugin_options.name || 'direct'
-
   return hub => ::
-    return hub[pi_name] = Object.assign @ connect, @{}
-      connect, pair, connectDirectPair, connectDirectChannel
+    function connect(...args) ::
+      return connect.connectDirectPair(...args)[0]
 
-    function connect(peer) :: return connectDirectPair(peer)[0]
-    function pair(peer) :: return Promise.all @ connectDirectPair(peer)
+    hub.direct = Object.assign @ connect, @{}
+      connect
+      pair(...args) ::
+        return Promise.all @ connect.connectDirectPair(...args)
 
-    function connectDirectPair(peer, channel_id, no_hello) ::
-      if peer[pi_name] && peer[pi_name].connectDirectChannel ::
-        peer = peer[pi_name]
+      connectDirectPair(peer, channel_id, no_hello) ::
+        peer = peer.direct || peer
 
-      const [recv_self, chan_self] =
-        connectDirectChannel @ pkt => recv_peer(pkt), channel_id, no_hello
+        const _recv_peer = pkt => recv_peer(pkt)
+        const [recv_self, chan_self] =
+          connect.connectDirectChannel @
+            _recv_peer, channel_id, no_hello
 
-      const [recv_peer, chan_peer] =
-        peer.connectDirectChannel @ pkt => recv_self(pkt), channel_id, no_hello
+        const [recv_peer, chan_peer] =
+          (peer.direct || peer).connectDirectChannel @
+            recv_self, channel_id, no_hello
 
-      return @[] chan_self, chan_peer
+        return @[] chan_self, chan_peer
 
-    function connectDirectChannel(send, channel_id, no_hello) ::
-      const [recv, channel] = hub.router.direct_channel(send)
-      channel.addRoute(channel_id || 'direct')
-      if ! no_hello ::
-        channel.peer_info = Promise.resolve().then @=>
-          hub.p2p.hello(channel)
-      return @[] recv, Promise.resolve(channel)
+      connectDirectChannel(send, channel_id, no_hello) ::
+        const [recv, channel] = hub.router.send_channel(send)
+        channel.channel_id = channel_id || 'direct'
+        if ! no_hello ::
+          channel.peer_info = Promise.resolve().then @=>
+            hub.p2p.hello(channel)
+        return @[] recv, Promise.resolve(channel)
 

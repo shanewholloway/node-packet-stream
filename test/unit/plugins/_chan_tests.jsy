@@ -132,7 +132,6 @@ export async function testSingleSidedChannelConnection(test_api) ::
   expect(log.calls).to.deep.equal @#
     @[] 'recv [$one$ tgt_one]', @{}
       from: test_api.from_tag
-      pkt_hdr: @[] '$remote$', 'tgt_remote'
       echo: @{} msg: 'hello remote'
 
   await test_api.done

@@ -1,3 +1,6 @@
-export * from './_web_channel.jsy'
 export * from './web.jsy'
-export {default, default as web} from './web.jsy'
+export * from './ws.jsy'
+
+export { default as web_basic_plugin } from './basic.jsy'
+export { default as web_full_plugin, default } from './index.jsy'
+

@@ -1,58 +1,60 @@
-import { bind_sendChannel, bind_postMessageChannel, bind_webSocketChannel } from './_web_channel.jsy'
+export default web_basic_api
+export function web_basic_api(hub) ::
+  const yes = () => true
 
-export default function web_plugin(plugin_options={}) ::
-  return hub => ::
-    const _global_ = hub.data_utils._global_
-    let WebSocket = plugin_options.WebSocket
-    const protocols = plugin_options.protocols
+  return @{}
+    connect(...args) ::
+      const channel = this.createChannel(...args)
+      if null == channel.channel_id ::
+        channel.channel_id = 'web_basic'
 
-    const _api_ = @{} hub
-      createChannel: hub._pkts_.bin_call.createChannel
-    const createSendChannel = bind_sendChannel(_api_)
-    const createPostMessageChannel = bind_postMessageChannel(_api_)
-    const createWebSocketChannel = bind_webSocketChannel(_api_)
-
-    const plugin = @{} WebSocket,
-      createSendChannel, createPostMessageChannel
-      connectSend, connectPostMessage
-      connectWS, createWebSocket, customWebSocket
-
-    hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],
-      url => plugin.connectWS(url, true)
-    return hub.web = plugin
-
-    function customWebSocket(WebSocket) ::
-      this.WebSocket = WebSocket
-      return this
-
-    function createWebSocket(ws_or_wss_url) ::
-      const l_WebSocket = this.WebSocket || _global_.WebSocket
-      return new l_WebSocket(ws_or_wss_url+'', protocols)
-
-    function connectSend(...args) ::
-      const channel = createSendChannel(...args)
       channel.peer_info = hub.p2p.hello(channel)
       return Promise.resolve(channel)
 
-    function connectPostMessage(...args) ::
-      const channel = createPostMessageChannel(...args)
+    connectStream(...args) ::
+      const channel = this.createStreamChannel(...args)
+      if null == channel.channel_id ::
+        channel.channel_id = 'web_stream'
+
       channel.peer_info = hub.p2p.hello(channel)
       return Promise.resolve(channel)
 
-    function connectWS(ws_or_wss_url, channel_id) ::
-      let websock
-      if ws_or_wss_url ::
-        websock = 'function' !== typeof ws_or_wss_url.send
-          ? this.createWebSocket(ws_or_wss_url)
-          : ws_or_wss_url
 
-      if undefined === websock ::
-        throw new TypeError @ `Invalid websocket connection`
+    createStreamChannel(tgt_recv, tgt_send, options) ::
+      return this.createChannel @ tgt_recv, tgt_send, options, hub.stream_codec
 
-      if true === channel_id ::
-        const id = new URL(ws_or_wss_url).pathname
-        channel_id = @[] id, false
+    createChannel(tgt_recv, tgt_send, options, codec) ::
+      if null == tgt_send :: tgt_send = tgt_recv
+      if null == options :: options = {}
+      if null == codec :: codec = options.codec
+      const accept = options.accept || yes
 
-      const channel = createWebSocketChannel(websock, {channel_id})
-      return Promise.resolve(channel)
+      const send_ex = @
+          tgt_send.postMessage ? _web_postmsg
+        : tgt_send.send ? _web_send
+        : null
+      .bind @ tgt_send
+
+      const [recv, channel] = codec
+        ? hub.router.codec_channel @ send_ex, codec
+        : hub.router.send_channel @ send_ex
+      channel.channel_id = options.channel_id
+
+      tgt_recv.addEventListener @ 'message',
+        evt => accept(evt) && recv(evt.data)
+        @{} passive: true
+
+      if 'function' === typeof tgt_recv.start ::
+        tgt_recv.start()
+      return channel
+
+function _web_postmsg(pkt) ::
+  if null !== pkt ::
+    this.postMessage(pkt)
+  else if this.close :: this.close()
+
+function _web_send(pkt) ::
+  if null !== pkt ::
+    this.send(pkt)
+  else if this.close :: this.close()
 

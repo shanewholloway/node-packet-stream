@@ -1,1 +1,13 @@
-export { default } from './web.jsy'
+import web_basic_api from './web.jsy'
+import websocket_api from './ws.jsy'
+
+export default function web_full_plugin(plugin_options={}) ::
+  // websocket extends basic, and is thus the superset
+  return hub => ::
+    hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],
+      url => hub.web.connectWS(url, true)
+
+    return hub.web = Object.assign @
+      web_basic_api(hub),
+      websocket_api(hub, plugin_options),
+

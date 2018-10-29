@@ -38,7 +38,7 @@ export default function () ::
         __proto__: faye_ws_test_api()
 
         init_b(hub) ::
-          hub.web.createWebSocket = url =>
+          hub.web.createWS = url =>
             new FayeWebSocket.Client @ url+''
 
         connect(hub_a, hub_b) ::
@@ -50,19 +50,19 @@ export default function () ::
         __proto__: faye_wss_test_api()
 
         init_b(hub) ::
-          hub.web.createWebSocket = url =>
+          hub.web.createWS = url =>
             new FayeWebSocket.Client @ url+'', [], @{} ca: this.ca
 
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('wss://')
           return hub_b.connect(this.conn_url)
 
-    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using custom WebSocket', @=>> ::
       await testChannelConnection @:
         __proto__: faye_ws_test_api()
 
         init_b(hub) ::
-          hub.web.customWebSocket @ FayeWebSocket.Client
+          hub.web.WebSocket = FayeWebSocket.Client
 
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('ws://')
@@ -97,7 +97,7 @@ export default function () ::
         __proto__: ws_test_api()
 
         init_b(hub) ::
-          hub.web.createWebSocket = url =>
+          hub.web.createWS = url =>
             new WSWebSocket @ url+''
 
         connect(hub_a, hub_b) ::
@@ -109,7 +109,7 @@ export default function () ::
         __proto__: wss_test_api()
 
         init_b(hub) ::
-          hub.web.createWebSocket = url =>
+          hub.web.createWS = url =>
             new WSWebSocket @ url+'', [], @{} ca: this.ca
 
         connect(hub_a, hub_b) ::
@@ -117,12 +117,12 @@ export default function () ::
           return hub_b.connect(this.conn_url)
 
 
-    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using customWebSocket', @=>> ::
+    it @ 'hub.connect("ws://127.0.0.1:«port»") is a channel using a custom WebSocket', @=>> ::
       await testChannelConnection @:
         __proto__: ws_test_api()
 
         init_b(hub) ::
-          hub.web.customWebSocket @ WSWebSocket
+          hub.web.WebSocket = WSWebSocket
 
         connect(hub_a, hub_b) ::
           expect(this.conn_url).to.be.a('string').to.have.string('ws://')

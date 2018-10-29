@@ -5,25 +5,25 @@ import test_web_worker from './web_worker.jsy'
 
 export default function () ::
   describe @ 'MessageChannel and MessagePort', @=> ::
-    it @ 'hub.web.connectPostMessage is a channel', @=>> ::
+    it @ 'hub.web.connect is a channel', @=>> ::
       await testChannelConnection @:
         connect(hub_a, hub_b) ::
           const mc = new MessageChannel()
-          hub_a.web.connectPostMessage @ mc.port1
-          return hub_b.web.connectPostMessage @ mc.port2
+          hub_a.web.connect @ mc.port1
+          return hub_b.web.connect @ mc.port2
 
   describe @ 'WebWorker', test_web_worker
 
   describe @ 'RTCDataChannel', @=> ::
-    it @ 'hub.web.connectSend is a channel', async function() ::
+    it @ 'hub.web.connectStream is a channel', async function() ::
       this.slow(200)
 
       const [rtc_dc_a, rtc_dc_b] = await createRTCTestingDataChannels()
 
       await testChannelConnection @:
         connect(hub_a, hub_b) ::
-          hub_a.web.connectSend @ rtc_dc_a
-          return hub_b.web.connectSend @ rtc_dc_b
+          hub_a.web.connectStream @ rtc_dc_a
+          return hub_b.web.connectStream @ rtc_dc_b
 
 
 export async function createRTCTestingDataChannels() ::

@@ -1,0 +1,62 @@
+export default websocket_api
+export function websocket_api(hub, plugin_options) ::
+  const { _global_ } = hub.data_utils
+
+  return @{}
+    WebSocket: plugin_options.WebSocket
+
+    createWS(ws_or_wss_url) ::
+      const WebSocket = this.WebSocket || _global_.WebSocket
+      return new WebSocket @
+        ws_or_wss_url+'',
+        plugin_options.protocols
+
+
+    connectWS(ws_or_wss_url, channel_id) ::
+      let websock = ws_or_wss_url.send
+        ? ws_or_wss_url
+        : this.createWS(ws_or_wss_url)
+
+      if undefined === websock ::
+        throw new TypeError @ `Invalid websocket connection`
+
+      if true === channel_id ::
+        const id = new URL(ws_or_wss_url).pathname
+        channel_id = @[] id, false
+
+      const channel = this.createWSChannel(websock, {channel_id})
+      if null == channel.channel_id ::
+        channel.channel_id = 'websocket'
+      return Promise.resolve(channel)
+
+
+    createWSChannel(websock, options) ::
+      const channel = this.createStreamChannel @ websock, websock, options
+      return Object.assign @ channel, @{}
+        when_opened: new Promise @ resolve => ::
+          websock.addEventListener @ 'open'
+            @=> resolve()
+            @{} passive: true, once: true
+
+        when_closed: new Promise @ resolve => ::
+          websock.addEventListener @ 'close'
+            @=> resolve()
+            @{} passive: true, once: true
+
+
+        peer_info: new Promise @ (resolve, reject) => ::
+          const readyState = websock.readyState
+
+          if 0 === readyState :: // connecting state
+            websock.addEventListener @ 'error', reject
+              @{} passive: true, once: true
+
+            websock.addEventListener @ 'open'
+              () => :: hub.p2p.hello(channel).then(resolve, reject)
+              @{} passive: true, once: true
+
+          else if 1 === readyState :: // open state
+            hub.p2p.hello(channel).then(resolve, reject)
+
+          else reject @ new Error @ 'WebSocket closed'
+

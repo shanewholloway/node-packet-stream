@@ -21,35 +21,35 @@ const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 add_core_jsy('core', null)
 add_core_jsy('index', true, {module_name: pkg_name})
 
-plugin_pkt()
-plugin_msgs()
-plugin_shadow()
+//pi_pkt()
+//pi_msgs()
+//pi_shadow()
 
-plugin_direct()
-plugin_net()
-plugin_web()
+pi_direct()
+pi_net()
+pi_web()
 
 
-function plugin_pkt() {
+function pi_pkt() {
   add_plugin_jsy('pkt/all', 'plugin-pkt-all', {exports: 'named'})
   add_plugin_jsy('pkt/index', 'plugin-pkt', {exports: 'named'})
   add_plugin_jsy('pkt/browser_line', 'plugin-pkt-browser-line', {plat_nodejs: false})
 }
-function plugin_msgs() {
+function pi_msgs() {
   add_plugin_jsy('msgs/all', 'plugin-msgs-all', {exports: 'named'})
   add_plugin_jsy('msgs/index', 'plugin-msgs', {})
 }
 
-function plugin_shadow() {
+function pi_shadow() {
   add_plugin_jsy('shadow/index', 'plugin-shadow', {})
 }
 
 
-function plugin_direct() {
+function pi_direct() {
   add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
   add_plugin_jsy('direct/index', 'plugin-direct', {})
 }
-function plugin_net() {
+function pi_net() {
   const external_nodejs = ['net', 'tls', 'stream']
 
   add_plugin_jsy('net/index', 'plugin-net-all', {plat_web: false, external_nodejs, exports: 'named'})
@@ -57,9 +57,10 @@ function plugin_net() {
   add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs})
   add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
 }
-function plugin_web() {
+function pi_web() {
   add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
-  add_plugin_jsy('web/index', 'plugin-web', {out_name: 'plugin-web'})
+  add_plugin_jsy('web/basic', 'plugin-web-basic', {exports: 'default'})
+  add_plugin_jsy('web/index', 'plugin-web', {exports: 'default'})
 }
 
 

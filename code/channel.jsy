@@ -1,7 +1,11 @@
 const o_assign = Object.assign
 
+export const channel_kinds = @{}
+  send_channel, codec_channel, local_channel
+
 export const base_channel = @{}
   __proto__: null
+  channel_id: null
 
   toJSON() :: throw new Error @ 'Not serializable'
 
@@ -35,12 +39,11 @@ async function _post_sent(pkt, p) ::
 
 
 
-
-export function direct_channel(send_ex) ::
+export function send_channel(send_ex) ::
   const { dispatch } = this
   const chan = @{}
     __proto__: this._channel_
-    dispatch: send_ex, send, is_direct: true
+    dispatch: send_ex, send
 
   return @[] recv, chan
 
@@ -48,6 +51,34 @@ export function direct_channel(send_ex) ::
     return _post_sent @ pkt, send_ex @ pkt
   async function recv(pkt) ::
     return dispatch @ await pkt, chan
+
+
+export function codec_channel(send_ex, codec) ::
+  const { dispatch } = this
+  const chan = @{}
+    __proto__: this._channel_
+    dispatch: resend, send
+
+  return @[] recv, chan
+
+  async function send(pkt) ::
+    const pkt_data = await codec.encode @ pkt
+    return _post_sent @ pkt, send_ex @ pkt_data
+  async function resend(pkt) ::
+    const pkt_data = await codec.encode @ pkt
+    return send_ex @ pkt_data
+  async function recv(pkt_data) ::
+    const pkt = await codec.decode @ pkt_data
+    return dispatch @ await pkt, chan
+
+export const json_codec = @{}
+  __proto__: null
+  encode(pkt) ::
+    return JSON.stringify(pkt)
+  decode(pkt_data) ::
+    return JSON.parse @ 
+      'string' === typeof pkt_data ? pkt_data
+        : decode_utf8 @ pkt_data
 
 
 
@@ -74,6 +105,7 @@ export function direct_channel(send_ex) ::
 
       return _post_sent @ pkt0,
         _send_ex @ serialize @ pkt
+
     async function _send_ex(pkt) ::
       try ::
         pkt = deserialize @ await pkt
@@ -89,7 +121,7 @@ export function direct_channel(send_ex) ::
     port2.onmessage = _send_ex
 
     const map = new Map()
-    let q=[], msg_id=1
+    let q=[], pkt_id=1
 
     const chan = @{}
       __proto__: this._channel_
@@ -107,7 +139,7 @@ export function direct_channel(send_ex) ::
 
       return _post_sent @ pkt0,
         new Promise @ resolve => ::
-          const id = q.pop() || msg_id++
+          const id = q.pop() || pkt_id++
           map.set @ id, resolve
           port1.postMessage @# id, pkt
 
@@ -121,4 +153,6 @@ export function direct_channel(send_ex) ::
         return resolve @ dispatch(pkt, chan)
       catch err ::
         chan.on_dispatch_error @ pkt, err
+
+
 

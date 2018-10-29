@@ -1,5 +1,6 @@
 import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 
+import { json_codec } from './channel.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'
@@ -120,6 +121,8 @@ Object.assign @ FabricHub.prototype, @{}
   _plugins_: Object.freeze([])
   is_fabric_hub: true
   data_utils
+  json_codec
+  stream_codec: json_codec
 
 Object.assign @ FabricHub, @{}
   _plugins_: Object.freeze([])

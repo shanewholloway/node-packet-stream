@@ -16,16 +16,16 @@ describe @ 'Target Router', test_target_router
 //import test_pi_pkt from './plugins/pkt.jsy'
 //import test_pi_msgs from './plugins/msgs.jsy'
 import test_pi_direct from './plugins/direct.jsy'
-import test_pi_shadow from './plugins/shadow.jsy'
+//import test_pi_shadow from './plugins/shadow.jsy'
 
 describe @ 'General Plugins', @=> ::
   describe @ 'direct', test_pi_direct
-  describe.skip @ 'shadow', test_pi_shadow
+  //describe.skip @ 'shadow', test_pi_shadow
 
 #IF PLAT_WEB
   import test_pi_web from './plugins/web.jsy'
 
-  describe.skip @ 'Browser Plugins', @=> ::
+  describe @ 'Browser Plugins', @=> ::
     describe @ 'web', test_pi_web
 
 #IF PLAT_NODEJS
@@ -34,8 +34,8 @@ describe @ 'General Plugins', @=> ::
   import test_pi_web_node from './plugins/web_node.jsy'
   import test_pi_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
 
-  describe.skip @ 'NodeJS Plugins', @=> ::
-    describe @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
-    describe @ 'net', test_pi_net
+  describe @ 'NodeJS Plugins', @=> ::
+    describe.skip @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
+    describe.skip @ 'net', test_pi_net
     describe @ 'web (node side)', test_pi_web_node
 

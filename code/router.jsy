@@ -1,6 +1,6 @@
 import { FabricBase } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
-import { base_channel, direct_channel, local_channel } from './channel.jsy'
+import { base_channel, channel_kinds } from './channel.jsy'
 
 export class FabricRouter extends FabricBase ::
   constructor() ::
@@ -74,8 +74,7 @@ export class FabricRouter extends FabricBase ::
   */
 
 
-Object.assign @ FabricRouter.prototype,
-  @{} direct_channel, local_channel
-
+Object.assign @ FabricRouter.prototype, channel_kinds
 
 export default FabricRouter
+
