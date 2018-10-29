@@ -1,3 +1,5 @@
+import { decode_utf8 } from './data_utils.jsy'
+
 const o_assign = Object.assign
 
 export const channel_kinds = @{}

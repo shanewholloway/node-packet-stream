@@ -24,11 +24,11 @@ export default function net_common(hub, plugin, protocol, asURL) ::
     url => plugin.connect @ _common_.unpackConnectURL(url)
 
   // shared implementation between net/tcp and tls implementations
-  return _common_ = @{} __proto__: stream_common(hub)
+  return _common_ = @{} __proto__: stream_common(hub, plugin.codec)
     createSocketChannel(sock, channel_id) ::
       sock.setNoDelay(true)
       return Object.defineProperties @ 
-        this.createRWChannel(sock, sock, channel_id || protocol)
+        this.createStreamChannel(sock, sock, channel_id || protocol)
         @{} conn_info: @{} value() :: return sock_conn_info(sock)
 
 

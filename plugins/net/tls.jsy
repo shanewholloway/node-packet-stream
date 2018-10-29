@@ -8,6 +8,7 @@ export default function tls_plugin(plugin_options={}) ::
   return function(hub) ::
     const plugin = Object.assign @ connect, @{}
       connect, createServer, on_url_connect, with_url_options
+      codec: plugin_options.codec
 
     const _common_ = net_common @ hub, plugin, protocol
     return hub[protocol] = plugin

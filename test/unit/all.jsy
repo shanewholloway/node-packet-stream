@@ -30,12 +30,19 @@ describe @ 'General Plugins', @=> ::
 
 #IF PLAT_NODEJS
 
-  import test_pi_net from './plugins/net.jsy'
+  import test_pi_net_direct from './plugins/net_direct.jsy'
+  import test_pi_net_tcp from './plugins/net_tcp.jsy'
+  import test_pi_net_tls from './plugins/net_tls.jsy'
   import test_pi_web_node from './plugins/web_node.jsy'
-  import test_pi_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
+  //import test_pi_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
 
   describe @ 'NodeJS Plugins', @=> ::
-    describe.skip @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
-    describe.skip @ 'net', test_pi_net
+    //describe.skip @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
+
+    describe @ 'net', @=> ::
+      describe @ 'hub.direct_stream', test_pi_net_direct
+      describe @ 'hub.tcp', test_pi_net_tcp
+      describe @ 'hub.tls', test_pi_net_tls
+
     describe @ 'web (node side)', test_pi_web_node
 

@@ -1,59 +1,60 @@
 export default stream_common
-export function stream_common(hub) ::
-  const createRWChannel = bind_channel(hub)
-  return @{} createRWChannel
+export function stream_common(hub, codec) ::
+  return @{}
+    __proto__: null
+    createStreamChannel(rstream, wstream, channel_id) ::
+      const pkt_hdr = Buffer.alloc(2)
+
+      const [recv, channel] = hub.router.codec_channel @ send_packed, codec || hub.stream_codec
+      if channel_id :: channel.channel_id = channel_id
+
+      channel.when_closed = new Promise @ resolve => ::
+        rstream.once @ 'end', resolve
+        wstream.once @ 'finish', resolve
+
+      recvPacketStream @ rstream, async pktList => ::
+        rstream.pause()
+        pktList = pktList.map(recv)
+        for const p of pktList :: await p
+        rstream.resume()
+
+      let p_drain = null, on_drain
+      wstream.on @ 'drain', @=> ::
+        p_drain = null
+        if null !== on_drain ::
+          on_drain()
+          on_drain = null
+
+      return channel
+
+      function send_packed(d_pkt) ::
+        if null === d_pkt ::
+          wstream.end()
+          return new Promise @ resolve =>
+            wstream.once @ 'finish', resolve
+
+        d_pkt = Buffer.from(d_pkt)
+        pkt_hdr.writeUInt16LE(2 + d_pkt.byteLength, 0)
+        const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
+        if wstream.write(s_pkt) ::
+          return // sent immediate, no backpressure promise
+        // backpressure as promise for next drain event
+        return next_drain()
+
+      function next_drain() ::
+        if null === p_drain ::
+          p_drain = new Promise @
+            resolve => :: on_drain = resolve
+        return p_drain
 
 
-export function bind_channel(hub) ::
-  const createChannel = hub._pkts_.bin_call.createChannel
 
-  return function (rstream, wstream, channel_id) ::
-    const pkt_hdr = Buffer.alloc(2)
-    send_packed.channel_id = channel_id
-    const [recv, channel] = createChannel @ hub.router.dispatch, send_packed
-    recvPacketStream @ rstream, recv
-
-    let p_drain=null, on_drain
-    wstream.on @ 'drain', @=> ::
-      p_drain = null
-      if null !== on_drain ::
-        on_drain()
-        on_drain = null
-
-    function next_drain() ::
-      if null === p_drain ::
-        p_drain = new Promise @
-          resolve => :: on_drain = resolve
-      return p_drain
-
-    channel.when_closed = new Promise @ resolve => ::
-      rstream.once @ 'end', resolve
-      wstream.once @ 'finish', resolve
-
-    return channel
-
-    function send_packed(d_pkt) ::
-      if null === d_pkt ::
-        wstream.end()
-        return new Promise @ resolve =>
-          wstream.once @ 'finish', resolve
-
-      d_pkt = Buffer.from(d_pkt)
-      pkt_hdr.writeUInt16LE(2 + d_pkt.byteLength, 0)
-      const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
-      if wstream.write(s_pkt) ::
-        return // sent immediate, no backpressure promise
-      // backpressure as promise for next drain event
-      return next_drain()
-
-
-
-export function recvPacketStream(rstream, dispatchCallback) ::
+export function recvPacketStream(rstream, recv_dispatch) ::
   return new Promise @ (resolve, reject) => ::
     rstream.on @ 'error', shutdown
     rstream.on @ 'close', shutdown
-    rstream.on @ 'data'
-      binaryLenPrefixFeedUint16LE @ shutdown, dispatchCallback
+    rstream.on @ 'data',
+      binaryLenPrefixFeedUint16LE @ shutdown, recv_dispatch
 
     function shutdown(err) ::
       if undefined !== rstream ::
@@ -63,7 +64,7 @@ export function recvPacketStream(rstream, dispatchCallback) ::
 
 
 
-export function binaryLenPrefixFeedUint16LE(shutdown, dispatchCallback) ::
+export function binaryLenPrefixFeedUint16LE(shutdown, recv_dispatch) ::
   let tipLen=null, byteLen=0, q=[]
 
   return function(data) ::
@@ -78,7 +79,7 @@ export function binaryLenPrefixFeedUint16LE(shutdown, dispatchCallback) ::
 
     if 0 !== pktList.length ::
       try ::
-        return dispatchCallback(pktList)
+        return recv_dispatch(pktList)
       catch err ::
         return shutdown(err)
 

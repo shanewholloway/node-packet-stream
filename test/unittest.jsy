@@ -14,17 +14,18 @@
   import FabricBaseHub from 'msg-fabric-core/esm/index.js'
   import pi_direct from 'msg-fabric-core/esm/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/plugin-web.js'
-  //import pi_direct_stream from 'msg-fabric-core/esm/plugin-net-direct.js'
-  //import pi_tcp from 'msg-fabric-core/esm/plugin-net-tcp.js'
-  //import pi_tls from 'msg-fabric-core/esm/plugin-net-tls.js'
-  //import pi_web from 'msg-fabric-core/esm/plugin-web.js'
+
+  import pi_direct_stream from 'msg-fabric-core/esm/plugin-net-direct.js'
+  import pi_tcp_stream from 'msg-fabric-core/esm/plugin-net-tcp.js'
+  import pi_tls_stream from 'msg-fabric-core/esm/plugin-net-tls.js'
 
   const FabricHub = FabricBaseHub.plugin @
     pi_direct()
     pi_web()
-    //pi_tcp()
-    //pi_tls()
-    //pi_web()
+
+    pi_tcp_stream()
+    pi_tls_stream()
+    pi_direct_stream()
 
 
 import { _init } from './unit/_setup.jsy'
