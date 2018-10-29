@@ -1,6 +1,6 @@
 import { Hub, expect, newLog } from './_setup.jsy'
 
-describe @ 'Router', @=> ::
+export default function test_hub_router() ::
   var hub, log, test_chan
   beforeEach @=>> ::
     log = newLog()
@@ -10,8 +10,7 @@ describe @ 'Router', @=> ::
       undeliverable({id_route, id_target}, mode) ::
         log @ 'undeliverable', @{} mode, id_route, id_target
 
-      send(obj) ::
-        const pkt = hub._fromObjPacket(obj)
+      send(pkt) ::
         return hub.router.dispatch @ pkt, this
 
 
@@ -20,7 +19,7 @@ describe @ 'Router', @=> ::
     it @ 'should call handler if target does exist', @=>> ::
       hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
         const {id_route, id_target} = pkt
-        log @ 'tgt recv', @{} id_route, id_target, body: pkt.json()
+        log @ 'tgt recv', @{} id_route, id_target, body: pkt.body
 
       await test_chan.send @:
         id_route: '$unit$'
@@ -39,13 +38,13 @@ describe @ 'Router', @=> ::
       hub.router.addRoute @ '$dynamic$', async (pkt, pktctx) => ::
         const dyn = logical[pkt.id_target]
         log @ 'dynamic route', pkt.id_target, dyn.id_target
-        pkt._hdr_[0] = dyn.id_route
-        pkt._hdr_[1] = dyn.id_target
+        pkt.id_route = dyn.id_route
+        pkt.id_target = dyn.id_target
         await pktctx.redispatch(pkt, pktctx)
 
       hub.local.addTarget @ tgt_id, (pkt, pktctx) => ::
         const {id_route, id_target} = pkt
-        log @ 'tgt recv', @{} id_route, id_target, body: pkt.json()
+        log @ 'tgt recv', @{} id_route, id_target, body: pkt.body
 
       await test_chan.send @:
         id_route: '$dynamic$', id_target: 'a-logical-tgt'

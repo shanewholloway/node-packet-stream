@@ -1,10 +1,13 @@
 import { FabricBase } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
+import { base_channel, direct_channel, local_channel } from './channel.jsy'
 
 export class FabricRouter extends FabricBase ::
   constructor() ::
     super()
+
     Object.defineProperties @ this, @{}
+      _channel_: @{} value: @{} __proto__: base_channel, router: this
       routeDiscovery: @{} value: this._discoveryDefault.slice()
 
     if this._skip_bind_api :: return this
@@ -69,5 +72,10 @@ export class FabricRouter extends FabricBase ::
   resolveRoute(id_route, allowDiscover, allowUpstream) : route function
 
   */
+
+
+Object.assign @ FabricRouter.prototype,
+  @{} direct_channel, local_channel
+
 
 export default FabricRouter

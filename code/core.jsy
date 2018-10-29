@@ -1,5 +1,7 @@
 export * from './hub.jsy'
+export * from './router_core.jsy'
 export * from './router.jsy'
+export * from './targets_core.jsy'
 export * from './targets.jsy'
 export * from './p2p.jsy'
 export { default } from './hub.jsy'

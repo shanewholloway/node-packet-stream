@@ -1,20 +1,11 @@
 import FabricHub from './hub.jsy'
-import pkt from '../plugins/pkt/index.jsy'
-import msgs from '../plugins/msgs/index.jsy'
-import direct from '../plugins/direct/index.jsy'
+//import pkt from '../plugins/pkt/index.jsy'
+//import msgs from '../plugins/msgs/index.jsy'
+//import direct from '../plugins/direct/index.jsy'
+//import web from '../plugins/web/index.jsy'
 
-#IF PLAT_WEB
-  import web from '../plugins/web/index.jsy'
-
-  export default FabricHub.plugin @
-    pkt()
-    msgs()
-    direct()
-    web()
-
-#ELSE
-  export default FabricHub.plugin @
-    pkt()
-    msgs()
-    direct()
-
+export default FabricHub.plugin @
+  //pkt()
+  //msgs()
+  //direct()
+  //web()

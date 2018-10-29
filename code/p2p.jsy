@@ -71,13 +71,15 @@ export class P2PRouter extends TargetRouter ::
       algs = Object.keys @ this.verifyRouteAlgs
 
     const body = Object.assign @ {}, this.hello_body,
-      @{} req_id, routes: this.public_routes, algs, signed
+      @{} req_id, routes: this.public_routes
 
+    if null != algs :: body.algs = algs
+    if null != signed :: body.signed = signed
     return @{} id_target, id_route: '', body
 
   async _tgt_hello(pkt, pktctx) ::
     const channel = pktctx.channel
-    const info = pkt.json(), req_id = info.req_id
+    const info = pkt.body, req_id = info.req_id
 
     const signed = info.algs && await this._sign_routes(req_id, channel)
     channel.send @ this._helloHandshake @
@@ -86,7 +88,7 @@ export class P2PRouter extends TargetRouter ::
     await this._applyHelloInfo(info, pkt, pktctx)
 
   async _tgt_olleh(pkt, pktctx) ::
-    const info = pkt.json()
+    const info = pkt.body
     const resolve = this._queries.get(info.req_id)
     if undefined !== resolve ::
       await this._applyHelloInfo(info, pkt, pktctx)

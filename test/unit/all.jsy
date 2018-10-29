@@ -1,29 +1,41 @@
-import './smoke.jsy'
-import './hub_create.jsy'
-import './router.jsy'
-import './p2p.jsy'
-import './targets.jsy'
-import './data_utils.jsy'
+import test_smoke from './smoke.jsy'
+import test_hub_creation from './hub_create.jsy'
+import test_hub_router from './router.jsy'
+import test_p2p_target_router from './p2p.jsy'
 
-import './plugins/pkt.jsy'
-import './plugins/msgs.jsy'
-import './plugins/shadow.jsy'
-import './plugins/direct.jsy'
+import test_target_router from './targets.jsy'
+import test_data_utils from './data_utils.jsy'
+
+it @ 'smoke', test_smoke
+describe @ 'Hub Creation', test_hub_creation
+describe @ 'Data Utils', test_data_utils
+describe @ 'Router', test_hub_router
+describe @ 'P2P Target Router', test_p2p_target_router
+describe @ 'Target Router', test_target_router
+
+//import test_pi_pkt from './plugins/pkt.jsy'
+//import test_pi_msgs from './plugins/msgs.jsy'
+import test_pi_direct from './plugins/direct.jsy'
+import test_pi_shadow from './plugins/shadow.jsy'
+
+describe @ 'General Plugins', @=> ::
+  describe @ 'direct', test_pi_direct
+  describe.skip @ 'shadow', test_pi_shadow
 
 #IF PLAT_WEB
-  import test_web from './plugins/web.jsy'
+  import test_pi_web from './plugins/web.jsy'
 
-  describe @ 'Browser Plugins', @=> ::
-    describe @ 'web', test_web
+  describe.skip @ 'Browser Plugins', @=> ::
+    describe @ 'web', test_pi_web
 
 #IF PLAT_NODEJS
 
-  import test_net from './plugins/net.jsy'
-  import test_web_node from './plugins/web_node.jsy'
-  import test_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
+  import test_pi_net from './plugins/net.jsy'
+  import test_pi_web_node from './plugins/web_node.jsy'
+  import test_pi_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
 
-  describe @ 'NodeJS Plugins', @=> ::
-    describe @ 'msgs streaming with NodeJS', test_msgs_streaming_node
-    describe @ 'net', test_net
-    describe @ 'web (node side)', test_web_node
+  describe.skip @ 'NodeJS Plugins', @=> ::
+    describe @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
+    describe @ 'net', test_pi_net
+    describe @ 'web (node side)', test_pi_web_node
 

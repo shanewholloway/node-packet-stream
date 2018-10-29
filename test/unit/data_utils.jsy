@@ -1,6 +1,6 @@
 import { Hub, expect } from './_setup.jsy'
 
-describe @ 'Plugin platform', @=> ::
+export default function test_data_utils() ::
 
   function has_data_utils(host) ::
     expect(host.data_utils).to.not.be.undefined
@@ -42,3 +42,4 @@ describe @ 'Plugin platform', @=> ::
     expect(url.pathname).to.equal @ '/a/b/c'
     expect(url.search).to.equal @ '?s=123'
     expect(url.hash).to.equal @ '#neat'
+

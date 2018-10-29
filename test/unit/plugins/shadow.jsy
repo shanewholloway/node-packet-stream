@@ -3,8 +3,7 @@ import pi_shadow from 'msg-fabric-core/esm/plugin-shadow'
 
 const xor_shadow = @{}
 
-
-describe @ 'Plugin shadow', @=> ::
+export default function test_pi_shadow() ::
   var hub, log, g_mask
   beforeEach @=>> ::
     g_mask = 0xa5

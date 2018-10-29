@@ -1,5 +1,5 @@
 import { Hub, expect } from './_setup.jsy'
 
-it @ 'smoke', @=>> :: 
+export default async function test_smoke() ::
   expect(Hub).to.be.a @ 'function'
   expect(Hub.create).to.be.a @ 'function'

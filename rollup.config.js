@@ -14,7 +14,7 @@ const plugins_nodejs = [ rpi_jsy({defines: {PLAT_NODEJS: true}}) ].concat(plugin
 const plugins_web = [ rpi_jsy({defines: {PLAT_WEB: true}}) ].concat(plugins_base)
 
 import { terser as rpi_terser } from 'rollup-plugin-terser'
-const min_plugins = true
+const min_plugins = false //true
 const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 
 

@@ -1,6 +1,6 @@
 import { Hub, expect } from './_setup.jsy'
 
-describe @ 'Hub creation', @=> ::
+export default function test_hub_creation() ::
 
   it @ 'new Hub', @=>> :: 
     const hub = new Hub()

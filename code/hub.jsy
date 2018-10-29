@@ -3,7 +3,6 @@ import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 import P2PRouter_Base from './p2p.jsy'
-import { local_channel } from './channel.jsy'
 
 import { applyPlugins, cmpPlugins } from './utils.jsy'
 
@@ -25,7 +24,7 @@ export class FabricHub ::
     const p2p = self._initHubP2PRoute(router)
     const local = self._initHubLocalRoute(options.id_route, router, p2p)
 
-    const channel = local_channel(router, this)
+    const channel = router.local_channel()
     Object.assign @ this, @{}
       router, p2p, local,
       channel, send: channel.send

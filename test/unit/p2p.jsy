@@ -1,6 +1,7 @@
 import { Hub, expect, newLog, createTestHub, sinon } from './_setup.jsy'
 
 describe @ 'P2P Target Router', @=> ::
+export default function test_p2p_target_router() ::
   it @ 'basics', @=>> :: 
     const hub = Hub.create('$one$')
     expect(hub.p2p.id_route).to.equal('')
