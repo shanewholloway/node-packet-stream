@@ -31,12 +31,12 @@ pi_web()
 
 
 function pi_pkt() {
-  add_plugin_jsy('pkt/all', 'plugin-pkt-all', {exports: 'named'})
+  add_plugin_jsy('pkt/all', 'plugin-pkt-all', {plat_web: false, exports: 'named'})
   add_plugin_jsy('pkt/index', 'plugin-pkt', {exports: 'named'})
   add_plugin_jsy('pkt/browser_line', 'plugin-pkt-browser-line', {plat_nodejs: false})
 }
 function pi_msgs() {
-  add_plugin_jsy('msgs/all', 'plugin-msgs-all', {exports: 'named'})
+  add_plugin_jsy('msgs/all', 'plugin-msgs-all', {plat_web: false, exports: 'named'})
   add_plugin_jsy('msgs/index', 'plugin-msgs', {})
 }
 
@@ -46,7 +46,7 @@ function pi_shadow() {
 
 
 function pi_direct() {
-  add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
+  add_plugin_jsy('direct/all', 'plugin-direct-all', {plat_web: false, exports: 'named'})
   add_plugin_jsy('direct/index', 'plugin-direct', {})
 }
 function pi_net() {
@@ -58,7 +58,7 @@ function pi_net() {
   add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
 }
 function pi_web() {
-  add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
+  add_plugin_jsy('web/all', 'plugin-web-all', {plat_web: false, exports: 'named'})
   add_plugin_jsy('web/basic', 'plugin-web-basic', {exports: 'default'})
   add_plugin_jsy('web/index', 'plugin-web', {exports: 'default'})
 }

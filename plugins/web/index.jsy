@@ -8,6 +8,6 @@ export default function web_full_plugin(plugin_options={}) ::
       url => hub.web.connectWS(url, true)
 
     return hub.web = Object.assign @
-      web_basic_api(hub),
+      web_basic_api(hub, plugin_options),
       websocket_api(hub, plugin_options),
 

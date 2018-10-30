@@ -1,5 +1,5 @@
 import { random_base64 } from './data_utils.jsy'
-import { FabricBase } from './utils.jsy'
+import { FabricBase, discoverFirst } from './utils.jsy'
 import { bindCoreTargetAPI } from './targets_core.jsy'
 
 export class TargetRouter extends FabricBase ::
@@ -26,7 +26,7 @@ export class TargetRouter extends FabricBase ::
     let lstDiscovery = this.targetDiscovery
     if 0 === lstDiscovery.length :: return
 
-    const target = await this._discoverFirst @
+    const target = await discoverFirst @
       lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_target, id_target, pktctx
       err => this._on_error @ 'target.discovery', err

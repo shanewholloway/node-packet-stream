@@ -1,23 +1,26 @@
 export default web_basic_api
-export function web_basic_api(hub) ::
+export function web_basic_api(hub, plugin_options) ::
   const yes = () => true
 
   return @{}
+    __proto__: null
+
+    p2p: plugin_options.p2p
+    with_p2p(p2p) :: return @{} p2p, __proto__: this
+
     connect(...args) ::
       const channel = this.createChannel(...args)
       if null == channel.channel_id ::
         channel.channel_id = 'web_basic'
 
-      channel.peer_info = hub.p2p.hello(channel)
-      return Promise.resolve(channel)
+      return channel.init @ channel.channel_id
 
     connectStream(...args) ::
       const channel = this.createStreamChannel(...args)
       if null == channel.channel_id ::
         channel.channel_id = 'web_stream'
 
-      channel.peer_info = hub.p2p.hello(channel)
-      return Promise.resolve(channel)
+      return channel.init @ channel.channel_id
 
 
     createStreamChannel(tgt_recv, tgt_send, options) ::
@@ -36,8 +39,8 @@ export function web_basic_api(hub) ::
       .bind @ tgt_send
 
       const [recv, channel] = codec
-        ? hub.router.codec_channel @ send_ex, codec
-        : hub.router.send_channel @ send_ex
+        ? hub.router.codec_channel @ this.p2p || hub.p2p, send_ex, codec
+        : hub.router.send_channel @ this.p2p || hub.p2p, send_ex
       channel.channel_id = options.channel_id
 
       tgt_recv.addEventListener @ 'message',

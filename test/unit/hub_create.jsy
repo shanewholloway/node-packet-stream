@@ -15,7 +15,6 @@ export default function test_hub_creation() ::
     expect(hub.channel.send).to.be.equal @ hub.send
 
     expect(hub.local.addTarget).to.be.a @ 'function'
-    expect(hub.p2p.addTarget).to.be.a @ 'function'
 
   it @ 'Hub.create', @=>> :: 
     const hub = Hub.create()
@@ -30,7 +29,6 @@ export default function test_hub_creation() ::
     expect(hub.channel.send).to.be.equal @ hub.send
 
     expect(hub.local.addTarget).to.be.a @ 'function'
-    expect(hub.p2p.addTarget).to.be.a @ 'function'
 
   it @ 'new Hub with specified id_route', @=>> :: 
     const hub = new Hub('$unit$')

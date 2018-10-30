@@ -1,7 +1,6 @@
 import test_smoke from './smoke.jsy'
 import test_hub_creation from './hub_create.jsy'
 import test_hub_router from './router.jsy'
-import test_p2p_target_router from './p2p.jsy'
 
 import test_target_router from './targets.jsy'
 import test_data_utils from './data_utils.jsy'
@@ -10,7 +9,6 @@ it @ 'smoke', test_smoke
 describe @ 'Hub Creation', test_hub_creation
 describe @ 'Data Utils', test_data_utils
 describe @ 'Router', test_hub_router
-describe @ 'P2P Target Router', test_p2p_target_router
 describe @ 'Target Router', test_target_router
 
 //import test_pi_pkt from './plugins/pkt.jsy'

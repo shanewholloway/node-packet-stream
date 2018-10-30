@@ -8,7 +8,7 @@ export default function tcp_plugin(plugin_options={}) ::
   return function(hub) ::
     const plugin = Object.assign @ connect, @{}
       connect, createServer, on_url_connect, with_url_options
-      codec: plugin_options.codec
+      codec: plugin_options.codec, p2p: plugin_options.p2p
 
     const _common_ = net_common @ hub, plugin, protocol
     return hub[protocol] = plugin

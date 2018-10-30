@@ -1,4 +1,4 @@
-import { FabricBase } from './utils.jsy'
+import { FabricBase, discoverFirst } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
 
@@ -9,6 +9,7 @@ export class FabricRouter extends FabricBase ::
     Object.defineProperties @ this, @{}
       _channel_: @{} value: @{} __proto__: base_channel, router: this
       routeDiscovery: @{} value: this._discoveryDefault.slice()
+      public_routes: @{} value: this._initPublicRoutes()
 
     if this._skip_bind_api :: return this
 
@@ -18,6 +19,14 @@ export class FabricRouter extends FabricBase ::
     return self
 
   _initRoutes() :: return new Map()
+  _initPublicRoutes() :: return new Map()
+
+  async publishRoute(route) ::
+    await route.ready
+    if 'string' === typeof route.id_route ::
+      this.public_routes.set @ route.id_route, route
+    else throw new TypeError()
+    return route
 
   upstreamRoute(id_route) ::
     return this.addDynamic @ id_route, this.upstream
@@ -26,7 +35,7 @@ export class FabricRouter extends FabricBase ::
     let lstDiscovery = this.routeDiscovery
     if 0 === lstDiscovery.length :: return
 
-    const route = await this._discoverFirst @
+    const route = await discoverFirst @
       lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_route, id_route
       err => this._on_error @ 'router.discovery', err

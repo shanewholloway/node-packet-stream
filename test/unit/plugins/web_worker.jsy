@@ -36,7 +36,8 @@ export default function () ::
             from: 'webworker'
             echo: pkt.body
 
-      hub.web.connect(self)
+      hub.local.ready.then @=>
+        hub.web.connect(self)
 
 
 

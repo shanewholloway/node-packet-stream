@@ -19,6 +19,9 @@ export async function testDoubleSidedChannelConnection(test_api) ::
   if test_api.before ::
     await test_api.before(hub_a, hub_b)
 
+  await hub_a.local.ready
+  await hub_b.local.ready
+
   const p_chan = test_api.connect(hub_a, hub_b)
   expect(p_chan).to.be.a('promise')
 
@@ -94,6 +97,8 @@ export async function testSingleSidedChannelConnection(test_api) ::
 
   if test_api.before ::
     await test_api.before(hub)
+
+  await hub.local.ready
 
   const p_chan = test_api.connect(hub)
   expect(p_chan).to.be.a('promise')

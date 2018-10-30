@@ -45,7 +45,7 @@ export function createTestHub(name, log) ::
     hub.local.addTarget @ `tgt_${name}`
       pkt => log @ `recv [${pkt.id_route} ${pkt.id_target}]`, pkt.body
 
-  expect(hub.p2p.public_routes)
-  .to.deep.equal @# `$${name}$`
+  expect(hub.local.id_route)
+  .to.equal @ `$${name}$`
 
   return hub

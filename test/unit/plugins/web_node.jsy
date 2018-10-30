@@ -194,6 +194,7 @@ export async function add_websocket(hub_a, ws) ::
   await expect(p_chan).to.be.fulfilled
 
   const chan = await p_chan
+  /*
   expect(chan.peer_info).to.be.a('promise')
   await expect(chan.peer_info).to.be.fulfilled
 
@@ -201,6 +202,7 @@ export async function add_websocket(hub_a, ws) ::
   expect(peer_info).to.have.property('routes')
   expect(peer_info.routes).to.have.lengthOf(1)
   expect(peer_info.routes[0]).to.be.oneOf @# '$one$', '$two$'
+  */
 
   return chan
 

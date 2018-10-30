@@ -24,7 +24,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
     url => plugin.connect @ _common_.unpackConnectURL(url)
 
   // shared implementation between net/tcp and tls implementations
-  return _common_ = @{} __proto__: stream_common(hub, plugin.codec)
+  return _common_ = @{} __proto__: stream_common(hub),
     createSocketChannel(sock, channel_id) ::
       sock.setNoDelay(true)
       return Object.defineProperties @ 
@@ -34,7 +34,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
 
     bindChannel(...args) ::
       const channel = this.createSocketChannel(...args)
-      channel.peer_info = hub.p2p.hello(channel)
+      channel.init()
       return channel
 
     createClient(channel_id, _impl_) ::

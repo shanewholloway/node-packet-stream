@@ -1,6 +1,6 @@
 import { decode_utf8 } from './data_utils.jsy'
 
-const o_assign = Object.assign
+const o_assign = Object.assign, o_create = Object.create
 
 export const channel_kinds = @{}
   send_channel, codec_channel, local_channel
@@ -29,7 +29,29 @@ export const base_channel = @{}
     return this.router.addRoute @
       id_route, this.dispatch || this.send, override
 
-  //shutdown() ::
+  get peerRoute() ::
+    const p2p = this.p2p
+    return p2p.peerRoute.bind(p2p)
+
+  async init(channel_id) ::
+    if undefined === this.peer_info ::
+      this.peer_info = Promise.resolve(this.ready)
+        .then @=> this.p2p ? this.p2p.hello() : null
+
+    if channel_id ::
+      this.channel_id = channel_id
+    return await this
+
+
+function _init_p2p(chan, p2p) ::
+  if null != p2p ::
+    if ! p2p.hello || ! p2p.peerRoute ::
+      throw new TypeError()
+
+    chan.p2p = Object.create @ p2p, @{}
+      channel: @{} value: chan
+      router: @{} value: chan.router
+  return chan
 
 async function _post_sent(pkt, p) ::
   if undefined === pkt.on_sent ::
@@ -41,12 +63,13 @@ async function _post_sent(pkt, p) ::
 
 
 
-export function send_channel(send_ex) ::
+export function send_channel(p2p, send_ex) ::
   const { dispatch } = this
   const chan = @{}
     __proto__: this._channel_
     dispatch: send_ex, send
 
+  _init_p2p(chan, p2p)
   return @[] recv, chan
 
   function send(pkt) ::
@@ -55,12 +78,13 @@ export function send_channel(send_ex) ::
     return dispatch @ await pkt, chan
 
 
-export function codec_channel(send_ex, codec) ::
+export function codec_channel(p2p, send_ex, codec) ::
   const { dispatch } = this
   const chan = @{}
     __proto__: this._channel_
     dispatch: resend, send
 
+  _init_p2p(chan, p2p)
   return @[] recv, chan
 
   async function send(pkt) ::
@@ -75,12 +99,19 @@ export function codec_channel(send_ex, codec) ::
 
 export const json_codec = @{}
   __proto__: null
+  cache: new WeakMap()
   encode(pkt) ::
+    let pkt_data = this.cache.get(pkt)
+    if undefined === pkt_data ::
+      pkt_data = JSON.stringify(pkt)
+      this.cache.set(pkt, pkt_data)
     return JSON.stringify(pkt)
   decode(pkt_data) ::
-    return JSON.parse @ 
+    const pkt = JSON.parse @ 
       'string' === typeof pkt_data ? pkt_data
         : decode_utf8 @ pkt_data
+    this.cache.set(pkt, pkt_data)
+    return pkt
 
 
 

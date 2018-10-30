@@ -2,9 +2,7 @@
 export const data_utils = @{}
   parse_url
   random, random_base64,
-  pack_base64, unpack_base64
   decode_utf8, encode_utf8
-  as_data, concat_data
 
 export default data_utils
 
@@ -26,25 +24,11 @@ export default data_utils
   export function parse_url(url) ::
     return new URL(url)
 
-  export function pack_base64(data) ::
-    return Buffer.from(data).toString('base64')
-
-  export function unpack_base64(str_b64) ::
-    return Buffer.from(str_b64, 'base64')
-
   export function decode_utf8(u8) ::
     return Buffer.from(u8).toString('utf-8')
 
   export function encode_utf8(str) ::
     return Buffer.from(str, 'utf-8')
-
-  export function as_data(data) ::
-    return null === data ? Buffer.alloc(0)
-      : Buffer.isBuffer(data) ? data
-      : Buffer.from(data)
-
-  export function concat_data(parts) ::
-    return Buffer.concat(parts)
 
 
 
@@ -54,14 +38,11 @@ export default data_utils
       'undefined' !== typeof window ? window
     : 'undefined' !== typeof self ? self
     : 'undefined' !== typeof global ? global
-    : @ console.warn('Unknown global exectuion environment'), {}
+    : {}
 
   Object.defineProperties @ data_utils, @{}
     _global_: {value: _global_}
 
-
-  const _fromCharCode = String.fromCharCode
-  const _charCodeAt = ''.charCodeAt
 
   export function random(n) ::
     const ua = new Uint8Array(n)
@@ -71,26 +52,15 @@ export default data_utils
   export function random_base64(n) ::
     const ua = new Uint8Array(n)
     _global_.crypto.getRandomValues(ua)
-    return pack_base64 @ ua
+
+    let res=''
+    const _fromCharCode = String.fromCharCode
+    for let i=0; i<n; i++ ::
+      res += _fromCharCode(ua[i])
+    return _global_.btoa(res)
 
   export function parse_url(url) ::
     return new URL(url)
-
-  export function pack_base64(data) ::
-    const u8 = new Uint8Array(data.buffer || data), len = u8.byteLength
-
-    let res=''
-    for (let i=0; i<len; i++)
-      res += _fromCharCode(u8[i])
-    return _global_.btoa(res)
-
-  export function unpack_base64(str_b64) ::
-    const sz = _global_.atob(str_b64), len = sz.length
-
-    const res = new Uint8Array(len)
-    for (let i=0; i<len; i++)
-      res[i] = _charCodeAt.call(sz, i)
-    return res
 
   export function decode_utf8(u8) ::
     if undefined === u8.byteLength ::
@@ -99,22 +69,4 @@ export default data_utils
 
   export function encode_utf8(str) ::
     return new TextEncoder().encode(str)
-
-  export function as_data(data) ::
-    if null === data || undefined === data ::
-      return new Uint8Array(0)
-    return 'string' === typeof data
-      ? encode_utf8(data)
-      : new Uint8Array(data.buffer || data)
-
-  export function concat_data(parts) ::
-    let i=0, len=0
-    for const b of parts ::
-      len += b.byteLength
-
-    const ua = new Uint8Array(len)
-    for const b of parts ::
-      ua.set @ new Uint8Array(b.buffer || b), i
-      i += b.byteLength
-    return ua
 

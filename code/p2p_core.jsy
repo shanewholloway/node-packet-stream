@@ -1,0 +1,57 @@
+
+const _answers = new Map()
+let _g_mid = 100
+function awaitAnswer() ::
+  const mid = _g_mid++
+  const p = new Promise @ (resolve, reject) => ::
+    _answers.set @ mid, @{} resolve, reject
+  p.mid = mid
+  return p
+
+function routeAnswer(mid, ans) ::
+  mid = mid.mid || mid
+  const r = _answers.get @ mid
+  _answers.delete @ mid
+  if r :: return r.resolve @ ans
+
+export const basic_p2p = @{}
+  __proto__: null
+
+  async hello() ::
+    const ans = awaitAnswer()
+    await this.channel.send @:
+      id_target: 'hello', mid: ans.mid
+      body: @{}
+        version: 'basic'
+        routes: Array.from @
+          this.router.public_routes.keys()
+    return ans
+
+  async olleh(pkt) ::
+    await this.channel.send @:
+      id_target: 'olleh', mid: pkt.mid
+      body: @{}
+        version: 'basic'
+        routes: Array.from @
+          this.router.public_routes.keys()
+
+  peerRoute(pkt, pktctx) ::
+    if 'basic' !== pkt.body.version :: return
+    const fn = this['_m$_'+pkt.id_target]
+    if fn :: return fn.call @ this, pkt, pktctx
+
+  _m$_hello(pkt, pktctx) ::
+    const { router, channel } = this
+    for const id_route of pkt.body.routes || [] ::
+      router.addPeer @ id_route, channel, false
+
+    return this.olleh(pkt)
+
+  _m$_olleh(pkt, pktctx) ::
+    const { router, channel } = this
+    for const id_route of pkt.body.routes || [] ::
+      router.addPeer @ id_route, channel, false
+
+    return routeAnswer(pkt, pkt.body)
+
+export default basic_p2p

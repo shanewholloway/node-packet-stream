@@ -1,9 +1,9 @@
 import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 
 import { json_codec } from './channel.jsy'
+import { basic_p2p } from './p2p_core.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
-import P2PRouter_Base from './p2p.jsy'
 
 import { applyPlugins, cmpPlugins } from './utils.jsy'
 
@@ -14,56 +14,44 @@ export class FabricHub ::
     const self = Object.create(this)
 
     if null == options :: options = {}
-    else if 'string' === typeof options ::
+    else if 'object' !== typeof options ::
       options = @{} id_route: options
     this.options = options
 
 
     applyPlugins @ 'pre', this._plugins_, self
 
-    const router = self._initFabricRouter()
-    const p2p = self._initHubP2PRoute(router)
-    const local = self._initHubLocalRoute(options.id_route, router, p2p)
-
+    const router = self._initHubRouter()
     const channel = router.local_channel()
     Object.assign @ this, @{}
-      router, p2p, local,
-      channel, send: channel.send
+      router, channel, send: channel.send
       _url_protos: {}
+
+    this.local = false === options.id_route ? null
+      : self._initLocal(options.id_route)
 
     applyPlugins @ null, this._plugins_, self
     applyPlugins @ 'post', this._plugins_, self
     return self
 
-  _initFabricRouter() ::
+  _initHubRouter() ::
     return new this.constructor.FabricRouter()
+  _initLocal(id_route) ::
+    return this.createLocalRoute(id_route)
 
-  _initHubP2PRoute(router) ::
-    return this.createP2PRoute(router)
-
-  createP2PRoute(router) ::
-    return new this.constructor.P2PRouter @ router || this.router, this
-
-  _initHubLocalRoute(id_route, router, p2p) ::
-    const local = this.createLocalRoute(id_route, router)
-    p2p.publishRoute(local)
-    return local
-
-  createLocalRoute(id_route, router) ::
+  createLocalRoute(id_route, is_private) ::
     if null == id_route :: id_route = this.newRouteId()
-    return new this.constructor.TargetRouter @
-      id_route, router || this.router, this
+    const local = new this.constructor.TargetRouter @
+      id_route, this.router, this
+
+    if ! is_private :: this.router.publishRoute(local)
+    return local
 
   newRouteId() ::
     const id = random_base64(5).slice(0, 6)
     const prefix = this.options.id_prefix
     return undefined === prefix ? id : prefix+id
 
-  newLocalRoute(privateRoute, id_route) ::
-    const route = this.createLocalRoute(id_route, this.router)
-    if ! privateRoute ::
-      this.p2p.publishRoute(route)
-    return route
 
 
   connect(conn_url) ::
@@ -104,13 +92,12 @@ export class FabricHub ::
 
     class FabricRouter extends this.FabricRouter ::
     class TargetRouter extends this.TargetRouter ::
-    class P2PRouter extends this.P2PRouter ::
 
     class FabricHub extends this ::
     FabricHub.prototype._plugins_ = inst_plugins
 
     Object.assign @ FabricHub, @{} _plugins_,
-      FabricRouter, TargetRouter, P2PRouter
+      FabricRouter, TargetRouter
 
     applyPlugins @ 'subclass', _plugins_, FabricHub, inst_plugins
     inst_plugins.sort @ cmpPlugins
@@ -118,16 +105,15 @@ export class FabricHub ::
 
 
 Object.assign @ FabricHub.prototype, @{}
-  _plugins_: Object.freeze([])
   is_fabric_hub: true
-  data_utils
-  json_codec
-  stream_codec: json_codec
+  _plugins_: Object.freeze([])
+  data_utils,
+  json_codec, stream_codec: json_codec
+  basic_p2p, p2p: basic_p2p
 
 Object.assign @ FabricHub, @{}
   _plugins_: Object.freeze([])
   FabricRouter: FabricRouter_Base
   TargetRouter: TargetRouter_Base
-  P2PRouter: P2PRouter_Base
 
 export default FabricHub

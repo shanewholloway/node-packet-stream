@@ -1,28 +1,20 @@
-import { promiseQueue } from './utils.jsy'
-
 const isArray = Array.isArray
 
 export function bindCoreDispatchRouter(hub_router, routes_map) ::
   // as closures over private variables (routes_map)
-  const pqueue = promiseQueue()
   const pktctx0 = @{} __proto__: null, hub_router, redispatch: dispatch_one
 
   return @{} dispatch, resolveRoute
 
-  function dispatch(pktArg, channel) ::
-    const pktctx = @{} channel, __proto__: pktctx0
-    const pq = pqueue() // pq will dispatch during Promise resolutions
-    return isArray(pktArg)
-      ? pktArg.map @ pkt =>
-          pq.then @=> dispatch_one @ pkt, pktctx
-      : pq.then @=> dispatch_one @ pktArg, pktctx
-
+  function dispatch(pkt, channel) ::
+    if isArray(pkt) :: throw new TypeError
+    return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
 
   async function dispatch_one(pkt, pktctx) ::
     try ::
       pkt = await pkt
       const id_route = pkt.id_route || ''
-      let route = routes_map.get(id_route)
+      let route = id_route ? routes_map.get(id_route) : pktctx.channel.peerRoute
       if undefined === route ::
         route = await resolveRoute(id_route, true, true)
 

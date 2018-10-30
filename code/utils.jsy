@@ -1,15 +1,5 @@
 import data_utils from './data_utils.jsy'
 
-export function promiseQueue(src) ::
-  let tip = null
-  return function () ::
-    if null === tip ::
-      tip = Promise.resolve(src).then(clear)
-    return tip
-
-  function clear() :: tip = null
-
-
 const sym_dedup = Symbol('msg_fabric_discovery')
 export function discoverFirst(lstFns, query, on_error) ::
   const key = query.key
@@ -56,8 +46,6 @@ export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
   data_utils
-  _promiseQueue: promiseQueue
-  _discoverFirst: discoverFirst
   _discoveryDefault: []
   _discoveryTimeout() :: return () => timeoutResolve(5000, null)
   _on_error(scope, err) :: console.error @ scope, err
