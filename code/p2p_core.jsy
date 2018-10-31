@@ -17,41 +17,25 @@ function routeAnswer(mid, ans) ::
 export const basic_p2p = @{}
   __proto__: null
 
-  async hello() ::
-    const ans = awaitAnswer()
+  async hello(mid) ::
+    const ans = mid ? null : awaitAnswer()
     await this.channel.send @:
-      id_target: 'hello', mid: ans.mid
+      id_target: ans ? 'hello' : 'olleh'
+      mid: ans ? ans.mid : mid
       body: @{}
         version: 'basic'
         routes: Array.from @
           this.router.public_routes.keys()
     return ans
 
-  async olleh(pkt) ::
-    await this.channel.send @:
-      id_target: 'olleh', mid: pkt.mid
-      body: @{}
-        version: 'basic'
-        routes: Array.from @
-          this.router.public_routes.keys()
-
   peerRoute(pkt, pktctx) ::
     if 'basic' !== pkt.body.version :: return
-    const fn = this['_m$_'+pkt.id_target]
-    if fn :: return fn.call @ this, pkt, pktctx
 
-  _m$_hello(pkt, pktctx) ::
     const { router, channel } = this
     for const id_route of pkt.body.routes || [] ::
       router.addPeer @ id_route, channel, false
 
-    return this.olleh(pkt)
+    switch pkt.id_target ::
+      case 'hello': return this.hello @ pkt.mid
+      case 'olleh': return routeAnswer @ pkt.mid, pkt.body
 
-  _m$_olleh(pkt, pktctx) ::
-    const { router, channel } = this
-    for const id_route of pkt.body.routes || [] ::
-      router.addPeer @ id_route, channel, false
-
-    return routeAnswer(pkt, pkt.body)
-
-export default basic_p2p
