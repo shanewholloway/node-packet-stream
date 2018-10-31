@@ -25,10 +25,39 @@ export function discoverFirst(lstFns, query, on_error) ::
   res.then @=> dedup.delete(key)
   return res
 
-export const timeoutResolve = (ms, answer) =>
-  new Promise @ resolve => ::
-    const tid = setTimeout @ resolve, ms, answer
+
+export function bindTimeouts(ms_interval) ::
+  const q = []
+
+  ms_interval = (0 | ms_interval) || 500
+
+  ::
+    const p0 = Promise.resolve(), p_then = p0.then.bind(p0)
+
+    const tick = function () ::
+      const tip = q.shift()
+      if tip :: tip.forEach @ p_then
+
+    const tid = setInterval @ tick, ms_interval
     if tid.unref :: tid.unref()
+
+
+  add.resolve = (ms_min_timeout, value) =>
+    new Promise @ y => add @ ms_min_timeout, @=> y @ value
+
+  add.reject = (ms_min_timeout, value) =>
+    new Promise @ (y, n) => add @ ms_min_timeout, @=> n @ value
+
+  return add
+
+  function add(ms_min_timeout, fn_timeout) ::
+    if 'function' !== typeof fn_timeout :: throw new TypeError
+
+    const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
+    const qi = q[idx] || []
+    if 0 === qi.length :: q[idx] = qi
+    qi.push @ fn_timeout
+
 
 
 export const cmpPlugins = (a, b) => (0 | a && a.order) - (0 | b && b.order)
@@ -46,7 +75,8 @@ export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
   data_utils
+  timeouts: bindTimeouts()
   _discoveryDefault: []
-  _discoveryTimeout() :: return () => timeoutResolve(5000, null)
+  _discoveryTimeout() :: return () => this.timeouts.resolve(5000, null)
   _on_error(scope, err) :: console.error @ scope, err
 

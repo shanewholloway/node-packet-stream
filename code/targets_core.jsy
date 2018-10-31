@@ -63,6 +63,23 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
       return targets_map.has(id_target)
 
 
+    addReply(ms_timeout=1000) ::
+      const id_target = this.newTargetId()
+      const p = new Promise @ (resolve, reject) => ::
+        targets_map.set @ id_target, (pkt, pktctx) => ::
+          targets_map.delete @ id_target
+          resolve @ pkt.body
+
+        if ms_timeout ::
+          this.timeouts @ ms_timeout, err => ::
+            targets_map.delete @ id_target
+            reject @ err
+
+      return p.id = @{} id_target, id_route
+
+
+
+
   return Object.assign @ targets_api,
     bindCoreDispatchTarget @
       tgt_router, targets_map,
