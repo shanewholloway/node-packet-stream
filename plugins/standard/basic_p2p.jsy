@@ -5,7 +5,7 @@ export function p2p_plugin({ p2p }={}) ::
     if undefined === p2p ::
       p2p = bind_basic_p2p @ hub.data_utils
 
-    hub.p2p = p2p
+    hub._root_.p2p = p2p
 
 
 export function bind_basic_p2p({ random_base64 }) ::

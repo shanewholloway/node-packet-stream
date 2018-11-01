@@ -12,6 +12,6 @@ export function stream_codec_plugin({ name, encode, decode }={}) ::
         'string' === typeof data
           ? data : decode_utf8 @ data
 
-    hub.stream_codec = bind_codec @
+    hub._root_.stream_codec = bind_codec @
       name, encode, decode
 

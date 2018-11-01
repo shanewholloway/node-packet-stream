@@ -22,6 +22,7 @@ export class FabricHub ::
     const router = self._initHubRouter()
     const loopback = router.loopback
     Object.assign @ this, @{}
+      _root_: this
       router, loopback, send: loopback.send
       _url_protos: {}
 

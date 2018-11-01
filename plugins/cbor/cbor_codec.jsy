@@ -10,7 +10,7 @@ export default cbor_codec_plugin
       Buffer.from @ cbor_encode @ pvec
 
     return hub => ::
-      hub.stream_codec = bind_codec @
+      hub._root_.stream_codec = bind_codec @
         'CBOR', _encode, cbor_decode
 
 #ELSE
@@ -18,6 +18,6 @@ export default cbor_codec_plugin
 
   export function cbor_codec_plugin() ::
     return hub => ::
-      hub.stream_codec = bind_codec @
+      hub._root_.stream_codec = bind_codec @
         'CBOR', cbor_encode, cbor_decode
 

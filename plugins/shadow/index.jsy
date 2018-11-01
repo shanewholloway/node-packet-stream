@@ -11,6 +11,8 @@ const default_options = @{}
   
 
 export default function shadow_pkt_plugin(plugin_options) ::
+  throw new Error @ 'TODO: update shadow_pkt_plugin to latest API'
+
   plugin_options = Object.assign @ {}, default_options, plugin_options
   const {shadow_id, encode, decode} = plugin_options
 

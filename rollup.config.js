@@ -2,7 +2,7 @@ import rpi_resolve from 'rollup-plugin-node-resolve'
 import rpi_jsy from 'rollup-plugin-jsy-lite'
 
 import pkg from './package.json'
-const pkg_name = pkg.name.replace('-', '_')
+const pkg_name = pkg.name.replace(/-/g, '_')
 
 const configs = []
 export default configs
