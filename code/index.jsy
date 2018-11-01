@@ -1,11 +1,10 @@
 import FabricHub from './hub.jsy'
-//import pkt from '../plugins/pkt/index.jsy'
-//import msgs from '../plugins/msgs/index.jsy'
-//import direct from '../plugins/direct/index.jsy'
-//import web from '../plugins/web/index.jsy'
+import stanard from '../plugins/standard/index.jsy'
+import direct from '../plugins/direct/index.jsy'
+import web from '../plugins/web/index.jsy'
 
 export default FabricHub.plugin @
-  //pkt()
-  //msgs()
-  //direct()
-  //web()
+  stanard()
+  direct()
+  web()
+

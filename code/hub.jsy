@@ -1,7 +1,5 @@
 import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 
-import { json_codec } from './json_codec.jsy'
-import { basic_p2p } from './p2p_core.jsy'
 import FabricRouter_Base from './router.jsy'
 import TargetRouter_Base from './targets.jsy'
 
@@ -107,9 +105,19 @@ export class FabricHub ::
 Object.assign @ FabricHub.prototype, @{}
   is_fabric_hub: true
   _plugins_: Object.freeze([])
-  data_utils,
-  json_codec, stream_codec: json_codec
-  basic_p2p, p2p: basic_p2p
+  data_utils
+
+  /* Plugin Provided (plugin/standard or similar):
+    
+       stream_codec: @{}
+         encode(pkt) : pkt_data
+         decode(pkt_data) : pkt
+
+       p2p: @{}
+        hello(ms_timeout=500) : Promise of peer_info
+        peerRouter(pkt, pktctx) : awaitable
+
+  */
 
 Object.assign @ FabricHub, @{}
   _plugins_: Object.freeze([])

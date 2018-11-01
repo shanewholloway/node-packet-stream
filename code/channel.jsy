@@ -56,7 +56,7 @@ o_assign @ as_send_pkt, @{}
 function _init_p2p(chan, p2p) ::
   if null != p2p ::
     if ! p2p.hello || ! p2p.peerRoute ::
-      throw new TypeError()
+      throw new TypeError
 
     chan.p2p = o_create @ p2p, @{}
       channel: @{} value: chan
@@ -81,7 +81,7 @@ export function send_channel(p2p, send_ex) ::
 
 
 export function codec_channel(p2p, send_ex, codec) ::
-  // see json_codec.jsy
+  // see plugin/standard/json_codec.jsy for a codec implementation
   const { dispatch } = this
   const chan = @{}
     __proto__: this._channel_

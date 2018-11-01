@@ -1,0 +1,12 @@
+import p2p_plugin from './basic_p2p.jsy'
+import codec_plugin from './json_codec.jsy'
+
+export default standard_plugin
+export function standard_plugin(plugin_options={}) ::
+  const pi_p2p = p2p_plugin(plugin_options)
+  const pi_codec = codec_plugin(plugin_options)
+
+  return hub => ::
+    pi_p2p @ hub
+    pi_codec @ hub
+

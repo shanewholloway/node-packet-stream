@@ -18,9 +18,11 @@ const min_plugins = true
 const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 
 
-add_core_jsy('core', null)
+add_core_jsy('all', null)
+add_core_jsy('core', true, {module_name: pkg_name})
 add_core_jsy('index', true, {module_name: pkg_name})
 
+pi_standard()
 //pi_shadow()
 
 pi_direct()
@@ -28,13 +30,17 @@ pi_net()
 pi_web()
 
 
+function pi_standard() {
+  add_plugin_jsy('standard/all', 'plugin-standard-all', {exports: 'named'})
+  add_plugin_jsy('standard/index', 'plugin-standard', {})
+}
+
 function pi_shadow() {
   add_plugin_jsy('shadow/index', 'plugin-shadow', {})
 }
 
-
 function pi_direct() {
-  add_plugin_jsy('direct/all', 'plugin-direct-all', {plat_web: false, exports: 'named'})
+  add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
   add_plugin_jsy('direct/index', 'plugin-direct', {})
 }
 function pi_net() {
@@ -46,7 +52,7 @@ function pi_net() {
   add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
 }
 function pi_web() {
-  add_plugin_jsy('web/all', 'plugin-web-all', {plat_web: false, exports: 'named'})
+  add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
   add_plugin_jsy('web/basic', 'plugin-web-basic', {exports: 'default'})
   add_plugin_jsy('web/index', 'plugin-web', {exports: 'default'})
 }
@@ -62,7 +68,7 @@ function add_plugin_jsy(src_name, module_name, kw) {
 
 function _add_jsy(src_root, src_name, out_name, inc_min, {module_name, plat_nodejs, plat_web, exports, external, external_nodejs, external_web}={}) {
   if (null == plat_nodejs) plat_nodejs = true
-  if (null == plat_web) plat_web = true
+  if (null == plat_web) plat_web = ! src_name.endsWith('/all')
 
   if (null == external) external = []
   if (null == external_web) external_web = external.concat([])

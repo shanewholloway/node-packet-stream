@@ -2,16 +2,19 @@
 
 
 #IF PLAT_WEB
-  import FabricBaseHub from 'msg-fabric-core/esm/web/index.js'
+  import FabricBaseHub from 'msg-fabric-core/esm/web/core.js'
+  import pi_standard from 'msg-fabric-core/esm/web/plugin-standard.js'
   import pi_direct from 'msg-fabric-core/esm/web/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/web/plugin-web.js'
 
   const FabricHub = FabricBaseHub.plugin @
+    pi_standard()
     pi_direct()
     pi_web()
 
 #IF PLAT_NODEJS
-  import FabricBaseHub from 'msg-fabric-core/esm/index.js'
+  import FabricBaseHub from 'msg-fabric-core/esm/core.js'
+  import pi_standard from 'msg-fabric-core/esm/plugin-standard.js'
   import pi_direct from 'msg-fabric-core/esm/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/plugin-web.js'
 
@@ -20,6 +23,7 @@
   import pi_tls_stream from 'msg-fabric-core/esm/plugin-net-tls.js'
 
   const FabricHub = FabricBaseHub.plugin @
+    pi_standard()
     pi_direct()
     pi_web()
 
