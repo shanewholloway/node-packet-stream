@@ -18,11 +18,10 @@ const msg_hawk = addTarget @ 'hc_hawk', hc.local
 function addTarget(id_target, {id_route, addTarget}) ::
   addTarget @ id_target, pkt => ::
     console.log @ `"${id_target}" recieved packet`, pkt
-    console.dir @ pkt.json(), {colors:true}
+    console.dir @ pkt.body, {colors:true}
     console.log()
 
   return body => @: id_target, id_route, body
-    on_sent() :: console.log @ 'on sent:', @{} id_target, id_route, body
 
 
 console.log()
