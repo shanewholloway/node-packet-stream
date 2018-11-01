@@ -42,7 +42,12 @@ export function stream_common(hub) ::
             wstream.once @ 'finish', resolve
 
         d_pkt = Buffer.from(d_pkt)
-        pkt_hdr.writeUInt16LE(2 + d_pkt.byteLength, 0)
+        const len = 2 + d_pkt.byteLength
+        if len > 0xffff ::
+          return Promise.reject @
+            new Error @ 'Packet too large; dropped'
+
+        pkt_hdr.writeUInt16BE(len, 0)
         const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
         if wstream.write(s_pkt) ::
           return // sent immediate, no backpressure promise
@@ -62,7 +67,7 @@ export function recvPacketStream(rstream, recv_dispatch) ::
     rstream.on @ 'error', shutdown
     rstream.on @ 'close', shutdown
     rstream.on @ 'data',
-      binaryLenPrefixFeedUint16LE @ shutdown, recv_dispatch
+      binaryLenPrefixFeedUint16BE @ shutdown, recv_dispatch
 
     function shutdown(err) ::
       if undefined !== rstream ::
@@ -72,7 +77,7 @@ export function recvPacketStream(rstream, recv_dispatch) ::
 
 
 
-export function binaryLenPrefixFeedUint16LE(shutdown, recv_dispatch) ::
+export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
   let tipLen=null, byteLen=0, q=[]
 
   return function(data) ::
@@ -96,7 +101,7 @@ export function binaryLenPrefixFeedUint16LE(shutdown, recv_dispatch) ::
       if byteLen < 2 :: return
 
       const buf = Buffer.concat(q)
-      tipLen = buf.readUInt16LE(0)
+      tipLen = buf.readUInt16BE(0)
       q = [buf]
 
       if tipLen < 4 ::
