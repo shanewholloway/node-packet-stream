@@ -4,6 +4,8 @@
 #IF PLAT_WEB
   import FabricBaseHub from 'msg-fabric-core/esm/web/core.js'
   import pi_standard from 'msg-fabric-core/esm/web/plugin-standard.js'
+  import pi_cbor from 'msg-fabric-core/esm/web/plugin-cbor.js'
+
   import pi_direct from 'msg-fabric-core/esm/web/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/web/plugin-web.js'
 
@@ -12,9 +14,14 @@
     pi_direct()
     pi_web()
 
+  const FabricHubCBOR = FabricHub.plugin @
+    pi_cbor()
+
 #IF PLAT_NODEJS
   import FabricBaseHub from 'msg-fabric-core/esm/core.js'
   import pi_standard from 'msg-fabric-core/esm/plugin-standard.js'
+  import pi_cbor from 'msg-fabric-core/esm/plugin-cbor.js'
+
   import pi_direct from 'msg-fabric-core/esm/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/plugin-web.js'
 
@@ -31,9 +38,12 @@
     pi_tls_stream()
     pi_direct_stream()
 
+  const FabricHubCBOR = FabricHub.plugin @
+    pi_cbor()
+
 
 import { _init } from './unit/_setup.jsy'
-_init(FabricHub)
+_init(FabricHub, FabricHubCBOR)
 
 export * from './unit/all.jsy'
 

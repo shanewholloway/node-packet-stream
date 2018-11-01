@@ -1,8 +1,10 @@
 export const sym_sampi = '\u03E0' // 'Ϡ'
 
-var Hub
-export { Hub }
-export function _init(FabricHub) :: Hub = FabricHub
+var Hub, HubCBOR
+export { Hub, HubCBOR }
+export function _init(FabricHub, FabricHubCBOR) ::
+  Hub = FabricHub
+  HubCBOR = FabricHubCBOR
 
 const chai = require('chai')
 import p_chai from 'chai-as-promised'
@@ -38,8 +40,10 @@ async function expectLastLogOf(...args) ::
   expect @ last.slice(0, -1) // trim off body
   .to.deep.equal(args)
 
-export function createTestHub(name, log) ::
-  const hub = Hub.create @ `$${name}$`
+export function createTestHub(name, log, use_cbor) ::
+  const hub = use_cbor
+    ? HubCBOR.create @ `$${name}$`
+    : Hub.create @ `$${name}$`
 
   if log ::
     hub.local.addTarget @ `tgt_${name}`

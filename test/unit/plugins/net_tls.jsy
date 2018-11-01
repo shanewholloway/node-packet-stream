@@ -4,7 +4,7 @@ const { createSelfSignedCertificate } = require('ec-pem/cert')
 import { expect } from '../_setup.jsy'
 import { testChannelConnection } from './_chan_tests.jsy'
 
-export default function() ::
+export default function(use_cbor) ::
   var tls_test_api
 
   before @=>> ::
@@ -14,6 +14,7 @@ export default function() ::
 
     tls_test_api = @{}
       sleep: 2
+      use_cbor
 
       async init_a(hub_a) ::
         const svr = hub_a.tls.createServer(tls_opt)

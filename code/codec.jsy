@@ -1,0 +1,28 @@
+
+export default bind_codec
+export function bind_codec(name, pktlst_encode, pktlst_decode) ::
+  // For use with `codec_channel` of 'code/channel.jsy'
+
+  // Also see plugins/standard/json_codec.jsy
+  //  and see plugins/cbor/cbor_codec.jsy
+
+  const cache = new WeakMap()
+  return @{}
+    __proto__: null, name: 'CBOR', cache,
+
+    encode(pkt) ::
+      let pkt_data = cache.get(pkt)
+      if undefined === pkt_data ::
+        const { id_route, id_target, meta, body } = pkt
+        pkt_data = pktlst_encode @#
+          id_route, id_target, meta, body
+        cache.set(pkt, pkt_data)
+      return pkt_data
+
+    decode(pkt_data) ::
+      const pkt_vec = pktlst_decode @ pkt_data
+      const [id_route, id_target, meta, body] = pkt_vec
+      const pkt = @{} id_route, id_target, meta, body
+      cache.set(pkt, pkt_data)
+      return pkt
+

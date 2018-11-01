@@ -1,3 +1,4 @@
+import rpi_resolve from 'rollup-plugin-node-resolve'
 import rpi_jsy from 'rollup-plugin-jsy-lite'
 
 import pkg from './package.json'
@@ -8,7 +9,7 @@ export default configs
 
 const sourcemap = true
 
-const plugins_base = []
+const plugins_base = [ rpi_resolve({ modulesOnly: true }) ]
 const plugins_generic = [ rpi_jsy() ].concat(plugins_base)
 const plugins_nodejs = [ rpi_jsy({defines: {PLAT_NODEJS: true}}) ].concat(plugins_base)
 const plugins_web = [ rpi_jsy({defines: {PLAT_WEB: true}}) ].concat(plugins_base)
@@ -23,6 +24,7 @@ add_core_jsy('core', true, {module_name: pkg_name})
 add_core_jsy('index', true, {module_name: pkg_name})
 
 pi_standard()
+pi_cbor()
 //pi_shadow()
 
 pi_direct()
@@ -33,6 +35,11 @@ pi_web()
 function pi_standard() {
   add_plugin_jsy('standard/all', 'plugin-standard-all', {exports: 'named'})
   add_plugin_jsy('standard/index', 'plugin-standard', {})
+}
+
+function pi_cbor() {
+  add_plugin_jsy('cbor/all', 'plugin-cbor-all', {exports: 'named'})
+  add_plugin_jsy('cbor/index', 'plugin-cbor', {})
 }
 
 function pi_shadow() {

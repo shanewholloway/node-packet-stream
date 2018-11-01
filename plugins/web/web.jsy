@@ -23,8 +23,9 @@ export function web_basic_api(hub, plugin_options) ::
       return channel.init @ channel.channel_id
 
 
-    createStreamChannel(tgt_recv, tgt_send, options) ::
-      return this.createChannel @ tgt_recv, tgt_send, options, hub.stream_codec
+    createStreamChannel(tgt_recv, tgt_send, options, codec) ::
+      if null == codec :: codec = options && options.codec || hub.stream_codec
+      return this.createChannel @ tgt_recv, tgt_send, options, codec
 
     createChannel(tgt_recv, tgt_send, options, codec) ::
       if null == tgt_send :: tgt_send = tgt_recv

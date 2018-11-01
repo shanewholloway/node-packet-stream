@@ -1,35 +1,17 @@
+import bind_codec from '../../code/codec.jsy'
 
 export default stream_codec_plugin
-export function stream_codec_plugin({ codec }={}) ::
+export function stream_codec_plugin({ name, encode, decode }={}) ::
   return hub => ::
-    if undefined === codec ::
-      codec = bind_json_codec @ hub.data_utils
+    if null == encode && encode === decode ::
+      const { decode_utf8 } = hub.data_utils
 
-    hub.stream_codec = codec
+      name = 'JSON'
+      encode = JSON.stringify
+      decode = data => JSON.parse @
+        'string' === typeof data
+          ? data : decode_utf8 @ data
 
-
-export function bind_json_codec({ decode_utf8 }) ::
-  // for use with `codec_channel` of 'code/channel.jsy'
-
-  return @{}
-    __proto__: null
-    cache: new WeakMap()
-
-    encode(pkt) ::
-      let pkt_data = this.cache.get(pkt)
-      if undefined === pkt_data ::
-        const {id_route, id_target, meta, body} = pkt
-        pkt_data = JSON.stringify @# id_route, id_target, meta, body
-        this.cache.set(pkt, pkt_data)
-      return pkt_data
-
-    decode(pkt_data) ::
-      const pkt_lst = JSON.parse @
-        'string' === typeof pkt_data ? pkt_data
-          : decode_utf8 @ pkt_data
-
-      const [id_route, id_target, meta, body] = pkt_lst
-      const pkt = @{} id_route, id_target, meta, body
-      this.cache.set(pkt, pkt_data)
-      return pkt
+    hub.stream_codec = bind_codec @
+      name, encode, decode
 

@@ -3,10 +3,11 @@ import { testChannelConnection } from './_chan_tests.jsy'
 
 import test_web_worker from './web_worker.jsy'
 
-export default function () ::
+export default function (use_cbor) ::
   describe @ 'MessageChannel and MessagePort', @=> ::
     it @ 'hub.web.connect is a channel', @=>> ::
       await testChannelConnection @:
+        use_cbor
         connect(hub_a, hub_b) ::
           const mc = new MessageChannel()
           hub_a.web.connect @ mc.port1
@@ -16,14 +17,19 @@ export default function () ::
 
   describe @ 'RTCDataChannel', @=> ::
     it @ 'hub.web.connectStream is a channel', async function() ::
-      this.slow(200)
+      try ::
+        this.slow(200)
 
-      const [rtc_dc_a, rtc_dc_b] = await createRTCTestingDataChannels()
+        const [rtc_dc_a, rtc_dc_b] = await createRTCTestingDataChannels()
 
-      await testChannelConnection @:
-        connect(hub_a, hub_b) ::
-          hub_a.web.connectStream @ rtc_dc_a
-          return hub_b.web.connectStream @ rtc_dc_b
+        await testChannelConnection @:
+          use_cbor
+          connect(hub_a, hub_b) ::
+            hub_a.web.connectStream @ rtc_dc_a
+            return hub_b.web.connectStream @ rtc_dc_b
+      catch err ::
+        console.log @ err
+        throw err
 
 
 export async function createRTCTestingDataChannels() ::

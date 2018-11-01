@@ -24,23 +24,42 @@ describe @ 'General Plugins', @=> ::
   import test_pi_web from './plugins/web.jsy'
 
   describe @ 'Browser Plugins', @=> ::
-    describe @ 'web', test_pi_web
+    describe @ 'web with JSON', @=> test_pi_web(false)
+
+    describe @ 'web with CBOR', @=> test_pi_web(true)
 
 #IF PLAT_NODEJS
 
   import test_pi_net_direct from './plugins/net_direct.jsy'
   import test_pi_net_tcp from './plugins/net_tcp.jsy'
   import test_pi_net_tls from './plugins/net_tls.jsy'
-  import test_pi_web_node from './plugins/web_node.jsy'
+  import { test_websockets_faye, test_websockets_ws } from './plugins/web_node.jsy'
   //import test_pi_msgs_streaming_node from './plugins/msgs_streaming_node.jsy'
 
   describe @ 'NodeJS Plugins', @=> ::
     //describe.skip @ 'msgs streaming with NodeJS', test_pi_msgs_streaming_node
 
-    describe @ 'net', @=> ::
-      describe @ 'hub.direct_stream', test_pi_net_direct
-      describe @ 'hub.tcp', test_pi_net_tcp
-      describe @ 'hub.tls', test_pi_net_tls
+    describe @ 'net with JSON', @=> ::
+      describe @ 'hub.direct_stream', @=> test_pi_net_direct(false)
+      describe @ 'hub.tcp', @=> test_pi_net_tcp(false)
+      describe @ 'hub.tls', @=> test_pi_net_tls(false)
 
-    describe @ 'web (node side)', test_pi_web_node
+    describe @ 'web with JSON (node side)', @=> ::
+      describe @ 'using "faye-websockets" WebSocket library', @=> ::
+        test_websockets_faye(false)
+
+      describe @ 'using "ws" WebSocket library', @=> ::
+        test_websockets_ws(false)
+
+    describe @ 'net with CBOR', @=> ::
+      describe @ 'hub.direct_stream', @=> test_pi_net_direct(true)
+      describe @ 'hub.tcp', @=> test_pi_net_tcp(true)
+      describe @ 'hub.tls', @=> test_pi_net_tls(true)
+
+    describe @ 'web with CBOR (node side)', @=> ::
+      describe @ 'using "faye-websockets" WebSocket library', @=> ::
+        test_websockets_faye(true)
+
+      describe @ 'using "ws" WebSocket library', @=> ::
+        test_websockets_ws(true)
 

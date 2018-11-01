@@ -10,12 +10,12 @@ const { createSelfSignedCertificate } = require('ec-pem/cert')
 import { expect } from '../_setup.jsy'
 import { testChannelConnection } from './_chan_tests.jsy'
 
-export default function () ::
-  describe @ 'using "faye-websockets" WebSocket library', @=> ::
+
+export function test_websockets_faye(use_cbor) ::
     var faye_ws_test_api, faye_wss_test_api
     before @=>> ::
-      faye_ws_test_api = await faye_ws_setup(false)
-      faye_wss_test_api = await faye_ws_setup(true)
+      faye_ws_test_api = await faye_ws_setup(use_cbor, false)
+      faye_wss_test_api = await faye_ws_setup(use_cbor, true)
 
     it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
       await testChannelConnection @:
@@ -70,11 +70,11 @@ export default function () ::
 
 
 
-  describe @ 'using "ws" WebSocket library', @=> ::
+export function test_websockets_ws(use_cbor) ::
     var ws_test_api, wss_test_api
     before @=>> ::
-      ws_test_api = await wslib_ws_setup(false)
-      wss_test_api = await wslib_ws_setup(true)
+      ws_test_api = await wslib_ws_setup(use_cbor, false)
+      wss_test_api = await wslib_ws_setup(use_cbor, true)
 
     it @ 'hub.web.connectWS is a channel for ws://', @=>> ::
       await testChannelConnection @:
@@ -129,7 +129,7 @@ export default function () ::
           return hub_b.web.connectWS(this.conn_url)
 
 
-export async function common_ws_setup(tls_opt, init_websocket_lib) ::
+export async function common_ws_setup(use_cbor, tls_opt, init_websocket_lib) ::
   if true === tls_opt ::
     tls_opt = await createSelfSignedCertificate @
       'localhost', @{} altNames: @[] 'localhost', '127.0.0.1'
@@ -138,6 +138,7 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
   return () => @:
     sleep: 2
     done: Promise.resolve()
+    use_cbor
 
     async init_a(hub_a) ::
       const svr = tls_opt
@@ -169,8 +170,8 @@ export async function common_ws_setup(tls_opt, init_websocket_lib) ::
         ws.close()
 
 
-export async function faye_ws_setup(tls_opt) ::
-  return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
+export async function faye_ws_setup(use_cbor, tls_opt) ::
+  return common_ws_setup @ use_cbor, tls_opt, (server, hub_a, test_api) => ::
     server.on @ 'upgrade', async (req, sock, body) => ::
       if FayeWebSocket.isWebSocket(req) ::
         const ws = new FayeWebSocket(req, sock, body)
@@ -179,8 +180,8 @@ export async function faye_ws_setup(tls_opt) ::
           add_websocket(hub_a, ws)
 
 
-export async function wslib_ws_setup(tls_opt) ::
-  return common_ws_setup @ tls_opt, (server, hub_a, test_api) => ::
+export async function wslib_ws_setup(use_cbor, tls_opt) ::
+  return common_ws_setup @ use_cbor, tls_opt, (server, hub_a, test_api) => ::
     const wss = new WSWebSocket.Server @: server
     wss.on @ 'connection', (ws, req) => ::
       test_api.ws_cleanup.push @ ws
@@ -194,7 +195,6 @@ export async function add_websocket(hub_a, ws) ::
   await expect(p_chan).to.be.fulfilled
 
   const chan = await p_chan
-  /*
   expect(chan.peer_info).to.be.a('promise')
   await expect(chan.peer_info).to.be.fulfilled
 
@@ -202,7 +202,6 @@ export async function add_websocket(hub_a, ws) ::
   expect(peer_info).to.have.property('routes')
   expect(peer_info.routes).to.have.lengthOf(1)
   expect(peer_info.routes[0]).to.be.oneOf @# '$one$', '$two$'
-  */
 
   return chan
 
