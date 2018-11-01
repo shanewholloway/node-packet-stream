@@ -1,33 +1,29 @@
 import { random_base64 } from './data_utils.jsy'
 
+const basic_hello_body = (router, id_reply) => @:
+  version: 'basic', id_reply, ts: new Date,
+  routes: Array.from @ router.public_routes.keys()
+
+
 export const basic_p2p = @{}
   __proto__: null
 
-  async hello(ms_timeout=500, id_reply) ::
-    const body = @{}
-      version: 'basic'
-      routes: Array.from @
-        this.router.public_routes.keys()
+  async hello(ms_timeout=500) ::
+    const id_reply = random_base64(6)
+    const k = '_m$_' + id_reply
 
-    if id_reply ::
-      await this.channel.send @:
-        id_target: id_reply, body
+    const p = new Promise @ (resolve, reject) => ::
+      this[k] = resolve
+      if ms_timeout ::
+        this.router.timeouts @ ms_timeout, reject
 
-    else ::
-      body.id_reply = id_reply = random_base64(6)
+    const clear = @=> :: delete this[k]
+    p.then(clear, clear)
 
-      const p = new Promise @ (resolve, reject) => ::
-        this[ '_m$_' + id_reply ] = resolve
-        if ms_timeout ::
-          this.router.timeouts @ ms_timeout, reject
+    await this.channel.send @ '', 'hello',
+      basic_hello_body @ this.router, id_reply
 
-      await this.channel.send @:
-        id_target: 'hello', body
-
-      return p
-
-  _m$_hello(body) ::
-    return this.hello @ null, body.id_reply
+    return p
 
   peerRoute(pkt) ::
     const {id_target, body} = pkt
@@ -37,6 +33,12 @@ export const basic_p2p = @{}
     for const id_route of body.routes || [] ::
       router.addPeer @ id_route, channel, false
 
-    const fn = this[ '_m$_' + id_target]
-    if fn :: return fn.call(this, body)
+
+    if 'hello' === id_target ::
+      this.channel.send @ '', body.id_reply, 
+        basic_hello_body @ router
+
+    else ::
+      const fn = this[ '_m$_' + id_target ]
+      if fn :: return fn.call(this, body)
 

@@ -1,5 +1,3 @@
-import { decode_utf8 } from './data_utils.jsy'
-
 const o_assign = Object.assign, o_create = Object.create
 
 export const channel_kinds = @{}
@@ -43,24 +41,27 @@ export const base_channel = @{}
     return await this
 
 
+const _typeof = v => typeof v
+export function as_send_pkt(args) ::
+  if 1 === args.length :: return args[0]
+  return as_send_pkt[args.map(_typeof)] @ ...args
+
+o_assign @ as_send_pkt, @{}
+  'string,string,object'(id_route, id_target, body) ::
+    return @{} id_route, id_target, body
+  'object,object'(addr, body) ::
+    return o_assign @ {body}, addr
+
+
 function _init_p2p(chan, p2p) ::
   if null != p2p ::
     if ! p2p.hello || ! p2p.peerRoute ::
       throw new TypeError()
 
-    chan.p2p = Object.create @ p2p, @{}
+    chan.p2p = o_create @ p2p, @{}
       channel: @{} value: chan
       router: @{} value: chan.router
   return chan
-
-async function _post_sent(pkt, p) ::
-  if undefined === pkt.on_sent ::
-    return p
-
-  const r = await p
-  pkt.on_sent(pkt)
-  return r
-
 
 
 export function send_channel(p2p, send_ex) ::
@@ -72,13 +73,15 @@ export function send_channel(p2p, send_ex) ::
   _init_p2p(chan, p2p)
   return @[] recv, chan
 
-  function send(pkt) ::
-    return _post_sent @ pkt, send_ex @ pkt
+  async function send(...args) ::
+    const pkt = as_send_pkt(args)
+    return await send_ex @ pkt
   async function recv(pkt) ::
     return dispatch @ await pkt, chan
 
 
 export function codec_channel(p2p, send_ex, codec) ::
+  // see json_codec.jsy
   const { dispatch } = this
   const chan = @{}
     __proto__: this._channel_
@@ -87,31 +90,16 @@ export function codec_channel(p2p, send_ex, codec) ::
   _init_p2p(chan, p2p)
   return @[] recv, chan
 
-  async function send(pkt) ::
+  async function send(...args) ::
+    const pkt = as_send_pkt(args)
     const pkt_data = await codec.encode @ pkt
-    return _post_sent @ pkt, send_ex @ pkt_data
+    return await send_ex @ pkt_data
   async function resend(pkt) ::
     const pkt_data = await codec.encode @ pkt
     return send_ex @ pkt_data
   async function recv(pkt_data) ::
     const pkt = await codec.decode @ pkt_data
     return dispatch @ await pkt, chan
-
-export const json_codec = @{}
-  __proto__: null
-  cache: new WeakMap()
-  encode(pkt) ::
-    let pkt_data = this.cache.get(pkt)
-    if undefined === pkt_data ::
-      pkt_data = JSON.stringify(pkt)
-      this.cache.set(pkt, pkt_data)
-    return JSON.stringify(pkt)
-  decode(pkt_data) ::
-    const pkt = JSON.parse @ 
-      'string' === typeof pkt_data ? pkt_data
-        : decode_utf8 @ pkt_data
-    this.cache.set(pkt, pkt_data)
-    return pkt
 
 
 
@@ -120,8 +108,8 @@ export const json_codec = @{}
   // use V8's serialize & deserialize for Structured Clone
   const { serialize, deserialize } = require('v8')
 
-  export function local_channel() ::
-    const { dispatch } = this
+  export function local_channel(dispatch) ::
+    if ! dispatch :: dispatch = this.dispatch
     const chan = @{}
       __proto__: this._channel_
       send, is_local: true
@@ -129,15 +117,9 @@ export const json_codec = @{}
 
     return chan
 
-    function send(pkt) ::
-      const pkt0 = pkt
-      if undefined !== pkt.on_sent ::
-        // shallow pre-clone
-        pkt = o_assign({}, pkt)
-        delete pkt.on_sent
-
-      return _post_sent @ pkt0,
-        _send_ex @ serialize @ pkt
+    async function send(...args) ::
+      const pkt = as_send_pkt(args)
+      return await _send_ex @ serialize @ pkt
 
     async function _send_ex(pkt) ::
       try ::
@@ -148,8 +130,8 @@ export const json_codec = @{}
 
 #ELSE
   // use MessageChannel for Structured Clone
-  export function local_channel() ::
-    const { dispatch } = this
+  export function local_channel(dispatch) ::
+    if ! dispatch :: dispatch = this.dispatch
     const { port1, port2 } = new MessageChannel()
     port2.onmessage = _send_ex
 
@@ -163,18 +145,12 @@ export const json_codec = @{}
 
     return chan
 
-    function send(pkt) ::
-      const pkt0 = pkt
-      if undefined !== pkt.on_sent ::
-        // shallow pre-clone
-        pkt = o_assign({}, pkt)
-        delete pkt.on_sent
-
-      return _post_sent @ pkt0,
-        new Promise @ resolve => ::
-          const id = q.pop() || pkt_id++
-          map.set @ id, resolve
-          port1.postMessage @# id, pkt
+    function send(...args) ::
+      const pkt = as_send_pkt(args)
+      return new Promise @ resolve => ::
+        const id = q.pop() || pkt_id++
+        map.set @ id, resolve
+        port1.postMessage @# id, pkt
 
     function _send_ex(evt) ::
       const [id, pkt] = evt.data
@@ -186,6 +162,4 @@ export const json_codec = @{}
         return resolve @ dispatch(pkt, chan)
       catch err ::
         chan.on_dispatch_error @ pkt, err
-
-
 

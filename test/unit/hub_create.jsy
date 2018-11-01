@@ -11,8 +11,8 @@ export default function test_hub_creation() ::
     expect(hub.router.dispatch).to.be.a @ 'function'
 
     expect(hub.send).to.be.a @ 'function'
-    expect(hub.channel.send).to.be.a @ 'function'
-    expect(hub.channel.send).to.be.equal @ hub.send
+    expect(hub.loopback.send).to.be.a @ 'function'
+    expect(hub.loopback.send).to.be.equal @ hub.send
 
     expect(hub.local.addTarget).to.be.a @ 'function'
 
@@ -25,8 +25,8 @@ export default function test_hub_creation() ::
     expect(hub.router.dispatch).to.be.a @ 'function'
 
     expect(hub.send).to.be.a @ 'function'
-    expect(hub.channel.send).to.be.a @ 'function'
-    expect(hub.channel.send).to.be.equal @ hub.send
+    expect(hub.loopback.send).to.be.a @ 'function'
+    expect(hub.loopback.send).to.be.equal @ hub.send
 
     expect(hub.local.addTarget).to.be.a @ 'function'
 

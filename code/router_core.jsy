@@ -1,20 +1,23 @@
-const isArray = Array.isArray
+function send_reply(... args) ::
+  return this.channel.send @ ...args
 
 export function bindCoreDispatchRouter(hub_router, routes_map) ::
   // as closures over private variables (routes_map)
-  const pktctx0 = @{} __proto__: null, hub_router, redispatch: dispatch_one
+  const loopback = hub_router.local_channel(dispatch)
+  const pktctx0 = @{} __proto__: null,
+    hub_router, redispatch: dispatch_one
+    loopback, send: loopback.send, reply: send_reply
 
-  return @{} dispatch, resolveRoute
+  return @{} dispatch, resolveRoute, loopback
 
   function dispatch(pkt, channel) ::
-    if isArray(pkt) :: throw new TypeError
     return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
 
   async function dispatch_one(pkt, pktctx) ::
     try ::
       pkt = await pkt
       const id_route = pkt.id_route || ''
-      let route = id_route ? routes_map.get(id_route) : pktctx.channel.peerRoute
+      let route = id_route ? routes_map.get(id_route) : (pktctx.channel || {}).peerRoute
       if undefined === route ::
         route = await resolveRoute(id_route, true, true)
 

@@ -2,7 +2,7 @@ import { sleep, expect, newLog, createTestHub } from '../_setup.jsy'
 
 export const testChannelConnection = testDoubleSidedChannelConnection
 export async function testDoubleSidedChannelConnection(test_api) ::
-  const log = newLog(), log_sent = newLog()
+  const log = newLog()
 
   const hub_a = createTestHub @ 'one', log
   if test_api.init :: 
@@ -47,7 +47,6 @@ export async function testDoubleSidedChannelConnection(test_api) ::
   if test_api.channel ::
     test_api.channel(chan)
 
-  expect(log_sent.calls).to.be.empty
   expect(log.calls).to.be.empty
 
   if test_api.during ::
@@ -57,12 +56,9 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     id_route: '$one$'
     id_target: 'tgt_one'
     body: @{} msg: 'hello one'
-    on_sent() :: log_sent @ 'on_sent one'
 
   await sleep @ test_api.sleep || 10
 
-  expect(log_sent.calls).to.deep.equal @#
-    'on_sent one'
   expect(log.calls).to.deep.equal @#
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
 
@@ -70,13 +66,8 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     id_route: '$two$'
     id_target: 'tgt_two'
     body: @{} msg: 'hello two'
-    on_sent() :: log_sent @ 'on_sent two'
 
   await sleep @ test_api.sleep || 0
-
-  expect(log_sent.calls).to.deep.equal @#
-    'on_sent one'
-    'on_sent two'
 
   expect(log.calls).to.deep.equal @#
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
@@ -89,7 +80,7 @@ export async function testDoubleSidedChannelConnection(test_api) ::
 
 
 export async function testSingleSidedChannelConnection(test_api) ::
-  const log = newLog(), log_sent = newLog()
+  const log = newLog()
 
   const hub = createTestHub @ 'one', log
   if test_api.init :: 
@@ -117,7 +108,6 @@ export async function testSingleSidedChannelConnection(test_api) ::
     expect(peer_info.routes[0]).to.equal('$remote$')
 
 
-  expect(log_sent.calls).to.be.empty
   expect(log.calls).to.be.empty
 
   if test_api.during ::
@@ -127,12 +117,8 @@ export async function testSingleSidedChannelConnection(test_api) ::
     id_route: '$remote$'
     id_target: 'tgt_remote'
     body: @{} msg: 'hello remote'
-    on_sent() :: log_sent @ 'on_sent'
 
   await sleep @ test_api.sleep || 0
-
-  expect(log_sent.calls).to.deep.equal @#
-    'on_sent'
 
   expect(log.calls).to.deep.equal @#
     @[] 'recv [$one$ tgt_one]', @{}

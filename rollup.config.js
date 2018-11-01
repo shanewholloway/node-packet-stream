@@ -14,31 +14,19 @@ const plugins_nodejs = [ rpi_jsy({defines: {PLAT_NODEJS: true}}) ].concat(plugin
 const plugins_web = [ rpi_jsy({defines: {PLAT_WEB: true}}) ].concat(plugins_base)
 
 import { terser as rpi_terser } from 'rollup-plugin-terser'
-const min_plugins = false //true
+const min_plugins = true
 const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 
 
 add_core_jsy('core', null)
 add_core_jsy('index', true, {module_name: pkg_name})
 
-//pi_pkt()
-//pi_msgs()
 //pi_shadow()
 
 pi_direct()
 pi_net()
 pi_web()
 
-
-function pi_pkt() {
-  add_plugin_jsy('pkt/all', 'plugin-pkt-all', {plat_web: false, exports: 'named'})
-  add_plugin_jsy('pkt/index', 'plugin-pkt', {exports: 'named'})
-  add_plugin_jsy('pkt/browser_line', 'plugin-pkt-browser-line', {plat_nodejs: false})
-}
-function pi_msgs() {
-  add_plugin_jsy('msgs/all', 'plugin-msgs-all', {plat_web: false, exports: 'named'})
-  add_plugin_jsy('msgs/index', 'plugin-msgs', {})
-}
 
 function pi_shadow() {
   add_plugin_jsy('shadow/index', 'plugin-shadow', {})
