@@ -1,7 +1,0 @@
-#IF PLAT_NODEJS
-  export * from './node.jsy'
-  export { default } from './node.jsy'
-
-#IF PLAT_WEB
-  export * from './browser.jsy'
-  export { default } from './browser.jsy'
