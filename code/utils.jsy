@@ -27,20 +27,10 @@ export function discoverFirst(lstFns, query, on_error) ::
 
 
 export function bindTimeouts(ms_interval) ::
+  const p0 = Promise.resolve(), p_then = p0.then.bind(p0)
   const q = []
 
-  ms_interval = (0 | ms_interval) || 500
-
-  ::
-    const p0 = Promise.resolve(), p_then = p0.then.bind(p0)
-
-    const tick = function () ::
-      const tip = q.shift()
-      if tip :: tip.forEach @ p_then
-
-    const tid = setInterval @ tick, ms_interval
-    if tid.unref :: tid.unref()
-
+  tick_interval(ms_interval, q)
 
   add.resolve = (ms_min_timeout, value) =>
     new Promise @ y => add @ ms_min_timeout, @=> y @ value
@@ -57,6 +47,30 @@ export function bindTimeouts(ms_interval) ::
     const qi = q[idx] || []
     if 0 === qi.length :: q[idx] = qi
     qi.push @ fn_timeout
+
+  function tick_interval(ms, lq) ::
+    ms_interval = (0 | ms) || 250
+
+    const tick = function () ::
+      const tip = lq.shift()
+      if tip :: tip.forEach @ p_then
+      else if lq !== q && 0 === lq.length ::
+        clearInterval(tid) // done
+
+    const tid = setInterval @ tick, ms_interval
+    if tid.unref :: tid.unref()
+
+    add.interval = ms => ::
+      if ms_interval != ms ::
+        // fork and finish current queue
+        if 0 !== lq.length ::
+          lq = lq.splice(0, lq.length)
+        else clearInterval(tid)
+
+        // start using new interval
+        tick_interval(ms, q)
+
+      return add
 
 
 
@@ -75,7 +89,6 @@ export class FabricBase ::
 
 Object.assign @ FabricBase.prototype, @{}
   data_utils
-  timeouts: bindTimeouts()
   _discoveryDefault: []
   _discoveryTimeout() :: return () => this.timeouts.resolve(5000, null)
   _on_error(scope, err) :: console.error @ scope, err

@@ -1,16 +1,10 @@
-export default web_stream_api
-export function web_stream_api(hub, plugin_options) ::
-  return @{}
-    connectStream(...args) ::
-      const channel = this.createStreamChannel(...args)
-      if null == channel.channel_id ::
-        channel.channel_id = 'web_stream'
+import web_basic_api from './web.jsy'
+import web_stream_api from './web_stream.jsy'
 
-      return channel.init @ channel.channel_id
-
-    createStreamChannel(tgt_recv, tgt_send, options, codec) ::
-      if null == codec :: codec = options && options.codec || this.codec || hub.stream_codec
-      return this.createChannel @ tgt_recv, tgt_send, options, codec
-
-    codec: plugin_options.codec
+export default function web_plugin(plugin_options={}) ::
+  // websocket extends basic, and is thus the superset
+  return hub => ::
+    hub.web = Object.assign @
+      web_basic_api(hub, plugin_options),
+      web_stream_api(hub, plugin_options),
 

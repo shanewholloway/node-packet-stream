@@ -1,8 +1,8 @@
 import web_basic_api from './web.jsy'
-import web_stream_api from './stream.jsy'
-import websocket_api from './ws.jsy'
+import web_stream_api from './web_stream.jsy'
+import websocket_api from './ws_stream.jsy'
 
-export default function web_full_plugin(plugin_options={}) ::
+export default function web_plugin(plugin_options={}) ::
   // websocket extends basic, and is thus the superset
   return hub => ::
     hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],

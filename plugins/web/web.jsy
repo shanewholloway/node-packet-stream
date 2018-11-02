@@ -5,31 +5,32 @@ export function web_basic_api(hub, plugin_options) ::
   return @{}
     __proto__: null
 
-    connect(...args) ::
-      const channel = this.createChannel(...args)
+    connect(tgt, options) ::
+      const channel = this.createChannel(tgt, options)
       if null == channel.channel_id ::
         channel.channel_id = 'web_basic'
 
       return channel.init @ channel.channel_id
 
-    createChannel(tgt_recv, tgt_send, options, codec) ::
-      if null == tgt_send :: tgt_send = tgt_recv
+    createChannel(tgt, options) ::
       if null == options :: options = {}
       const accept = options.accept || yes
 
-      const send_ex = @
+      const [tgt_send, tgt_recv] = Array.isArray(tgt) ? tgt : [tgt, tgt]
+
+      const dispatch = @
           tgt_send.postMessage ? _web_postmsg
         : tgt_send.send ? _web_send
         : null
       .bind @ tgt_send
 
-      const [recv, channel] = codec
-        ? hub.router.codec_channel @ this.p2p || hub.p2p, send_ex, codec
-        : hub.router.send_channel @ this.p2p || hub.p2p, send_ex
+      const [recv, channel] = options.codec
+        ? hub.router.codec_channel @ this.p2p || hub.p2p, dispatch, options.codec
+        : hub.router.send_channel @ this.p2p || hub.p2p, dispatch
       channel.channel_id = options.channel_id
 
       tgt_recv.addEventListener @ 'message',
-        evt => accept(evt) && recv(evt.data)
+        evt => true === accept(evt) && recv(evt.data)
         @{} passive: true
 
       if 'function' === typeof tgt_recv.start ::

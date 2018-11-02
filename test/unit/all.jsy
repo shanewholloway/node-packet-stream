@@ -1,9 +1,8 @@
 import test_smoke from './smoke.jsy'
 import test_hub_creation from './hub_create.jsy'
-import test_hub_router from './router.jsy'
-
-import test_target_router from './targets.jsy'
 import test_data_utils from './data_utils.jsy'
+import test_hub_router from './router.jsy'
+import test_target_router from './targets.jsy'
 
 it @ 'smoke', test_smoke
 describe @ 'Hub Creation', test_hub_creation

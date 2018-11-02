@@ -57,6 +57,7 @@ function pi_net() {
 function pi_web() {
   add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
   add_plugin_jsy('web/basic', 'plugin-web-basic', {exports: 'default'})
+  add_plugin_jsy('web/stream', 'plugin-web-stream', {exports: 'default'})
   add_plugin_jsy('web/index', 'plugin-web', {exports: 'default'})
 }
 

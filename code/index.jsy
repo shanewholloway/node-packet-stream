@@ -1,7 +1,7 @@
 import FabricHub from './hub.jsy'
-import stanard from '../plugins/standard/index.jsy'
-import direct from '../plugins/direct/index.jsy'
-import web from '../plugins/web/index.jsy'
+import { default as stanard } from '../plugins/standard/index.jsy'
+import { default as direct } from '../plugins/direct/index.jsy'
+import { default as web } from '../plugins/web/index.jsy'
 
 export default FabricHub.plugin @
   stanard()

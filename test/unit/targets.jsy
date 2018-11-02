@@ -1,22 +1,102 @@
 import { Hub, expect, newLog } from './_setup.jsy'
 
 export default function test_target_router() ::
-  var hub, log
-  beforeEach @=>> ::
-    log = newLog()
-    hub = Hub.create('$unit$')
+  describe @ 'simple messages', @=> ::
+    var hub, log
 
-  it @ 'simple message send', @=>> ::
-    hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
-      const {id_route, id_target, body} = pkt
-      log @ 'tgt recv', @{} id_route, id_target, body
+    function check_msg(ts, body, meta) ::
+      if null == body ::
+        body = @{} msg: 'a message', ts
 
-    ::
+      expect(log.calls[0]).to.be.deep.equal @#
+        'tgt recv', @{} id_route: '$unit$', id_target: 'a-tgt', meta, body
+
+      if log.calls[1] ::
+        expect(log.calls[1][0]).to.be.equal @ 'replying to'
+
+
+    beforeEach @=>> ::
+      log = newLog()
+      hub = Hub.create('$unit$')
+      hub.router.timeouts.interval @ 50
+
+      hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
+        const {id_route, id_target, meta, body} = pkt
+        log @ 'tgt recv', @{} id_route, id_target, meta, body
+
+        if body && body.id_reply ::
+          log @ 'replying to', body.id_reply
+          pktctx.send @ body.id_reply, @{} ts_echo: body.ts
+
+
+    it @ 'message pkt send({ id_route, id_target, body })', @=>> ::
       const ts = new Date()
       await hub.send @:
         id_route: '$unit$'
         id_target: 'a-tgt'
         body: @{} msg: 'a message', ts
 
-      expect(log.calls).to.be.deep.equal @#
-        @[] 'tgt recv', @{} id_route: '$unit$', id_target: 'a-tgt', body: @{} msg: 'a message', ts
+      check_msg(ts)
+
+
+    it @ 'message pkt with meta send({ id_route, id_target, meta, body })', @=>> ::
+      const ts = new Date()
+      await hub.send @:
+        id_route: '$unit$'
+        id_target: 'a-tgt'
+        meta: @{} ts
+        body: @{} msg: 'a message', ts
+
+      check_msg(ts, null, { ts })
+
+
+    it @ 'message addr body send({ id_route, id_target }, body )', @=>> ::
+      const ts = new Date()
+      await hub.send @
+        @{} id_route: '$unit$', id_target: 'a-tgt'
+        @{} msg: 'a message', ts
+
+      check_msg(ts)
+
+
+    it @ 'message positional send(id_route, id_target, body )', @=>> ::
+      const ts = new Date()
+      await hub.send @ '$unit$', 'a-tgt', @{}
+        msg: 'a message', ts
+
+      check_msg(ts)
+
+
+    it @ 'message with reply', @=>> ::
+      const ts = new Date()
+
+      const reply = hub.local.addReply()
+      expect(reply).to.be.a('promise')
+
+      const body = @{}
+        msg: 'a message', ts, id_reply: reply.id
+
+      await hub.send @ '$unit$', 'a-tgt', body
+
+      check_msg(ts, body)
+
+      const ans = await reply
+      expect(ans).to.be.deep.equal @:
+        ts_echo: ts
+
+
+    it @ 'message with reply timeout', @=>> ::
+      const ts = new Date()
+
+      const no_reply = hub.local.addReply(10)
+      expect(no_reply).to.be.a('promise')
+
+      const body = @{}
+        msg: 'a message', ts, id_other: no_reply.id
+
+      await hub.send @ '$unit$', 'a-tgt', body
+
+      check_msg(ts, body)
+
+      expect(no_reply).to.be.rejected
+

@@ -1,6 +1,8 @@
 export * from './web.jsy'
-export * from './ws.jsy'
+export * from './web_stream.jsy'
+export * from './ws_stream.jsy'
 
 export { default as web_basic_plugin } from './basic.jsy'
+export { default as web_stream_plugin } from './stream.jsy'
 export { default as web_full_plugin, default } from './index.jsy'
 

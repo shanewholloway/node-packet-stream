@@ -1,4 +1,4 @@
-import { FabricBase, discoverFirst } from './utils.jsy'
+import { FabricBase, discoverFirst, bindTimeouts } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
 
@@ -6,14 +6,16 @@ export class FabricRouter extends FabricBase ::
   constructor() ::
     super()
 
-    Object.defineProperties @ this, @{}
-      _channel_: @{} value: @{} __proto__: base_channel, router: this
-      routeDiscovery: @{} value: this._discoveryDefault.slice()
-      public_routes: @{} value: this._initPublicRoutes()
-
-    if this._skip_bind_api :: return this
+    Object.assign @ this, @{}
+      timeouts: bindTimeouts(),
+      _channel_: @{} __proto__: base_channel, router: this
+      routeDiscovery: this._discoveryDefault.slice()
+      public_routes: this._initPublicRoutes()
 
     const self = Object.create(this)
+    if this._skip_bind_api ::
+      return self
+
     Object.assign @ this,
       bindCoreRouterAPI @ self, this._initRoutes()
     return self
@@ -81,7 +83,7 @@ export class FabricRouter extends FabricBase ::
   */
 
 
-Object.assign @ FabricRouter.prototype, channel_kinds
+Object.assign @ FabricRouter.prototype, channel_kinds,
 
 export default FabricRouter
 

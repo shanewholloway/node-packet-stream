@@ -7,23 +7,6 @@ Inspired by:
 - Uber's [Ringpop](https://github.com/uber-node/ringpop-node) and [TChannel](https://github.com/uber/tchannel-node)
 - [PouchDB](https://pouchdb.com/custom.html)'s excellent plugin model
 
-### Ecosystem
-
-- Foundational
-  - [msg-fabric][msgfab-top]
-  - [msg-fabric-core][msgfab-core]
-  - [msg-fabric-endpoint][msgfab-ep]
-
-- Plugins
-  - [msg-fabric-plugin-swim-discovery][msgfab-swim]
-    - **SWIM:** Scalable Weakly-consistent Infection-style Process Group Membership Protocol [PDF](http://www.cs.cornell.edu/~asdas/research/dsn02-SWIM.pdf)
-  - [msg-fabric-plugin-ec-target-router][msgfab-ectgt]
-
-[msgfab-top]: https://www.npmjs.com/package/msg-fabric
-[msgfab-core]: https://www.npmjs.com/package/msg-fabric-core
-[msgfab-ep]: https://www.npmjs.com/package/msg-fabric-endpoint
-[msgfab-swim]: https://npmjs.com/packages/msg-fabric-plugin-swim-discovery
-[msgfab-ectgt]: https://npmjs.com/packages/msg-fabric-plugin-ec-target-router
 
 ## Examples
 
@@ -36,13 +19,29 @@ const hub = FabricHub.create()
 const hub = new FabricHub()
 ```
 
-##### Connecting a hub to another from NodeJS
+
+##### Browser hub connections
+
+```javascript
+hub.connect('ws://«host»:«port»')
+hub.connect('wss://«host»:«port»')
+
+hub.web.connect( a_message_channel.port1 )
+hub.web.connect( a_web_worker || self )
+hub.web.connect( an_iframe )
+
+hub.web.connectWS( a_websocket )
+hub.web.connectStream( an_rtc_data_channel )
+```
+
+
+##### NodeJS hub connections
+
+See [plugins/net](plugins/net/README.md)
 
 ```javascript
 hub.connect('tcp://«host»:«port»')
 hub.connect('tls://«host»:«port»')
-
-hub.direct.connect(hub_other)
 
 hub.tcp.createServer()
 hub.tcp.connect({ host, port })
@@ -50,88 +49,72 @@ hub.tcp.connect({ host, port })
 hub.tls.createServer( tls_options )
 hub.tls.connect({ host, port })
 
-hub.web.connectWS( a_websocket )
 hub.direct_stream.connect( hub_other )
-```
 
-##### Connecting a hub to another from the Browser
-
-```javascript
-hub.connect('ws://«host»:«port»')
-hub.connect('wss://«host»:«port»')
-
-hub.direct.connect(hub_other)
-
+// WebSockets also work server-side
 hub.web.connectWS( a_websocket )
-
-hub.web.connectSend( an_rtc_data_channel )
-
-hub.web.connectPostMessage( a_message_channel.port1 )
-hub.web.connectPostMessage( a_web_worker || self )
-hub.web.connectPostMessage( an_iframe )
 ```
 
 
-#### Low-level packet API use
+##### Same-process hub connections
 
-##### Registering a new target
+See [plugins/direct](plugins/net/README.md)
 
 ```javascript
-const tgt_addr = {
-  id_route: hub.local.id_route,
-  id_target: 'a_pkt_target_id' }
+hub.direct.connect( hub_other )
+```
 
-hub.local.registerTarget(tgt_addr.id_target, pkt => {
+
+#### Messaging API
+
+##### Add a Target
+
+```javascript
+const tgt_addr = hub.local.addTarget(pkt => {
   console.log('pkt target received pkt:', pkt)
+
+  if (pkt.body.id_reply) {
+    console.log('replying to:', pkt.body.id_reply)
+    hub.send( pkt.body.id_reply, { ts: new Date, echo: pkt.body })
+  }
 })
 ```
 
-##### Sending to target using the raw `channel.send()` api
+##### Send a Message
 
 ```javascript
+hub.send(tgt_addr,
+  { msg: 'hello readme example (addr, body)' })
+
+// or
+hub.send(tgt_addr.id_route, tgt_addr.id_target,
+  { msg: 'hello readme example (id_route, id_target, body)' })
+
+// or
+const { id_route, id_target } = tgt_addr
 hub.send({
-  id_route: tgt_addr.id_route,
-  id_target: tgt_addr.id_target,
-  body: { msg: 'hello readme hub.send example!' }
+  id_route,
+  id_target,
+  meta: {
+    ts: new Date
+  },
+  body: {
+    msg: 'hello readme example ({ id_route, id_target, meta, body })'
+  }
 })
+
 ```
 
-
-
-#### Mid-level messages API use via `hub.msgs` plugin
-
-##### Sending to target using the `hub.msgs` api
+##### Send and await a Reply
 
 ```javascript
-const client = hub.msgs.to({
-  id_route: tgt_addr.id_route,
-  id_target: tgt_addr.id_target })
+const reply = hub.addReply()
+hub.send(tgt_addr,
+  { msg: 'hello readme example with reply',
+    id_reply: reply.id
+  })
 
-client.send({ msg: 'hello readme msg.send example!' })
-```
-
-##### Registering a new target using `hub.msgs.as()` api
-
-```javascript
-const source = hub.msgs.as({
-  id_route: hub.local.id_route,
-  id_target: 'a_msg_target_id' })
-
-source.send({ msg: 'hello readme msg.send example!' })
-hub.local.registerTarget(source.id_target, pkt => {
-  const rpkt = source._recv_pkt_(pkt)
-  console.log('msg target received pkt:', rpkt, rpkt.op)
-})
-```
-
-
-
-#### High-level [endpoint][msgfab-ep] API use
-
-See [msg-fabric-endpoint][msgfab-ep]
-
-
-
+reply.then(ans => console.log('Received reply', ans) )
 
 ## License
 

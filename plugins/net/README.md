@@ -130,7 +130,7 @@ An optional hook called when `hub.connect('tcp://«host»:«port»')` (or `'tls:
 Provide a function of the form `(options, url) => options` to override.
 
 
-##### `hub.« tcp | tls | direct_stream ».codec`
+##### `hub.« tcp | tls | direct_stream ».codec`, default `null`
 
 Use the specified `codec` if provided. If falsy, `hub.stream_codec` instance is used.
 

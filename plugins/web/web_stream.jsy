@@ -1,0 +1,19 @@
+export default web_stream_api
+export function web_stream_api(hub, plugin_options) ::
+  return @{}
+    connectStream(tgt, options) ::
+      const channel = this.createStreamChannel(tgt, options)
+      if null == channel.channel_id ::
+        channel.channel_id = 'web_stream'
+
+      return channel.init @ channel.channel_id
+
+    createStreamChannel(tgt, options) ::
+      if ! options || ! options.codec ::
+        const codec = this.codec || hub.stream_codec
+        options = Object.assign @ {codec}, options
+
+      return this.createChannel @ tgt, options
+
+    codec: plugin_options.codec
+
