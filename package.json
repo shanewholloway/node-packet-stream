@@ -1,16 +1,16 @@
 {
   "name": "msg-fabric-core",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Distributed live object messaging. (Core)",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
-  "homepage": "https://github.com/shanewholloway/msg-fabric-core#readme",
+  "homepage": "https://github.com/msg-fabric/msg-fabric-core#readme",
   "bugs": {
-    "url": "https://github.com/shanewholloway/msg-fabric-core/issues"
+    "url": "https://github.com/msg-fabric/msg-fabric-core/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric-core.git"
+    "url": "git+ssh://git@github.com/msg-fabric/msg-fabric-core.git"
   },
   "keywords": [
     "ecosystem:msg-fabric",
