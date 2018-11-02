@@ -23,7 +23,7 @@ export class FabricHub ::
     const loopback = router.loopback
     Object.assign @ this, @{}
       _root_: this
-      router, loopback, send: loopback.send
+      router, loopback, send: loopback.send,
       _url_protos: {}
 
     this.local = false === options.id_route ? null

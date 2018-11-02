@@ -37,12 +37,6 @@ export default function(use_cbor) ::
         expect(chan.when_closed).to.be.a('promise')
 
 
-  it @ 'hub.tcp is a channel', @=>> ::
-    await testChannelConnection @:
-      __proto__: tcp_test_api
-      connect(hub_a, hub_b) ::
-        return hub_b.tcp @ this.a_conn_info
-
   it @ 'hub.tcp.connect is a channel', @=>> ::
     await testChannelConnection @:
       __proto__: tcp_test_api

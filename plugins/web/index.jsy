@@ -1,4 +1,5 @@
 import web_basic_api from './web.jsy'
+import web_stream_api from './stream.jsy'
 import websocket_api from './ws.jsy'
 
 export default function web_full_plugin(plugin_options={}) ::
@@ -7,7 +8,8 @@ export default function web_full_plugin(plugin_options={}) ::
     hub.registerProtocols @ ['ws', 'ws:', 'wss', 'wss:'],
       url => hub.web.connectWS(url, true)
 
-    return hub.web = Object.assign @
+    hub.web = Object.assign @
       web_basic_api(hub, plugin_options),
+      web_stream_api(hub, plugin_options),
       websocket_api(hub, plugin_options),
 

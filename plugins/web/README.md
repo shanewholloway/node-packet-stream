@@ -13,11 +13,11 @@ hub.connect('wss://«host»:«port»')
 
 hub.web.connectWS( a_websocket )
 
-hub.web.connectSend( an_rtc_data_channel )
+hub.web.connect( an_rtc_data_channel )
 
-hub.web.connectPostMessage( a_message_channel.port1 )
-hub.web.connectPostMessage( a_web_worker || self )
-hub.web.connectPostMessage( an_iframe )
+hub.web.connect( a_message_channel.port1 )
+hub.web.connect( a_web_worker || self )
+hub.web.connect( an_iframe )
 ```
 
 ###### NodeJS-side
@@ -70,20 +70,4 @@ server.listen(8000, '127.0.0.1', () =>
 ```
 
 ### Plugin API
-
-```javascript
-hub.web = {
-  connectSend(tgt_recv, tgt_send, options) {}, // => Promise(channel)
-  createSendChannel(tgt_recv, tgt_send, options) {}, // => channel using .send()
-
-  connectPostMessage(tgt_recv, tgt_send, options) {}, // => Promise(channel)
-  createPostMessageChannel(tgt_recv, tgt_send, options) {}, // => channel using .postMessage()
-
-  connectWS(ws_or_wss_url, channel_id) {}, // => Promise(channel)
-  createWebSocket(ws_or_wss_url) {}, // => new this.WebSocket
-
-  WebSocket, // a pluggable WebSocket implementation. See [][] and [][]
-  customWebSocket(WebSocket) {}, // sets this.WebSocket and returns the plugin
-}
-```
 

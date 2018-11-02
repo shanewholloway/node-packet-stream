@@ -1,5 +1,14 @@
-export * from './_stream_common.jsy'
-export * from './_net_common.jsy'
-export {default as direct, default as direct_stream} from './direct.jsy'
-export {default as tls} from './tls.jsy'
-export {default as tcp} from './tcp.jsy'
+import { default as stream } from './direct_stream.jsy'
+import { default as tls } from './tls.jsy'
+import { default as tcp } from './tcp.jsy'
+
+export default function nodejs_net_plugin(plugin_options={}) ::
+  const pi_stream = stream @ plugin_options
+  const pi_tcp = tcp @ plugin_options
+  const pi_tls = tls @ plugin_options
+
+  return hub => ::
+    pi_stream @ hub
+    pi_tcp @ hub
+    pi_tls @ hub
+

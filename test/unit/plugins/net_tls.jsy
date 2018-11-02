@@ -53,12 +53,6 @@ export default function(use_cbor) ::
         expect(chan.when_closed).to.be.a('promise')
 
 
-  it @ 'hub.tls is a channel', @=>> ::
-    await testChannelConnection @:
-      __proto__: tls_test_api
-      connect(hub_a, hub_b) ::
-        return hub_b.tls @ this.a_conn_info, 
-
   it @ 'hub.tls.connect is a channel', @=>> ::
     await testChannelConnection @:
       __proto__: tls_test_api

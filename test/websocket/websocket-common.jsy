@@ -6,13 +6,13 @@ const web_plugin = require('msg-fabric-core/cjs/plugin-web')
 const WebFabricHub = BasicHub.plugin @ web_plugin()
 export const hub = WebFabricHub.create('$server$')
 
-hub.local.registerTarget @ 'hello-server'
+hub.local.addTarget @ 'hello-server'
   (...args) => console.log('RECV in WS hello-server:', args)
 
 
 export async function add_websocket(ws, url_path, headers) ::
   console.log @ 'ADD WS:', @[] url_path, headers
-  hub.router.unregisterRoute('$browser$')
+  hub.router.removeRoute('$browser$')
 
   const channel = await hub.web.connectWS @ ws, @[] false, url_path
 

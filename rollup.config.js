@@ -25,7 +25,6 @@ add_core_jsy('index', true, {module_name: pkg_name})
 
 pi_standard()
 pi_cbor()
-//pi_shadow()
 
 pi_direct()
 pi_net()
@@ -42,10 +41,6 @@ function pi_cbor() {
   add_plugin_jsy('cbor/index', 'plugin-cbor', {})
 }
 
-function pi_shadow() {
-  add_plugin_jsy('shadow/index', 'plugin-shadow', {})
-}
-
 function pi_direct() {
   add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
   add_plugin_jsy('direct/index', 'plugin-direct', {})
@@ -53,10 +48,11 @@ function pi_direct() {
 function pi_net() {
   const external_nodejs = ['net', 'tls', 'stream']
 
-  add_plugin_jsy('net/index', 'plugin-net-all', {plat_web: false, external_nodejs, exports: 'named'})
+  add_plugin_jsy('net/all', 'plugin-net-all', {plat_web: false, exports: 'named'})
+  add_plugin_jsy('net/index', 'plugin-net', {plat_web: false, external_nodejs})
   add_plugin_jsy('net/tcp', 'plugin-net-tcp', {plat_web: false, external_nodejs})
   add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs})
-  add_plugin_jsy('net/direct', 'plugin-net-direct', {plat_web: false, external_nodejs})
+  add_plugin_jsy('net/direct_stream', 'plugin-net-direct', {plat_web: false, external_nodejs})
 }
 function pi_web() {
   add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})

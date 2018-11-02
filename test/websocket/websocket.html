@@ -8,7 +8,7 @@
   const FabricHub = window.FabricHub = window['msg-fabric-core']
   const hub = window.hub = FabricHub.create('$browser$')
 
-  hub.local.registerTarget('hello-browser',
+  hub.local.addTarget('hello-browser',
     (...args) => console.log('RECV in hello-browser:', args) )
 
 

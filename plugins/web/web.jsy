@@ -1,12 +1,9 @@
 export default web_basic_api
 export function web_basic_api(hub, plugin_options) ::
-  const yes = () => true
+  const yes = @=> true
 
   return @{}
     __proto__: null
-
-    p2p: plugin_options.p2p
-    with_p2p(p2p) :: return @{} p2p, __proto__: this
 
     connect(...args) ::
       const channel = this.createChannel(...args)
@@ -15,22 +12,9 @@ export function web_basic_api(hub, plugin_options) ::
 
       return channel.init @ channel.channel_id
 
-    connectStream(...args) ::
-      const channel = this.createStreamChannel(...args)
-      if null == channel.channel_id ::
-        channel.channel_id = 'web_stream'
-
-      return channel.init @ channel.channel_id
-
-
-    createStreamChannel(tgt_recv, tgt_send, options, codec) ::
-      if null == codec :: codec = options && options.codec || hub.stream_codec
-      return this.createChannel @ tgt_recv, tgt_send, options, codec
-
     createChannel(tgt_recv, tgt_send, options, codec) ::
       if null == tgt_send :: tgt_send = tgt_recv
       if null == options :: options = {}
-      if null == codec :: codec = options.codec
       const accept = options.accept || yes
 
       const send_ex = @
@@ -51,6 +35,10 @@ export function web_basic_api(hub, plugin_options) ::
       if 'function' === typeof tgt_recv.start ::
         tgt_recv.start()
       return channel
+
+
+    p2p: plugin_options.p2p
+
 
 function _web_postmsg(pkt) ::
   if null !== pkt ::

@@ -23,6 +23,14 @@ export default function net_common(hub, plugin, protocol, asURL) ::
   hub.registerProtocols @ [protocol, `${protocol}:`],
     url => plugin.connect @ _common_.unpackConnectURL(url)
 
+
+  Object.assign @ plugin, @{}
+    with_url_options(options) ::
+      // merges options onto this.url_options
+      return plugin.url_options = Object.assign @
+        {}, plugin.url_options, options
+
+
   // shared implementation between net/tcp and tls implementations
   return _common_ = @{} __proto__: stream_common(hub),
     createSocketChannel(sock, channel_id) ::
@@ -80,9 +88,8 @@ export default function net_common(hub, plugin, protocol, asURL) ::
     bindOnPeer(svr, onPeer) ::
       if 'function' === typeof onPeer ::
         return onPeer
-      if 'string' === typeof onPeer ::
-        return channel => svr.emit @ onPeer, channel
-      return () => null
+      return ! onPeer ? noop :
+        channel => svr.emit @ onPeer, channel
 
     unpackConnectURL(conn_url) ::
       if 'string' === typeof conn_url.href ::
@@ -104,3 +111,4 @@ export default function net_common(hub, plugin, protocol, asURL) ::
           path = path.slice(1)
         return @{} path
 
+function noop() {}

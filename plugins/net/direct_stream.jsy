@@ -1,0 +1,32 @@
+import {PassThrough} from 'stream'
+import stream_common from './_stream_common.jsy'
+
+export default function direct_stream_plugin(plugin_options={}) ::
+  return hub => ::
+    const api = @{}
+      connect(peer) ::
+        return this.connectPair(peer)[0]
+
+      pair(peer, channel_id) ::
+        return Promise.all @
+          this.connectPair(peer, channel_id)
+
+      connectPair(peer, channel_id) ::
+        const s0 = new PassThrough(), s1 = new PassThrough()
+        return @[]
+          this.createChanel @ s0, s1, channel_id
+          (peer.direct_stream || peer).createChanel @ s1, s0, channel_id
+
+      createChanel(rstream, wstream, channel_id) ::
+        const channel = _common_.createStreamChannel(rstream, wstream, channel_id)
+        return channel.init @ channel_id
+
+      codec: plugin_options.codec
+
+      with_p2p(p2p) :: return @{} p2p, __proto__: this
+      p2p: plugin_options.p2p
+
+
+    const _common_ = stream_common(hub)
+    hub.direct_stream = api
+

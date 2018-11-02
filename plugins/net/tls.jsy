@@ -2,26 +2,23 @@ import { createServer as _tls_server, connect as _tls_connect } from 'tls'
 import net_common from './_net_common.jsy'
 
 export default function tls_plugin(plugin_options={}) ::
-  const on_url_connect = plugin_options.on_url_connect
   const protocol = plugin_options.protocol || 'tls'
 
-  return function(hub) ::
-    const plugin = Object.assign @ connect, @{}
-      connect, createServer, on_url_connect, with_url_options
-      codec: plugin_options.codec, p2p: plugin_options.p2p
+  return hub => ::
+    const tls_api = @{}
+      connect(...args) ::
+        return _common_.createClient @ protocol,
+          handler => _tls_connect @ ...args, handler
 
-    const _common_ = net_common @ hub, plugin, protocol
-    return hub[protocol] = plugin
+      createServer(tls_options, onPeer) ::
+        return _common_.createServer @ protocol, onPeer,
+          handler => _tls_server @ tls_options, handler
 
-    function connect(...args) ::
-      return _common_.createClient @ protocol,
-        handler => _tls_connect @ ...args, handler
+      codec: plugin_options.codec
+      on_url_connect: plugin_options.on_url_connect
+      p2p: plugin_options.p2p
 
-    function createServer(tls_options, onPeer) ::
-      return _common_.createServer @ protocol, onPeer,
-        handler => _tls_server @ tls_options, handler
 
-    function with_url_options(options) ::
-      // merges options onto this.url_options
-      return this.url_options = Object.assign @
-        {}, this.url_options, options
+    const _common_ = net_common @ hub, tls_api, protocol
+    hub[protocol] = tls_api
+

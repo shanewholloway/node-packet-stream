@@ -2,21 +2,6 @@ import { expect } from '../_setup.jsy'
 import { testChannelConnection } from './_chan_tests.jsy'
 
 export default function(use_cbor) ::
-    it @ 'hub.direct_stream is a channel', @=>> ::
-      await testChannelConnection @:
-        use_cbor
-        channel(chan) :: expect(chan.when_closed).to.be.a('promise')
-        connect(hub_a, hub_b) ::
-          return hub_b.direct_stream @ hub_a
-
-    it @ 'hub.direct_stream is a channel', @=>> ::
-      await testChannelConnection @:
-        use_cbor
-        channel(chan) :: expect(chan.when_closed).to.be.a('promise')
-        connect(hub_a, hub_b) ::
-          return hub_b.direct_stream.connect @ hub_a
-
-
     it @ 'hub.direct_stream.connect is a channel', @=>> ::
       await testChannelConnection @:
         use_cbor
@@ -32,24 +17,24 @@ export default function(use_cbor) ::
           return hub_a.direct_stream.connect @ hub_b.direct_stream
 
 
-    it @ 'hub.direct_stream.connectDirectPair is a [channel, channel]', @=>> ::
+    it @ 'hub.direct_stream.connectPair is a [channel, channel]', @=>> ::
       await testChannelConnection @:
         use_cbor
         channel(chan) :: expect(chan.when_closed).to.be.a('promise')
         connect(hub_a, hub_b) ::
-          const pair = hub_b.direct_stream.connectDirectPair @ hub_a
+          const pair = hub_b.direct_stream.connectPair @ hub_a
           expect(pair).to.be.an('array')
           expect(pair).to.have.lengthOf(2)
           expect(pair[0]).to.be.a('promise')
           expect(pair[1]).to.be.a('promise')
           return pair[1]
 
-    it @ 'hub.direct_stream.connectDirectPair is a [channel, channel] (2)', @=>> ::
+    it @ 'hub.direct_stream.connectPair is a [channel, channel] (2)', @=>> ::
       await testChannelConnection @:
         use_cbor
         channel(chan) :: expect(chan.when_closed).to.be.a('promise')
         connect(hub_a, hub_b) ::
-          const pair = hub_a.direct_stream.connectDirectPair @ hub_b.direct_stream
+          const pair = hub_a.direct_stream.connectPair @ hub_b.direct_stream
           expect(pair).to.be.an('array')
           expect(pair).to.have.lengthOf(2)
           expect(pair[0]).to.be.a('promise')

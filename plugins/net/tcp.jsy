@@ -2,26 +2,23 @@ import { createServer as _tcp_server, createConnection as _tcp_connect } from 'n
 import net_common from './_net_common.jsy'
 
 export default function tcp_plugin(plugin_options={}) ::
-  const on_url_connect = plugin_options.on_url_connect
   const protocol = plugin_options.protocol || 'tcp'
 
-  return function(hub) ::
-    const plugin = Object.assign @ connect, @{}
-      connect, createServer, on_url_connect, with_url_options
-      codec: plugin_options.codec, p2p: plugin_options.p2p
+  return hub => ::
+    const tcp_api = @{}
+      connect(...args) ::
+        return _common_.createClient @ protocol,
+          handler => _tcp_connect @ ...args, handler
 
-    const _common_ = net_common @ hub, plugin, protocol
-    return hub[protocol] = plugin
+      createServer(onPeer) ::
+        return _common_.createServer @ protocol, onPeer,
+          handler => _tcp_server @ handler
 
-    function connect(...args) ::
-      return _common_.createClient @ protocol,
-        handler => _tcp_connect @ ...args, handler
+      codec: plugin_options.codec
+      on_url_connect: plugin_options.on_url_connect
+      p2p: plugin_options.p2p
 
-    function createServer(onPeer) ::
-      return _common_.createServer @ protocol, onPeer,
-        handler => _tcp_server @ handler
 
-    function with_url_options(options) ::
-      // merges options onto this.url_options
-      return this.url_options = Object.assign @
-        {}, this.url_options, options
+    const _common_ = net_common @ hub, tcp_api, protocol
+    hub[protocol] = tcp_api
+

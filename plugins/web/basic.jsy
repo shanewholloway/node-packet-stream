@@ -2,5 +2,5 @@ import web_basic_api from './web.jsy'
 
 export default function web_basic_plugin(plugin_options={}) ::
   return hub => ::
-    return hub.web = web_basic_api @ hub, plugin_options
+    hub.web = web_basic_api @ hub, plugin_options
 
