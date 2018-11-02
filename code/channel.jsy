@@ -1,7 +1,7 @@
 const o_assign = Object.assign, o_create = Object.create
 
 export const channel_kinds = @{}
-  send_channel, codec_channel, local_channel
+  raw_channel, send_channel, codec_channel, local_channel
 
 export const base_channel = @{}
   __proto__: null
@@ -13,12 +13,6 @@ export const base_channel = @{}
     const {id_route, id_target} = pkt
     console.warn @ '~~ undeliverable',
       @{} mode, id_route, id_target
-
-  on_dispatch_error(pkt, err) ::
-    const {id_route, id_target} = pkt
-    console.warn @ '~~ channel dispatch error',
-      @{} id_route, id_target
-      err
 
   on_send_error(err) ::
     console.warn @ '~~ channel send error', err
@@ -53,7 +47,10 @@ o_assign @ as_send_pkt, @{}
     return o_assign @ {body}, addr
 
 
-function _init_p2p(chan, p2p) ::
+
+export function raw_channel(p2p, unpack, chan_ex) ::
+  const chan = o_assign @ o_create(this._channel_), chan_ex
+
   if null != p2p ::
     if ! p2p.hello || ! p2p.peerRoute ::
       throw new TypeError
@@ -61,46 +58,31 @@ function _init_p2p(chan, p2p) ::
     chan.p2p = o_create @ p2p, @{}
       channel: @{} value: chan
       router: @{} value: chan.router
-  return chan
 
+  const r_disp = this.dispatch
+  const recv = unpack
+    ? async pkt => r_disp @ await unpack(await pkt), chan
+    : async pkt => r_disp @ await pkt, chan
 
-export function send_channel(p2p, send_ex) ::
-  const { dispatch } = this
-  const chan = @{}
-    __proto__: this._channel_
-    dispatch: send_ex, send
-
-  _init_p2p(chan, p2p)
   return @[] recv, chan
 
-  async function send(...args) ::
-    const pkt = as_send_pkt(args)
-    return await send_ex @ pkt
-  async function recv(pkt) ::
-    return dispatch @ await pkt, chan
+
+export function send_channel(p2p, dispatch) ::
+  return this.raw_channel @ p2p, null, @{}
+    send: async (...args) =>
+      await dispatch @ as_send_pkt @ args
+
+    dispatch
 
 
-export function codec_channel(p2p, send_ex, codec) ::
+export function codec_channel(p2p, dispatch, {encode, decode}) ::
   // see plugin/standard/json_codec.jsy for a codec implementation
-  const { dispatch } = this
-  const chan = @{}
-    __proto__: this._channel_
-    dispatch: resend, send
+  return this.raw_channel @ p2p, decode, @{}
+    send: async (...args) =>
+      dispatch @ await encode @ as_send_pkt @ args
 
-  _init_p2p(chan, p2p)
-  return @[] recv, chan
-
-  async function send(...args) ::
-    const pkt = as_send_pkt(args)
-    const pkt_data = await codec.encode @ pkt
-    return await send_ex @ pkt_data
-  async function resend(pkt) ::
-    const pkt_data = await codec.encode @ pkt
-    return send_ex @ pkt_data
-  async function recv(pkt_data) ::
-    const pkt = await codec.decode @ pkt_data
-    return dispatch @ await pkt, chan
-
+    dispatch: async pkt =>
+      dispatch @ await encode @ pkt
 
 
 
@@ -108,58 +90,50 @@ export function codec_channel(p2p, send_ex, codec) ::
   // use V8's serialize & deserialize for Structured Clone
   const { serialize, deserialize } = require('v8')
 
-  export function local_channel(dispatch) ::
-    if ! dispatch :: dispatch = this.dispatch
-    const chan = @{}
-      __proto__: this._channel_
-      send, is_local: true
-      addRoute: null,
+  export function local_channel() ::
+    const [recv, chan] = this.raw_channel @ null, deserialize, @{}
+      is_local: true, addRoute: null,
+      send: async (...args) =>
+        recv @ await serialize @ as_send_pkt @ args
 
     return chan
 
-    async function send(...args) ::
-      const pkt = as_send_pkt(args)
-      return await _send_ex @ serialize @ pkt
-
-    async function _send_ex(pkt) ::
-      try ::
-        pkt = deserialize @ await pkt
-        return dispatch(pkt, chan)
-      catch err ::
-        chan.on_dispatch_error @ pkt, err
+    async function unpack(pkt_data) ::
+      try :: return deserialize(pkt_data)
+      catch err :: chan.on_send_error @ err
 
 #ELSE
   // use MessageChannel for Structured Clone
-  export function local_channel(dispatch) ::
-    if ! dispatch :: dispatch = this.dispatch
+  export function local_channel() ::
     const { port1, port2 } = new MessageChannel()
-    port2.onmessage = _send_ex
+    port2.onmessage = on_msg
 
     const map = new Map()
     let q=[], pkt_id=1
 
-    const chan = @{}
-      __proto__: this._channel_
-      send, is_local: true
-      addRoute: null,
+    const [recv, chan] = this.raw_channel @ null, null, @{}
+      send, is_local: true, addRoute: null
 
     return chan
 
     function send(...args) ::
       const pkt = as_send_pkt(args)
-      return new Promise @ resolve => ::
+      return new Promise @ (... p_args) => ::
         const id = q.pop() || pkt_id++
-        map.set @ id, resolve
+        map.set @ id, p_args
         port1.postMessage @# id, pkt
 
-    function _send_ex(evt) ::
+    function on_msg(evt) ::
       const [id, pkt] = evt.data
-      const resolve = map.get(id)
+      const [resolve, reject] = map.get(id)
       map.delete(id)
-      q.push(id)
+      q.push(id) // reuse id to avoid GC thrash
 
-      try ::
-        return resolve @ dispatch(pkt, chan)
+      let res
+      try :: res = recv @ pkt
       catch err ::
-        chan.on_dispatch_error @ pkt, err
+        chan.on_send_error @ err
+        return reject(err)
+
+      return resolve(res)
 

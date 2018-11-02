@@ -3,7 +3,12 @@ function send_reply(... args) ::
 
 export function bindCoreDispatchRouter(hub_router, routes_map) ::
   // as closures over private variables (routes_map)
-  const loopback = hub_router.local_channel(dispatch)
+
+  // to create loopback, shim .dispatch onto a temporary prototype
+  const loopback = @
+      @{} dispatch, __proto__: hub_router
+    .local_channel()
+
   const pktctx0 = @{} __proto__: null,
     hub_router, redispatch: dispatch_one
     loopback, send: loopback.send, reply: send_reply
