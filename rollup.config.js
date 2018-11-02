@@ -52,7 +52,7 @@ function pi_net() {
   add_plugin_jsy('net/index', 'plugin-net', {plat_web: false, external_nodejs})
   add_plugin_jsy('net/tcp', 'plugin-net-tcp', {plat_web: false, external_nodejs})
   add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs})
-  add_plugin_jsy('net/direct_stream', 'plugin-net-direct', {plat_web: false, external_nodejs})
+  add_plugin_jsy('net/stream', 'plugin-net-stream', {plat_web: false, external_nodejs})
 }
 function pi_web() {
   add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})

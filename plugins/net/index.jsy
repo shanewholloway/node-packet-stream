@@ -1,4 +1,4 @@
-import { default as stream } from './direct_stream.jsy'
+import { default as stream } from './stream.jsy'
 import { default as tls } from './tls.jsy'
 import { default as tcp } from './tcp.jsy'
 

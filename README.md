@@ -114,7 +114,10 @@ hub.send(tgt_addr,
     id_reply: reply.id
   })
 
-reply.then(ans => console.log('Received reply', ans) )
+reply.then( ans => {
+  console.log('Received reply', ans) 
+})
+```
 
 ## License
 
