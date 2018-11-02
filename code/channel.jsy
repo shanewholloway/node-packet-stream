@@ -24,8 +24,8 @@ export const base_channel = @{}
     console.warn @ '~~ channel send error', err
 
   addRoute(id_route, override) ::
-    return this.router.addRoute @
-      id_route, this.dispatch || this.send, override
+    return this.router.addPeer @
+      id_route, this, override
 
   get peerRoute() ::
     const p2p = this.p2p

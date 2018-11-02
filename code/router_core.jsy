@@ -66,12 +66,12 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
         id_route = id_route.id_route
 
       if 'function' !== typeof route ::
-        throw new TypeError @ `Expected 'route' to be a function`
+        throw new TypeError
       if ! override && routes_map.has(id_route) ::
         return routes_map.get(id_route)
 
       routes_map.set @ id_route, route
-      return route
+      return @[] route, @=> this.removeRoute @ id_route, route
 
     removeRoute(id_route, route) ::
       if 1 === arguments.length ::

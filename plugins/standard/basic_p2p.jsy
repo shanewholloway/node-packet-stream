@@ -13,24 +13,23 @@ export function bind_basic_p2p({ random_base64 }) ::
     __proto__: null
 
     async hello(ms_timeout=500) ::
-      const { router, channel } = this
       const id_reply = random_base64(6)
-      const key = '_m$_' + id_reply
-
       const p = new Promise @ (resolve, reject) => ::
-        this[key] = resolve
+        this[ '_m$_' + id_reply ] = resolve
         if ms_timeout ::
-          router.timeouts @ ms_timeout, reject
+          this.router.timeouts @ ms_timeout, reject
 
+      const { channel } = this
       await channel.send @ '', 'hello', @{}
         version: 'basic', id_reply, ts: new Date
 
       let ans
       try :: ans = await p
-      finally :: delete this[key]
+      finally ::
+        delete this[ '_m$_' + id_reply ]
 
       for const id_route of Object(ans).routes || [] ::
-        router.addPeer @ id_route, channel, false
+        channel.addRoute @ id_route, false
 
       return ans
 

@@ -48,7 +48,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
         id_target = id_target.id_target
 
       if 'function' !== typeof target ::
-        throw new TypeError @ `Expected 'target' function`
+        throw new TypeError
 
       if ! override && targets_map.has(id_target) ::
         return targets_map.get(target)

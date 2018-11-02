@@ -25,8 +25,7 @@ export class FabricRouter extends FabricBase ::
     await route.ready
     if 'string' === typeof route.id_route ::
       this.public_routes.set @ route.id_route, route
-    else throw new TypeError()
-    return route
+      return route
 
   upstreamRoute(id_route) ::
     return this.addDynamic @ id_route, this.upstream
@@ -44,14 +43,11 @@ export class FabricRouter extends FabricBase ::
 
 
   addPeer(id_route, channel, override) ::
-    let disp = channel.dispatch
-    if null == disp ::
-      disp = pkt => :: channel.send(pkt)
-      Object.defineProperty @ channel, 'dispatch', {value: disp}
-    if undefined !== channel.when_closed ::
-      channel.when_closed.then @=>
-        this.removeRoute @ id_route, disp
-    return this.addRoute @ id_route, disp, override
+    const disp = channel.dispatch || channel.send
+    const res = this.addRoute @ id_route, disp, override
+    if channel.when_closed ::
+      channel.when_closed.then @ res[1]
+    return res
 
   addDynamic(id_route, route) ::
     if 1 === arguments.length ::
@@ -61,9 +57,11 @@ export class FabricRouter extends FabricBase ::
     if null == route :: return
     if route.ephemeral :: return route
 
-    return 'function' === typeof route
+    const res = 'function' === typeof route
       ? this.addRoute(id_route, route, true)
       : this.addPeer(id_route, route, true)
+
+    return res[0]
 
 
   /* // from bindCoreRouterAPI

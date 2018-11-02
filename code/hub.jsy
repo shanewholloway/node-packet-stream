@@ -65,7 +65,7 @@ export class FabricHub ::
 
   registerProtocols(protocolList, cb_connect) ::
     if 'function' !== typeof cb_connect ::
-      throw new TypeError()
+      throw new TypeError
     for const protocol of protocolList ::
       this._url_protos[protocol] = cb_connect
     return this
