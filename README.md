@@ -1,5 +1,23 @@
 # msg-fabric-core
 
+`msg-fabric-core` is a uniform messaging API for writing distributed (network) actors. 
+
+In a browser environment, use `msg-fabric-core` to communicate in the main
+context, an IFrame, a Web Worker, over an RTCDataChannel, or over a WebSocket.
+
+In a NodeJS environment, communciate over TCP, TLS, duplex Streams,
+WebSockets, or use a plugin to bridge over NATS or MQTT.
+
+Sent packets are synchronously cloned, thereby preventing accidental mutation.
+Furthermore, packets are only encoded to bytes when needed to transmit across
+a stream-oriented connection — WebSocket, RTCDataChannel, TCP/TLS, or similar
+stream.
+
+A collection of ES6 modules are published for both NodeJS and Web platforms,
+as well as all the core plugins, to allow crafting a build including only is
+required to solve the problem at hand.
+
+
 Inspired by:
 
 - Alan Kay's vision of messaging between objects in [Smalltalk](https://en.wikipedia.org/wiki/Smalltalk#Messages)
@@ -10,17 +28,55 @@ Inspired by:
 
 ## Examples
 
-##### Creating a new hub
 ```javascript
 import FabricHub from 'msg-fabric-core' 
-
 const hub = FabricHub.create()
-// or
-const hub = new FabricHub()
 ```
 
+##### Add a Target
+
+```javascript
+const tgt_addr = hub.local.addTarget(pkt => {
+  console.log('pkt target received pkt:', pkt)
+
+  if (pkt.body.id_reply) {
+    console.log('replying to:', pkt.body.id_reply)
+    hub.send( pkt.body.id_reply, { ts: new Date, echo: pkt.body })
+  }
+})
+```
+
+##### Send a message and await a reply
+
+```javascript
+const reply = hub.local.addReply()
+hub.send(tgt_addr,
+  { msg: 'hello readme example with reply',
+    id_reply: reply.id
+  })
+
+reply.then( ans => {
+  console.log('Received reply', ans) 
+})
+```
+
+### Connections and Platforms
 
 ##### Browser hub connections
+
+Works out of the box with Web APIs like:
+
+ - `hub.web.connect()` for:
+   - [.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) for [IFrame's contentWindow](https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/contentWindow) and [Window](https://developer.mozilla.org/en-US/docs/Web/API/Channel_Messaging_API/Using_channel_messaging)
+   - [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Worker)
+   - [MessagePort](https://developer.mozilla.org/en-US/docs/Web/API/MessagePort) and [MessageChannels](https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel)
+
+ - `hub.web.connectStream()` for:
+   - [RTCDataChannels](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
+
+ - `hub.web.connectWS()` for:
+   - [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+
 
 ```javascript
 hub.connect('ws://«host»:«port»')
@@ -36,6 +92,12 @@ hub.web.connectStream( an_rtc_data_channel )
 
 
 ##### NodeJS hub connections
+
+Works out of the box with NodeJS APIs like:
+ - `hub.tcp` for [`require('net')`](https://nodejs.org/api/net.html)
+ - `hub.tls` for [`require('tls')`](https://nodejs.org/api/tls.html)
+ - `hub.direct_stream` for [`require('stream')`](https://nodejs.org/api/stream.html)
+ - `hub.web` for WebSockets, tested with [ws](https://www.npmjs.com/package/ws) and [faye-websocket](https://www.npmjs.com/package/faye-websocket) libraries
 
 See [plugins/net](plugins/net/README.md)
 
@@ -64,60 +126,6 @@ See [plugins/direct](plugins/net/README.md)
 hub.direct.connect( hub_other )
 ```
 
-
-#### Messaging API
-
-##### Add a Target
-
-```javascript
-const tgt_addr = hub.local.addTarget(pkt => {
-  console.log('pkt target received pkt:', pkt)
-
-  if (pkt.body.id_reply) {
-    console.log('replying to:', pkt.body.id_reply)
-    hub.send( pkt.body.id_reply, { ts: new Date, echo: pkt.body })
-  }
-})
-```
-
-##### Send a Message
-
-```javascript
-hub.send(tgt_addr,
-  { msg: 'hello readme example (addr, body)' })
-
-// or
-hub.send(tgt_addr.id_route, tgt_addr.id_target,
-  { msg: 'hello readme example (id_route, id_target, body)' })
-
-// or
-const { id_route, id_target } = tgt_addr
-hub.send({
-  id_route,
-  id_target,
-  meta: {
-    ts: new Date
-  },
-  body: {
-    msg: 'hello readme example ({ id_route, id_target, meta, body })'
-  }
-})
-
-```
-
-##### Send and await a Reply
-
-```javascript
-const reply = hub.addReply()
-hub.send(tgt_addr,
-  { msg: 'hello readme example with reply',
-    id_reply: reply.id
-  })
-
-reply.then( ans => {
-  console.log('Received reply', ans) 
-})
-```
 
 ## License
 
