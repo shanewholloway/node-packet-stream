@@ -56,10 +56,10 @@ export class TargetRouter extends FabricBase ::
 
   */
 
-  addEndpoint(initialize) ::
+  async addEndpoint(initialize) ::
     const id_target = this.newTargetId()
     const addr = @{} id_target, id_route
-    const target = initialize(addr, router.loopback, this)
+    const target = await initialize(addr, router.loopback, this)
 
     if 'function' === typeof target ::
       return this.addTarget(id_target, target)
