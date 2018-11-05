@@ -56,4 +56,16 @@ export class TargetRouter extends FabricBase ::
 
   */
 
+  addEndpoint(initialize) ::
+    const id_target = this.newTargetId()
+    const addr = @{} id_target, id_route
+    const target = initialize(addr, router.loopback, this)
+
+    if 'function' === typeof target ::
+      return this.addTarget(id_target, target)
+
+    if false !== target ::
+      throw new TypeError @ 'Endpoint initialize must return a function or false'
+
+
 export default TargetRouter
