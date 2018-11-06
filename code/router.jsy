@@ -46,6 +46,11 @@ export class FabricRouter extends FabricBase ::
       @{} key: id_route, id_route
       err => this._on_error @ 'router.discovery', err
 
+    if 'string' === typeof route ::
+      const alias = this.getRoute(route)
+      return alias ? alias
+        : this.discoverRoute(route)
+
     return this.addDynamic @ id_route, route
 
 

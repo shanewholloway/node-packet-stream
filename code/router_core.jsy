@@ -66,6 +66,7 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
 
 
 export function bindCoreRouterAPI(hub_router, routes_map) ::
+  // Allow individual queries but not enumeration
   const router_api = @{}
     addRoute(id_route, route, override) ::
       if 1 === arguments.length ::
@@ -90,6 +91,9 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
         // remove only if route is currently at id_route
         return routes_map.delete @ id_route
       return false
+
+    getRoute(id_route) ::
+      return routes_map.get(id_route)
 
     hasRoute(id_route) ::
       return routes_map.has(id_route)
