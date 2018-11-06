@@ -33,10 +33,12 @@ export function bindTimeouts(ms_interval) ::
   tick_interval(ms_interval, q)
 
   add.resolve = (ms_min_timeout, value) =>
-    new Promise @ y => add @ ms_min_timeout, @=> y @ value
+    new Promise @ resolve =>
+      add @ ms_min_timeout, @=> resolve @ value
 
   add.reject = (ms_min_timeout, value) =>
-    new Promise @ (y, n) => add @ ms_min_timeout, @=> n @ value
+    new Promise @ (resolve, reject) =>
+      add @ ms_min_timeout, @=> reject @ value
 
   return add
 

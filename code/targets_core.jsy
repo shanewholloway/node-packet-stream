@@ -76,6 +76,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
             reject @ err
 
       p.id = @{} id_target, id_route
+      p.catch(Boolean) // supress 'unhandled rejection' warnings
       return p
 
 
