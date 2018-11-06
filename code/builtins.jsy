@@ -1,0 +1,2 @@
+export const o_assign = Object.assign, o_create = Object.create
+

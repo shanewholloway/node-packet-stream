@@ -1,4 +1,5 @@
-const o_assign = Object.assign, o_create = Object.create
+import { o_assign, o_create } from './builtins.jsy'
+
 
 export const channel_kinds = @{}
   raw_channel, send_channel, codec_channel, local_channel
@@ -29,6 +30,7 @@ export const base_channel = @{}
     if undefined === this.peer_info ::
       this.peer_info = Promise.resolve(this.ready)
         .then @=> this.p2p ? this.p2p.hello() : null
+      this.peer_info.catch(Boolean) // supress 'unhandled rejection' warnings
 
     if channel_id ::
       this.channel_id = channel_id

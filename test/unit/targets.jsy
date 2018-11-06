@@ -98,5 +98,6 @@ export default function test_target_router() ::
 
       check_msg(ts, body)
 
-      expect(no_reply).to.be.rejected
+      expect(no_reply).to.be.fulfilled
+      expect(no_reply).to.eventually.be.equal(undefined)
 

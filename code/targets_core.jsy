@@ -41,6 +41,8 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
   const targets_api = @{}
+    __proto__: null,
+
     addTarget(id_target, target, override) ::
       if 1 === arguments.length ::
         target = id_target.target || id_target
@@ -62,27 +64,23 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
     hasTarget(id_target) ::
       return targets_map.has(id_target)
 
-
-    addReply(ms_timeout=1000, as_full_pkt) ::
+    transient() ::
       const id_target = this.newTargetId()
-      const p = new Promise @ (resolve, reject) => ::
-        targets_map.set @ id_target, (pkt, pktctx) => ::
+      return @{}
+        __proto__: router.router_ctx
+        id: @{} id_target, id_route
+
+        enable(target) ::
+          if ! target :: target = this.target
+          if 'function' !== typeof target ::
+            throw new TypeError
+          targets_map.set @ id_target, target
+
+        disable() ::
           targets_map.delete @ id_target
-          resolve @ as_full_pkt ? pkt : pkt.body
-
-        if ms_timeout ::
-          router.timeouts @ ms_timeout, err => ::
-            targets_map.delete @ id_target
-            reject @ err
-
-      p.id = @{} id_target, id_route
-      p.catch(Boolean) // supress 'unhandled rejection' warnings
-      return p
-
-
-
 
   return Object.assign @ targets_api,
     bindCoreDispatchTarget @
       tgt_router, targets_map,
       id_route, router
+

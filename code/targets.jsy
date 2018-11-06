@@ -1,3 +1,4 @@
+import { o_assign, o_create } from './builtins.jsy'
 import { random_base64 } from './data_utils.jsy'
 import { FabricBase, discoverFirst } from './utils.jsy'
 import { bindCoreTargetAPI } from './targets_core.jsy'
@@ -11,7 +12,7 @@ export class TargetRouter extends FabricBase ::
 
     if this._skip_bind_api :: return this
 
-    const self = Object.create(this)
+    const self = o_create(this)
     Object.assign @ this,
       bindCoreTargetAPI @ self, this._initTargets(), id_route, router
     return self
@@ -56,16 +57,35 @@ export class TargetRouter extends FabricBase ::
 
   */
 
+  addReply(ms_timeout=1000, absent) ::
+    const tgt = this.transient()
+    const p = new Promise @ (resolve, reject) => ::
+      tgt.enable @ pkt => ::
+        tgt.disable()
+        resolve @ pkt.body
+
+      if ms_timeout ::
+        tgt.timeouts @ ms_timeout, @=> ::
+          tgt.disable()
+          resolve @ 'function' === typeof absent
+            ? p.then(absent) : absent
+
+    p.catch @ Boolean // supress 'unhandled rejection' warnings
+    return o_assign @ p, tgt
+
+
   async addEndpoint(initialize) ::
-    const id_target = this.newTargetId()
-    const addr = @{} id_target, id_route
-    const target = await initialize(addr, router.loopback, this)
+    const tgt = this.transient()
+    const target = await initialize(tgt)
 
     if 'function' === typeof target ::
-      return this.addTarget(id_target, target)
+      tgt.target = target
+      tgt.enable()
 
-    if false !== target ::
+    else if ! tgt.target && false !== target ::
       throw new TypeError @ 'Endpoint initialize must return a function or false'
 
+    return tgt.id
 
 export default TargetRouter
+

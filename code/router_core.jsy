@@ -10,10 +10,15 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
     .local_channel()
 
   const pktctx0 = @{} __proto__: null,
-    hub_router, redispatch: dispatch_one
+    redispatch: dispatch_one
+    hub_router, timeouts: hub_router.timeouts,
     loopback, send: loopback.send, reply: send_reply
 
-  return @{} dispatch, resolveRoute, loopback
+  const router_ctx = @{} __proto__: null,
+    hub_router, timeouts: hub_router.timeouts,
+    loopback, send: loopback.send
+
+  return @{} dispatch, resolveRoute, loopback, router_ctx
 
   function dispatch(pkt, channel) ::
     return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
