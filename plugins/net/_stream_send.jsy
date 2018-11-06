@@ -1,0 +1,54 @@
+export default bind_sendPacketStream
+export function bind_sendPacketStream(wstream) ::
+  const pkt_hdr = Buffer.alloc(2)
+  let p_drain = null, on_drain
+
+  const p = new Promise @ resolve => ::
+    wstream.on @ 'drain', _drained
+    wstream.once @ 'error', shutdown
+    wstream.once @ 'close', shutdown
+
+    function shutdown() ::
+      if null !== wstream ::
+        wstream.off @ 'drain', _drained
+        wstream.end()
+        wstream = null
+        resolve()
+
+  return @[] send_packed, p
+
+  function send_packed(d_pkt) ::
+    if null === wstream ::
+      // blackhole extra packets
+      return Promise.resolve()
+
+    if null === d_pkt ::
+      wstream.end()
+      return new Promise @ resolve =>
+        wstream.once @ 'finish', resolve
+
+    d_pkt = Buffer.from(d_pkt)
+    const len = 2 + d_pkt.byteLength
+    if len > 0xffff ::
+      return Promise.reject @
+        new Error @ 'Packet too large; dropped'
+
+    pkt_hdr.writeUInt16BE(len, 0)
+    const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
+    if wstream.write(s_pkt) ::
+      return // sent immediate, no backpressure promise
+    // backpressure as promise for next drain event
+    return next_drain()
+
+  function next_drain() ::
+    if null === p_drain ::
+      p_drain = new Promise @
+        resolve => :: on_drain = resolve
+    return p_drain
+
+  function _drained() ::
+    p_drain = null
+    if null !== on_drain ::
+      on_drain()
+      on_drain = null
+

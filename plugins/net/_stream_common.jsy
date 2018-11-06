@@ -1,10 +1,17 @@
+import bind_sendPacketStream from './_stream_send.jsy'
+import bind_recvPacketStream from './_stream_recv.jsy'
+
+export * from './_stream_send.jsy'
+export * from './_stream_recv.jsy'
+
+
 export default stream_common
 export function stream_common(hub) ::
   return @{}
     __proto__: null
 
     createStreamChannel(rstream, wstream, channel_id) ::
-      const pkt_hdr = Buffer.alloc(2)
+      const [send_packed, pw_closed] = bind_sendPacketStream(wstream)
 
       const [recv, channel] =
         hub.router.codec_channel @
@@ -12,107 +19,11 @@ export function stream_common(hub) ::
           send_packed,
           this.codec || hub.stream_codec
 
+      const pr_closed = bind_recvPacketStream(rstream, recv)
+
       if channel_id :: channel.channel_id = channel_id
 
-      channel.when_closed = new Promise @ resolve => ::
-        rstream.once @ 'end', resolve
-        wstream.once @ 'finish', resolve
-
-      recvPacketStream @ rstream, async pktList => ::
-        rstream.pause()
-        pktList = pktList.map(recv)
-        for const p of pktList :: await p
-        rstream.resume()
-
-      let p_drain = null, on_drain
-      wstream.on @ 'drain', @=> ::
-        p_drain = null
-        if null !== on_drain ::
-          on_drain()
-          on_drain = null
-
+      channel.when_closed = Promise.all @# pw_closed, pr_closed
       return channel
 
-      function send_packed(d_pkt) ::
-        if null === d_pkt ::
-          wstream.end()
-          return new Promise @ resolve =>
-            wstream.once @ 'finish', resolve
-
-        d_pkt = Buffer.from(d_pkt)
-        const len = 2 + d_pkt.byteLength
-        if len > 0xffff ::
-          return Promise.reject @
-            new Error @ 'Packet too large; dropped'
-
-        pkt_hdr.writeUInt16BE(len, 0)
-        const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
-        if wstream.write(s_pkt) ::
-          return // sent immediate, no backpressure promise
-        // backpressure as promise for next drain event
-        return next_drain()
-
-      function next_drain() ::
-        if null === p_drain ::
-          p_drain = new Promise @
-            resolve => :: on_drain = resolve
-        return p_drain
-
-
-
-export function recvPacketStream(rstream, recv_dispatch) ::
-  return new Promise @ (resolve, reject) => ::
-    rstream.on @ 'error', shutdown
-    rstream.on @ 'close', shutdown
-    rstream.on @ 'data',
-      binaryLenPrefixFeedUint16BE @ shutdown, recv_dispatch
-
-    function shutdown(err) ::
-      if undefined !== rstream ::
-        rstream.end()
-        rstream = undefined
-        err ? reject(err) : resolve()
-
-
-
-export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
-  let tipLen=null, byteLen=0, q=[]
-
-  return function(data) ::
-    q.push(data) ; byteLen += data.byteLength
-
-    const pktList = []
-    while 1 ::
-      const buf = parseNext()
-      if undefined !== buf ::
-        pktList.push @ buf
-      else break
-
-    if 0 !== pktList.length ::
-      try ::
-        return recv_dispatch(pktList)
-      catch err ::
-        return shutdown(err)
-
-  function parseNext() ::
-    if null === tipLen ::
-      if byteLen < 2 :: return
-
-      const buf = Buffer.concat(q)
-      tipLen = buf.readUInt16BE(0)
-      q = [buf]
-
-      if tipLen < 4 ::
-        shutdown @ new Error @ 'Binary stream framing error'
-        return
-
-    if tipLen <= byteLen ::
-      const buf_q = 1===q.length ? q[0]
-        : Buffer.concat(q)
-
-      const buf = buf_q.slice(0, tipLen)
-      q = [buf_q.slice(tipLen)]
-      byteLen -= tipLen
-      tipLen = null
-      return buf.slice(2)
 
