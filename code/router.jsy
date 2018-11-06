@@ -29,6 +29,11 @@ export class FabricRouter extends FabricBase ::
       this.public_routes.set @ route.id_route, route
       return route
 
+  setUpstream(upstream) ::
+    const disp = upstream.dispatch || upstream.send || upstream
+    if 'function' === typeof disp ::
+      return this.upstream = disp
+
   upstreamRoute(id_route) ::
     return this.addDynamic @ id_route, this.upstream
 

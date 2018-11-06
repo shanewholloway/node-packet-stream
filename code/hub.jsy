@@ -52,6 +52,16 @@ export class FabricHub ::
     return undefined === prefix ? id : prefix+id
 
 
+  async connectUpstream(upstream) ::
+    upstream = await upstream
+    let res = this.router.setUpstream(upstream)
+    if ! res ::
+      upstream = await this.connect(upstream)
+      res = this.router.setUpstream(upstream)
+      if ! res :: throw new TypeError()
+
+    await upstream.peer_info
+    return upstream
 
   connect(conn_url) ::
     if ! conn_url.protocol ::
