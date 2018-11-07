@@ -1,6 +1,9 @@
 export default bind_sendPacketStream
 export function bind_sendPacketStream(wstream) ::
-  const pkt_hdr = Buffer.alloc(2)
+  const pkt_hdr_1 = Buffer.from @# 0
+  const pkt_hdr_3 = Buffer.from @# 254, 0, 0
+  const pkt_hdr_5 = Buffer.from @# 255, 0, 0, 0, 0
+
   let p_drain = null, on_drain
 
   const p = new Promise @ resolve => ::
@@ -28,12 +31,16 @@ export function bind_sendPacketStream(wstream) ::
         wstream.once @ 'finish', resolve
 
     d_pkt = Buffer.from(d_pkt)
-    const len = 2 + d_pkt.byteLength
-    if len > 0xffff ::
-      return Promise.reject @
-        new Error @ 'Packet too large; dropped'
+    const len = d_pkt.byteLength
 
-    pkt_hdr.writeUInt16BE(len, 0)
+    let pkt_hdr
+    if len < 254 ::
+      (pkt_hdr = pkt_hdr_1).writeUInt8 @ len
+    else if len < 65536 ::
+      (pkt_hdr = pkt_hdr_3).writeUInt16BE @ len
+    else ::
+      (pkt_hdr = pkt_hdr_5).writeUInt32BE @ len
+
     const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
     if wstream.write(s_pkt) ::
       return // sent immediate, no backpressure promise

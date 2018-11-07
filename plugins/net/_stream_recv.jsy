@@ -22,6 +22,15 @@ export function bind_recvPacketStream(rstream, recv) ::
 
 
 
+const len_u8 = Object.assign @ (buf, b0) => b0, {width: 1}
+const len_u16be = Object.assign @ (buf) => buf.readUInt16BE(1), {width: 3}
+const len_u32be = Object.assign @ (buf) => buf.readUInt32BE(1), {width: 5}
+
+const lut_byLength = Array(256).fill(len_u8)
+lut_byLength[0] = lut_byLength[1] = lut_byLength[2] = lut_byLength[3] = null
+lut_byLength[254] = len_u16be
+lut_byLength[255] = len_u32be
+
 export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
   let tipLen=null, byteLen=0, q=[]
 
@@ -41,15 +50,20 @@ export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
 
   function parseNext() ::
     if null === tipLen ::
-      if byteLen < 2 :: return
+      if byteLen < 5 :: return
 
-      const buf = Buffer.concat(q)
-      tipLen = buf.readUInt16BE(0)
-      q = [buf]
+      let buf = Buffer.concat(q)
 
-      if tipLen < 4 ::
+      const b0 = buf.readUInt8(0)
+      const len_fn = lut_byLength[b0]
+      if null === len_fn ::
         shutdown @ new Error @ 'Binary stream framing error'
         return
+
+      const len_width = len_fn.width
+      tipLen = len_fn @ buf, b0
+      q = @[] buf.slice @ len_width
+      byteLen -= len_width
 
     if tipLen <= byteLen ::
       const buf_q = 1===q.length ? q[0]
@@ -59,5 +73,5 @@ export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
       q = [buf_q.slice(tipLen)]
       byteLen -= tipLen
       tipLen = null
-      return buf.slice(2)
+      return buf
 
