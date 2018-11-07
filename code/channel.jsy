@@ -51,22 +51,20 @@ o_assign @ as_send_pkt, @{}
 
 
 export function raw_channel(p2p, unpack, chan_ex) ::
-  const chan = o_assign @ o_create(this._channel_), chan_ex
+  const channel = o_assign @ o_create(this._channel_), chan_ex
 
   if null != p2p ::
     if ! p2p.hello || ! p2p.peerRoute ::
       throw new TypeError
 
-    chan.p2p = o_create @ p2p, @{}
-      channel: @{} value: chan
-      router: @{} value: chan.router
+    channel.p2p = p2p.initForChannel(channel)
 
   const r_disp = this.dispatch
   const recv = unpack
-    ? async pkt => r_disp @ await unpack(await pkt), chan
-    : async pkt => r_disp @ await pkt, chan
+    ? async pkt => r_disp @ await unpack(await pkt), channel
+    : async pkt => r_disp @ await pkt, channel
 
-  return @[] recv, chan
+  return @[] recv, channel
 
 
 export function send_channel(p2p, dispatch) ::
@@ -93,16 +91,16 @@ export function codec_channel(p2p, dispatch, {encode, decode}) ::
   const { serialize, deserialize } = require('v8')
 
   export function local_channel() ::
-    const [recv, chan] = this.raw_channel @ null, deserialize, @{}
+    const [recv, channel] = this.raw_channel @ null, deserialize, @{}
       is_local: true, addRoute: null,
       send: async (...args) =>
         recv @ await serialize @ as_send_pkt @ args
 
-    return chan
+    return channel
 
     async function unpack(pkt_data) ::
       try :: return deserialize(pkt_data)
-      catch err :: chan.on_send_error @ err
+      catch err :: channel.on_send_error @ err
 
 #ELSE
   // use MessageChannel for Structured Clone
@@ -113,10 +111,10 @@ export function codec_channel(p2p, dispatch, {encode, decode}) ::
     const map = new Map()
     let q=[], pkt_id=1
 
-    const [recv, chan] = this.raw_channel @ null, null, @{}
+    const [recv, channel] = this.raw_channel @ null, null, @{}
       send, is_local: true, addRoute: null
 
-    return chan
+    return channel
 
     function send(...args) ::
       const pkt = as_send_pkt(args)
@@ -134,7 +132,7 @@ export function codec_channel(p2p, dispatch, {encode, decode}) ::
       let res
       try :: res = recv @ pkt
       catch err ::
-        chan.on_send_error @ err
+        channel.on_send_error @ err
         return reject(err)
 
       return resolve(res)

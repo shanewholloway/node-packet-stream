@@ -1,3 +1,4 @@
+import { o_create } from '../../code/builtins.jsy'
 
 export default p2p_plugin
 export function p2p_plugin({ p2p }={}) ::
@@ -11,6 +12,11 @@ export function p2p_plugin({ p2p }={}) ::
 export function bind_basic_p2p({ random_base64 }) ::
   return @{}
     __proto__: null
+
+    initForChannel(channel) ::
+      return o_create @ this, @{}
+        channel: @{} value: channel
+        router: @{} value: channel.router
 
     async hello(ms_timeout=500) ::
       const { channel, router } = this
