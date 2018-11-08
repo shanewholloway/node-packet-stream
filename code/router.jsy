@@ -1,27 +1,28 @@
-import { FabricBase, discoverFirst, bindTimeouts } from './utils.jsy'
+import { o_assign, o_create } from './builtins.jsy'
+import { discoverFirst, bindTimeouts } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
 
-export class FabricRouter extends FabricBase ::
+export class FabricRouter ::
   constructor() ::
-    super()
-
-    Object.assign @ this, @{}
+    o_assign @ this, @{}
       timeouts: bindTimeouts(),
       _channel_: @{} __proto__: base_channel, router: this
-      routeDiscovery: this._discoveryDefault.slice()
+      routeDiscovery: (this.routeDiscovery || []).slice()
       public_routes: this._initPublicRoutes()
 
-    const self = Object.create(this)
+    const self = o_create(this)
     if this._skip_bind_api ::
       return self
 
-    Object.assign @ this,
+    o_assign @ this,
       bindCoreRouterAPI @ self, this._initRoutes()
     return self
 
   _initRoutes() :: return new Map()
   _initPublicRoutes() :: return new Map()
+
+  _on_error(scope, err) :: console.error @ 'router', scope, err
 
   async publishRoute(route) ::
     await route.ready
@@ -37,14 +38,14 @@ export class FabricRouter extends FabricBase ::
   upstreamRoute(id_route) ::
     return this.addDynamic @ id_route, this.upstream
 
+
   async discoverRoute(id_route) ::
     let lstDiscovery = this.routeDiscovery
     if 0 === lstDiscovery.length :: return
 
     const route = await discoverFirst @
-      lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_route, id_route
-      err => this._on_error @ 'router.discovery', err
+      lstDiscovery, this
 
     if 'string' === typeof route ::
       const alias = this.getRoute(route)
@@ -53,6 +54,8 @@ export class FabricRouter extends FabricBase ::
 
     return this.addDynamic @ id_route, route
 
+  _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
+  _on_discovery_error(err) :: this._on_error @ 'router.discovery', err
 
   addPeer(id_route, channel, override) ::
     const disp = channel.dispatch || channel.send
@@ -93,7 +96,7 @@ export class FabricRouter extends FabricBase ::
   */
 
 
-Object.assign @ FabricRouter.prototype, channel_kinds,
+o_assign @ FabricRouter.prototype, channel_kinds,
 
 export default FabricRouter
 

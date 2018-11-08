@@ -1,29 +1,43 @@
+import { o_defprop } from './builtins.jsy'
 import data_utils from './data_utils.jsy'
 
 const sym_dedup = Symbol('msg_fabric_discovery')
-export function discoverFirst(lstFns, query, on_error) ::
+export function discoverFirst(query, lstFns, host) ::
   const key = query.key
   let dedup = lstFns[sym_dedup]
   if undefined !== dedup ::
-    const res = dedup.get(key)
-    if undefined !== res ::
-      return res
+    const p_discover = dedup.get(key)
+    if undefined !== p_discover ::
+      return p_discover
 
   else ::
     dedup = new Map()
-    Object.defineProperty @ lstFns, sym_dedup, {value: dedup}
+    o_defprop @ lstFns, sym_dedup, {value: dedup}
 
-  const res = new Promise @ resolve => ::
-    const resolveIf = e => undefined !== e ? resolve(e) : e
-    const tip = Promise.resolve(query)
+
+  const p_discover = _discoverFirst(query, lstFns, host)
+
+  const clear = @=> dedup.delete(key)
+  dedup.set @ key, p_discover
+  p_discover.then(clear, clear)
+  return p_discover
+
+function _discoverFirst(query, lstFns, host) ::
+  let p_discover
+  return p_discover = new Promise @ resolve => ::
+    const ans_null = () => resolve(null)
+    host._discoveryTimeout(ans_null)
+
+    const resolveFirst = async fn_discover => ::
+      const e = await fn_discover @ await query, p_discover
+      if undefined !== e ::
+        resolve(e)
+
     Promise.all @
-      Array.from @ lstFns, fn =>
-        tip.then(fn).then(resolveIf, on_error)
-    .then @=> resolve(null)
+      Array.from @ lstFns, resolveFirst
+    .then @ ans_null,
+      err => host._on_error('discovery', err)
 
-  dedup.set @ key, res
-  res.then @=> dedup.delete(key)
-  return res
 
 
 export function bindTimeouts(ms_interval) ::
@@ -85,13 +99,4 @@ export function applyPlugins(key, pluginList, ...args) ::
       plugin = plugin[key]
     if 'function' === typeof plugin ::
       plugin(...args)
-
-
-export class FabricBase ::
-
-Object.assign @ FabricBase.prototype, @{}
-  data_utils
-  _discoveryDefault: []
-  _discoveryTimeout() :: return () => this.timeouts.resolve(5000, null)
-  _on_error(scope, err) :: console.error @ scope, err
 

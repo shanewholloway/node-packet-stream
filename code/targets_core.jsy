@@ -1,3 +1,4 @@
+import { o_assign, o_defprop } from './builtins.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
   // as closures over private variables (targets_map)
@@ -31,7 +32,7 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 
   function addRoute(id_route) ::
-    Object.defineProperties @ tgt_router, @{}
+    o_defprop @ tgt_router, @{}
       id_route: @{} value: id_route, enumerable: true
 
     target_route.id_route = id_route
@@ -79,7 +80,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
         disable() ::
           targets_map.delete @ id_target
 
-  return Object.assign @ targets_api,
+  return o_assign @ targets_api,
     bindCoreDispatchTarget @
       tgt_router, targets_map,
       id_route, router

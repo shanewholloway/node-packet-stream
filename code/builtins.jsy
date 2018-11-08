@@ -1,2 +1,6 @@
-export const o_assign = Object.assign, o_create = Object.create
-
+export const ::{}
+  assign: o_assign,
+  create: o_create,
+  freeze: o_freeze,
+  defineProperties: o_defprop,
+= Object

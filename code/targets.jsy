@@ -1,36 +1,37 @@
 import { o_assign, o_create } from './builtins.jsy'
 import { random_base64 } from './data_utils.jsy'
-import { FabricBase, discoverFirst } from './utils.jsy'
+import { discoverFirst } from './utils.jsy'
 import { bindCoreTargetAPI } from './targets_core.jsy'
 
-export class TargetRouter extends FabricBase ::
+export class TargetRouter ::
 
   constructor(id_route, router, hub) ::
-    super()
-    Object.defineProperties @ this, @{}
-      targetDiscovery: @{} value: this._discoveryDefault.slice()
+    o_assign @ this, @{}
+      targetDiscovery: (this.targetDiscovery || []).slice()
+      timeouts: router.timeouts
 
     if this._skip_bind_api :: return this
 
     const self = o_create(this)
-    Object.assign @ this,
+    o_assign @ this,
       bindCoreTargetAPI @ self, this._initTargets(), id_route, router
     return self
 
   _initTargets() :: return new Map()
+  _on_error(scope, err) :: console.error @ 'target', scope, err
 
   newTargetId() :: return random_base64(6)
   createTarget(target) ::
     return this.addTarget(this.newTargetId(), target)
+
 
   async discoverTarget(id_target, pktctx) ::
     let lstDiscovery = this.targetDiscovery
     if 0 === lstDiscovery.length :: return
 
     const target = await discoverFirst @
-      lstDiscovery.concat @# this._discoveryTimeout()
       @{} key: id_target, id_target, pktctx
-      err => this._on_error @ 'target.discovery', err
+      lstDiscovery, this
 
     if null == target :: return
 
@@ -38,6 +39,7 @@ export class TargetRouter extends FabricBase ::
       this.addTarget(id_target, target)
     return target
 
+  _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
 
   /* // from bindCoreTargetAPI
 

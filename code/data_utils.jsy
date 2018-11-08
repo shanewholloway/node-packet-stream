@@ -1,3 +1,4 @@
+import { o_defprop } from './builtins.jsy'
 
 export const data_utils = @{}
   parse_url
@@ -11,7 +12,7 @@ export default data_utils
   const { URL } = require('url')
   const { randomBytes } = require('crypto')
 
-  Object.defineProperties @ data_utils, @{}
+  o_defprop @ data_utils, @{}
     _global_: {value: global}
 
 
@@ -40,7 +41,7 @@ export default data_utils
     : 'undefined' !== typeof global ? global
     : {}
 
-  Object.defineProperties @ data_utils, @{}
+  o_defprop @ data_utils, @{}
     _global_: {value: _global_}
 
 

@@ -1,3 +1,5 @@
+import { o_assign } from './builtins.jsy'
+
 function send_reply(... args) ::
   return this.channel.send @ ...args
 
@@ -40,7 +42,7 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
 
       await route(pkt, pktctx)
     catch err ::
-      hub_router._on_error @ 'router.dispatch', err, {pkt, pktctx}
+      hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
 
 
   async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
@@ -103,6 +105,6 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
     hasRoute(id_route) ::
       return routes_map.has(id_route)
 
-  return Object.assign @ router_api,
+  return o_assign @ router_api,
     bindCoreDispatchRouter @
       hub_router, routes_map

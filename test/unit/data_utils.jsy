@@ -16,10 +16,6 @@ export default function test_data_utils() ::
     const hub = Hub.create()
     has_data_utils(hub)
 
-  it @ 'hub.local members', @=>> ::
-    const hub = Hub.create()
-    has_data_utils(hub.local)
-
   it @ 'data_utils.url', @=>> ::
     const hub = Hub.create()
 

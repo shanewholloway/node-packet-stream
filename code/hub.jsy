@@ -1,3 +1,4 @@
+import { o_assign, o_create, o_freeze } from './builtins.jsy'
 import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 
 import FabricRouter_Base from './router.jsy'
@@ -9,7 +10,7 @@ export class FabricHub ::
   static create(...args) :: return new this(...args)
 
   constructor(options) ::
-    const self = Object.create(this)
+    const self = o_create(this)
 
     if null == options :: options = {}
     else if 'object' !== typeof options ::
@@ -21,7 +22,7 @@ export class FabricHub ::
 
     const router = self._initHubRouter()
     const loopback = router.loopback
-    Object.assign @ this, @{}
+    o_assign @ this, @{}
       _root_: this
       router, loopback, send: loopback.send,
       _url_protos: {}
@@ -92,7 +93,7 @@ export class FabricHub ::
     return this
 
   static plugin(... _plugins_) ::
-    _plugins_ = Object.freeze @
+    _plugins_ = o_freeze @
       this._plugins_
         .concat @ _plugins_
         .sort @ cmpPlugins
@@ -105,7 +106,7 @@ export class FabricHub ::
     class FabricHub extends this ::
     FabricHub.prototype._plugins_ = inst_plugins
 
-    Object.assign @ FabricHub, @{} _plugins_,
+    o_assign @ FabricHub, @{} _plugins_,
       FabricRouter, TargetRouter
 
     applyPlugins @ 'subclass', _plugins_, FabricHub, inst_plugins
@@ -113,9 +114,9 @@ export class FabricHub ::
     return FabricHub
 
 
-Object.assign @ FabricHub.prototype, @{}
+o_assign @ FabricHub.prototype, @{}
   is_fabric_hub: true
-  _plugins_: Object.freeze([])
+  _plugins_: o_freeze([])
   data_utils
 
   /* Plugin Provided (plugin/standard or similar):
@@ -130,8 +131,8 @@ Object.assign @ FabricHub.prototype, @{}
 
   */
 
-Object.assign @ FabricHub, @{}
-  _plugins_: Object.freeze([])
+o_assign @ FabricHub, @{}
+  _plugins_: o_freeze([])
   FabricRouter: FabricRouter_Base
   TargetRouter: TargetRouter_Base
 

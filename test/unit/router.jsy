@@ -129,12 +129,9 @@ export default function test_hub_router() ::
 
 
     it @ 'should timeout router.routeDiscovery if no response', @=>> ::
-      hub.router._discoveryTimeout = () => ::
+      hub.router._discoveryTimeout = resolve => ::
         log @ 'createDiscoveryTimeout'
-        return ({id_route, key}) => ::
-          log @ 'discoveryTimeout', @{} key, id_route
-          return new Promise @ resolve => ::
-            setTimeout @ resolve, 10
+        setTimeout @ resolve, 10
 
       hub.router.routeDiscovery.push @
         ({id_route, key}) => ::
@@ -148,7 +145,6 @@ export default function test_hub_router() ::
       expect(log.calls).to.be.deep.equal @#
         'createDiscoveryTimeout'
         @[] 'discovery, no return', @{} key: 'dne-route', id_route: 'dne-route'
-        @[] 'discoveryTimeout', @{} key: 'dne-route', id_route: 'dne-route'
         @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
 
 
