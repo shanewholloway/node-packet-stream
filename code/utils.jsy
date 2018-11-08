@@ -15,23 +15,30 @@ export function discoverFirst(query, lstFns, host) ::
     o_defprop @ lstFns, sym_dedup, {value: dedup}
 
 
-  const p_discover = _discoverFirst(query, lstFns, host)
+  const p_search = _discoverFirst(query, lstFns, host)
 
   const clear = @=> dedup.delete(key)
-  dedup.set @ key, p_discover
-  p_discover.then(clear, clear)
-  return p_discover
+  dedup.set @ key, p_search
+  p_search.then(clear, clear)
+  return p_search
 
 function _discoverFirst(query, lstFns, host) ::
-  let p_discover
-  return p_discover = new Promise @ resolve => ::
-    const ans_null = () => resolve(null)
+  const p_search = new Promise(do_discovery)
+  const ctx = @{} host, done: false, p_search
+  return p_search
+
+  async function do_discovery(resolve) ::
+    const ans_null = @=> ::
+      ctx.done = resolve(null), true
+
     host._discoveryTimeout(ans_null)
 
+    await null
+
     const resolveFirst = async fn_discover => ::
-      const e = await fn_discover @ await query, p_discover
+      const e = await fn_discover(query, ctx)
       if undefined !== e ::
-        resolve(e)
+        ctx.done = resolve(e), true
 
     Promise.all @
       Array.from @ lstFns, resolveFirst
