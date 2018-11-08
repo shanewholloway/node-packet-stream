@@ -55,8 +55,6 @@ export class TargetRouter ::
 
   hasTarget(id_target) : Boolean
 
-  addReply(ms_timeout=1000, as_full_pkt) : Promise with id={id_target, id_route}
-
   */
 
   addReply(ms_timeout=1000, absent) ::

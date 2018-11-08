@@ -43,10 +43,14 @@ export function as_send_pkt(args) ::
   return as_send_pkt[args.map(_typeof)] @ ...args
 
 o_assign @ as_send_pkt, @{}
+  'string,string,object,object'(id_route, id_target, meta, body) ::
+    return @{} id_route, id_target, meta, body
   'string,string,object'(id_route, id_target, body) ::
     return @{} id_route, id_target, body
   'object,object'(addr, body) ::
     return o_assign @ {body}, addr
+  'object,object,object'(addr, meta, body) ::
+    return o_assign @ {meta, body}, addr
 
 
 
@@ -69,19 +73,21 @@ export function raw_channel(p2p, unpack, chan_ex) ::
 
 export function send_channel(p2p, dispatch) ::
   return this.raw_channel @ p2p, null, @{}
+    dispatch
     send: async (...args) =>
       await dispatch @ as_send_pkt @ args
-
-    dispatch
+    send_pkt: async pkt =>
+      await dispatch @ await pkt
 
 
 export function codec_channel(p2p, dispatch, {encode, decode}) ::
   // see plugin/standard/json_codec.jsy for a codec implementation
   return this.raw_channel @ p2p, decode, @{}
+    dispatch: async pkt =>
+      dispatch @ await encode @ pkt
     send: async (...args) =>
       dispatch @ await encode @ as_send_pkt @ args
-
-    dispatch: async pkt =>
+    send_pkt: async pkt =>
       dispatch @ await encode @ pkt
 
 
@@ -93,8 +99,11 @@ export function codec_channel(p2p, dispatch, {encode, decode}) ::
   export function local_channel() ::
     const [recv, channel] = this.raw_channel @ null, deserialize, @{}
       is_local: true, addRoute: null,
+      dispatch: this.dispatch,
       send: async (...args) =>
         recv @ await serialize @ as_send_pkt @ args
+      send_pkt: async pkt =>
+        recv @ await serialize @ pkt
 
     return channel
 
@@ -112,12 +121,16 @@ export function codec_channel(p2p, dispatch, {encode, decode}) ::
     let q=[], pkt_id=1
 
     const [recv, channel] = this.raw_channel @ null, null, @{}
-      send, is_local: true, addRoute: null
+      is_local: true, addRoute: null
+      dispatch: this.dispatch,
+      send, send_pkt,
 
     return channel
 
     function send(...args) ::
-      const pkt = as_send_pkt(args)
+      return send_pkt @ as_send_pkt @ args
+
+    function send_pkt(pkt) ::
       return new Promise @ (... p_args) => ::
         const id = q.pop() || pkt_id++
         map.set @ id, p_args
