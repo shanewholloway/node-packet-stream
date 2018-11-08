@@ -1,8 +1,5 @@
 import { o_assign } from './builtins.jsy'
 
-function send_reply(... args) ::
-  return this.channel.send @ ...args
-
 export function bindCoreDispatchRouter(hub_router, routes_map) ::
   // as closures over private variables (routes_map)
 
@@ -14,7 +11,8 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
   const pktctx0 = @{} __proto__: null,
     redispatch: dispatch_one
     hub_router, timeouts: hub_router.timeouts,
-    loopback, send: loopback.send, reply: send_reply
+    loopback, send: loopback.send,
+    get reply() :: return this.channel.send
 
   const router_ctx = @{} __proto__: null,
     hub_router, timeouts: hub_router.timeouts,
