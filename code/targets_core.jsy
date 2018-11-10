@@ -1,4 +1,5 @@
 import { o_assign, o_defprop } from './builtins.jsy'
+import { bindTransientAPI } from './transient_core.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
   // as closures over private variables (targets_map)
@@ -41,6 +42,8 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
+  const [transient_api, transient_reply_api] = bindTransientAPI(tgt_router, targets_map, id_route, router)
+
   const targets_api = @{}
     __proto__: null,
 
@@ -65,20 +68,14 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
     hasTarget(id_target) ::
       return targets_map.has(id_target)
 
-    transient() ::
+    transient(asReply) ::
       const id_target = this.newTargetId()
       return @{}
-        __proto__: router.router_ctx
+        __proto__: asReply ? transient_reply_api : transient_api
         id: @{} id_target, id_route
-
-        enable(target) ::
-          if ! target :: target = this.target
-          if 'function' !== typeof target ::
-            throw new TypeError
-          targets_map.set @ id_target, target
-
         disable() ::
-          targets_map.delete @ id_target
+          targets_map.delete(id_target)
+
 
   return o_assign @ targets_api,
     bindCoreDispatchTarget @

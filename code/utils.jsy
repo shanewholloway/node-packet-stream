@@ -52,14 +52,11 @@ export function bindTimeouts(ms_interval) ::
   const q = []
 
   tick_interval(ms_interval, q)
-
-  add.resolve = (ms_min_timeout, value) =>
-    new Promise @ resolve =>
-      add @ ms_min_timeout, @=> resolve @ value
-
-  add.reject = (ms_min_timeout, value) =>
-    new Promise @ (resolve, reject) =>
-      add @ ms_min_timeout, @=> reject @ value
+  add.absent = (ms_min_timeout, callback, value) =>
+    add @ ms_min_timeout, @=> callback @
+      'function' === typeof value
+        ? value()
+        : value
 
   return add
 

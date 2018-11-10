@@ -24,7 +24,7 @@ export const base_channel = @{}
 
   get peerRoute() ::
     const p2p = this.p2p
-    return p2p.peerRoute.bind(p2p)
+    return p2p ? p2p.peerRoute.bind(p2p) : Boolean
 
   close() :: return false
 

@@ -1,0 +1,48 @@
+import { o_assign } from './builtins.jsy'
+
+export function bindTransientAPI(tgt_router, targets_map, id_route, router) ::
+  const transient_api = @{}
+    __proto__: router.router_ctx
+
+    enable(target, use) ::
+      if 0 === arguments.length ::
+        target = this.target
+      if 'function' !== typeof target ::
+        throw new TypeError
+      if use :: this.target = target
+      targets_map.set @ this.id.id_target, target
+
+    until(p, target) ::
+      // disable the ephemeral if same target
+      const k = this.id.id_target
+      const dis = null == target ? this.disable : @=> ::
+        if target === targets_map.get(k) ::
+          targets_map.delete(k)
+
+      p.then(dis, dis)
+      return this
+
+  const transient_reply_api = o_assign @
+    @{} __proto__: transient_api
+    transient_reply_base_api
+
+  return @[] transient_api, transient_reply_api
+
+
+const transient_reply_base_api = @{}
+  then(y,n) :: return this.ans.then(y,n)
+  catch(f) :: return this.ans.catch(f)
+  finally(f) :: return this.ans.finally(f)
+
+  untilAnswer(p) ::
+    return this.until @ this.ans = p, this.target
+
+  untilReply(ms_timeout=1000, absent, on_reply) ::
+    return this.untilAnswer @ 
+      new Promise @ resolve => ::
+        this.enable @ pkt => resolve @ on_reply(pkt)
+
+        if ms_timeout ::
+          this.timeouts.absent @
+            ms_timeout, resolve, absent
+

@@ -55,37 +55,19 @@ export class TargetRouter ::
 
   hasTarget(id_target) : Boolean
 
+  transient(asReply) : tranient object
+
   */
 
   addReply(ms_timeout=1000, absent) ::
-    const tgt = this.transient()
-    const p = new Promise @ (resolve, reject) => ::
-      tgt.enable @ pkt => ::
-        tgt.disable()
-        resolve @ pkt.body
-
-      if ms_timeout ::
-        tgt.timeouts @ ms_timeout, @=> ::
-          tgt.disable()
-          resolve @ 'function' === typeof absent
-            ? p.then(absent) : absent
-
-    p.catch @ Boolean // supress 'unhandled rejection' warnings
-    return o_assign @ p, tgt
-
+    return this.transient(true).untilReply @
+      ms_timeout, absent, _pkt_body
 
   async addEndpoint(initialize) ::
     const tgt = this.transient()
-    const target = await initialize(tgt)
-
-    if 'function' === typeof target ::
-      tgt.target = target
-      tgt.enable()
-
-    else if ! tgt.target && false !== target ::
-      throw new TypeError @ 'Endpoint initialize must return a function or false'
-
-    return tgt.id
+    return false === await initialize(tgt)
+      ? null : tgt.id
 
 export default TargetRouter
 
+function _pkt_body(pkt) :: return pkt.body

@@ -127,7 +127,7 @@ o_assign @ FabricHub.prototype, @{}
 
        p2p: @{}
         hello(ms_timeout=500) : Promise of peer_info
-        peerRouter(pkt, pktctx) : awaitable
+        peerRoute(pkt, pktctx) : awaitable
 
   */
 

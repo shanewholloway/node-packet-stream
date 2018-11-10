@@ -71,7 +71,8 @@ export default function test_target_router() ::
       const ts = new Date()
 
       const reply = hub.local.addReply()
-      expect(reply).to.be.a('promise')
+      expect(reply.then).to.be.a('function')
+      expect(reply.then()).to.be.a('promise')
 
       const body = @{}
         msg: 'a message', ts, id_reply: reply.id
@@ -89,7 +90,8 @@ export default function test_target_router() ::
       const ts = new Date()
 
       const no_reply = hub.local.addReply(10)
-      expect(no_reply).to.be.a('promise')
+      expect(no_reply.then).to.be.a('function')
+      expect(no_reply.then()).to.be.a('promise')
 
       const body = @{}
         msg: 'a message', ts, id_other: no_reply.id

@@ -86,7 +86,7 @@ export default function net_common(hub, plugin, protocol, asURL) ::
     bindOnPeer(svr, onPeer) ::
       if 'function' === typeof onPeer ::
         return onPeer
-      return ! onPeer ? noop :
+      return ! onPeer ? Boolean :
         channel => svr.emit @ onPeer, channel
 
     unpackConnectURL(conn_url) ::
@@ -109,4 +109,3 @@ export default function net_common(hub, plugin, protocol, asURL) ::
           path = path.slice(1)
         return @{} path
 
-function noop() {}

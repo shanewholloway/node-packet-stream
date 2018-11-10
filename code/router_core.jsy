@@ -30,7 +30,10 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
       if undefined === pkt :: return
 
       const id_route = pkt.id_route || ''
-      let route = id_route ? routes_map.get(id_route) : (pktctx.channel || {}).peerRoute
+      let route = id_route
+        ? routes_map.get(id_route)
+        : (pktctx.channel || {}).peerRoute
+
       if undefined === route ::
         route = await resolveRoute(id_route, true, true)
 
