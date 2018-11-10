@@ -2,7 +2,7 @@ export default bind_recvPacketStream
 
 export function bind_recvPacketStream(rstream, recv) ::
   return new Promise @ resolve => ::
-    const on_data = binaryLenPrefixFeedUint16BE @ shutdown,
+    const on_data = binaryLenPrefixFeedBE @ shutdown,
       async pkt_lst => ::
         rstream.pause()
         for const p of pkt_lst.map(recv) ::
@@ -31,7 +31,7 @@ lut_byLength[0] = lut_byLength[1] = lut_byLength[2] = lut_byLength[3] = null
 lut_byLength[254] = len_u16be
 lut_byLength[255] = len_u32be
 
-export function binaryLenPrefixFeedUint16BE(shutdown, recv_dispatch) ::
+export function binaryLenPrefixFeedBE(shutdown, recv_dispatch) ::
   let tipLen=null, byteLen=0, q=[]
 
   return function(data) ::
