@@ -73,6 +73,8 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
     @[] 'recv [$two$ tgt_two]', @{} msg: 'hello two'
 
+  expect(chan.close).to.be.a('function')
+  chan.close()
 
   await test_api.done
   if test_api.after :: 

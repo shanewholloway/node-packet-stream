@@ -35,9 +35,11 @@ export default function net_common(hub, plugin, protocol, asURL) ::
   return _common_ = @{} __proto__: stream_common(hub),
     createSocketChannel(sock, channel_id) ::
       sock.setNoDelay(true)
-      return Object.defineProperties @ 
-        this.createStreamChannel(sock, sock, channel_id || protocol)
-        @{} conn_info: @{} value() :: return sock_conn_info(sock)
+      const channel = this.createStreamChannel(sock, sock, channel_id || protocol)
+      return Object.defineProperties @ channel, @{}
+        conn_info: @{} enumerable: true, value() :: return sock_conn_info(sock)
+        sock: @{} enumerable: true, get() :: return sock
+            
 
 
     bindChannel(...args) ::
@@ -48,17 +50,15 @@ export default function net_common(hub, plugin, protocol, asURL) ::
     createClient(channel_id, _impl_) ::
       return new Promise @ (resolve, reject) => ::
         _impl_ @ function() ::
-          const sock = this.unref().setKeepAlive(true)
+          const sock = this.setKeepAlive(true)
           const channel = _common_.bindChannel(sock, channel_id)
-          Object.defineProperty @ channel, 'sock', {value: sock}
           resolve(channel)
         .on @ 'error', reject
 
     createServer(channel_id, onPeer, _impl_) ::
       const svr = _impl_ @ sock => ::
         sock = sock.unref().setKeepAlive(false)
-        const channel = this.bindChannel(sock, channel_id)
-        Object.defineProperty @ channel, 'sock', {value: sock}
+        const channel = _common_.bindChannel(sock, channel_id)
         on_peer(channel)
 
       const on_peer = this.bindOnPeer(svr, onPeer)

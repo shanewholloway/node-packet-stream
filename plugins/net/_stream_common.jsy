@@ -22,6 +22,10 @@ export function stream_common(hub) ::
       const pr_closed = bind_recvPacketStream(rstream, recv)
 
       if channel_id :: channel.channel_id = channel_id
+      channel.close = @=> ::
+        wstream.end()
+        if wstream.unref :: wstream.unref()
+        return true
 
       channel.when_closed = Promise.all @# pw_closed, pr_closed
       return channel

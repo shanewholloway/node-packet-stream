@@ -28,6 +28,8 @@ export function web_basic_api(hub, plugin_options) ::
         ? hub.router.codec_channel @ this.p2p || hub.p2p, dispatch, options.codec
         : hub.router.send_channel @ this.p2p || hub.p2p, dispatch
       channel.channel_id = options.channel_id
+      if tgt.close ::
+        channel.close = @=> @ tgt.close(), true
 
       tgt_recv.addEventListener @ 'message',
         evt => true === accept(evt) && recv(evt.data)
@@ -41,13 +43,6 @@ export function web_basic_api(hub, plugin_options) ::
     p2p: plugin_options.p2p
 
 
-function _web_postmsg(pkt) ::
-  if null !== pkt ::
-    this.postMessage(pkt)
-  else if this.close :: this.close()
-
-function _web_send(pkt) ::
-  if null !== pkt ::
-    this.send(pkt)
-  else if this.close :: this.close()
+function _web_postmsg(pkt) :: this.postMessage(pkt)
+function _web_send(pkt) :: this.send(pkt)
 

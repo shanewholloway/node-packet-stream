@@ -26,6 +26,8 @@ export const base_channel = @{}
     const p2p = this.p2p
     return p2p.peerRoute.bind(p2p)
 
+  close() :: return false
+
   async init(channel_id) ::
     if undefined === this.peer_info ::
       this.peer_info = Promise.resolve(this.ready)

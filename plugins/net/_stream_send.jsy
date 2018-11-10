@@ -25,11 +25,6 @@ export function bind_sendPacketStream(wstream) ::
       // blackhole extra packets
       return Promise.resolve()
 
-    if null === d_pkt ::
-      wstream.end()
-      return new Promise @ resolve =>
-        wstream.once @ 'finish', resolve
-
     d_pkt = Buffer.from(d_pkt)
     const len = d_pkt.byteLength
 
