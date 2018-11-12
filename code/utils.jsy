@@ -1,4 +1,4 @@
-import { o_defprop } from './builtins.jsy'
+import { o_defprop, is_func, as_func } from './builtins.jsy'
 import data_utils from './data_utils.jsy'
 
 const sym_dedup = Symbol('msg_fabric_discovery')
@@ -54,19 +54,15 @@ export function bindTimeouts(ms_interval) ::
   tick_interval(ms_interval, q)
   add.absent = (ms_min_timeout, callback, value) =>
     add @ ms_min_timeout, @=> callback @
-      'function' === typeof value
-        ? value()
-        : value
+      is_func(value) ? value() : value
 
   return add
 
   function add(ms_min_timeout, fn_timeout) ::
-    if 'function' !== typeof fn_timeout :: throw new TypeError
-
     const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
     const qi = q[idx] || []
     if 0 === qi.length :: q[idx] = qi
-    qi.push @ fn_timeout
+    qi.push @ as_func @ fn_timeout
 
   function tick_interval(ms, lq) ::
     ms_interval = (0 | ms) || 250
@@ -101,6 +97,6 @@ export function applyPlugins(key, pluginList, ...args) ::
     if ! plugin :: continue
     if null !== key ::
       plugin = plugin[key]
-    if 'function' === typeof plugin ::
+    if is_func @ plugin ::
       plugin(...args)
 

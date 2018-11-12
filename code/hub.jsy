@@ -1,4 +1,4 @@
-import { o_assign, o_create, o_freeze } from './builtins.jsy'
+import { o_assign, o_create, o_freeze, as_func } from './builtins.jsy'
 import { random_base64, parse_url, data_utils } from './data_utils.jsy'
 
 import FabricRouter_Base from './router.jsy'
@@ -75,8 +75,7 @@ export class FabricHub ::
     return connect(conn_url)
 
   registerProtocols(protocolList, cb_connect) ::
-    if 'function' !== typeof cb_connect ::
-      throw new TypeError
+    as_func(cb_connect)
     for const protocol of protocolList ::
       this._url_protos[protocol] = cb_connect
     return this

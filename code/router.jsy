@@ -1,4 +1,4 @@
-import { o_assign, o_create } from './builtins.jsy'
+import { o_assign, o_create, is_func } from './builtins.jsy'
 import { discoverFirst, bindTimeouts } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
@@ -32,7 +32,7 @@ export class FabricRouter ::
 
   setUpstream(upstream) ::
     const disp = upstream.dispatch || upstream.send || upstream
-    if 'function' === typeof disp ::
+    if is_func @ disp ::
       return this.upstream = disp
 
   upstreamRoute(id_route) ::
@@ -72,7 +72,7 @@ export class FabricRouter ::
     if null == route :: return
     if route.ephemeral :: return route
 
-    const res = 'function' === typeof route
+    const res = is_func(route)
       ? this.addRoute(id_route, route, true)
       : this.addPeer(id_route, route, true)
 

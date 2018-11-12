@@ -1,4 +1,4 @@
-import { o_assign } from './builtins.jsy'
+import { o_assign, as_func } from './builtins.jsy'
 
 export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
   const target_api = @{}
@@ -8,11 +8,8 @@ export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
       this.enable @ this.target = target
       return this
     enable(target) ::
-      if 0 === arguments.length ::
-        target = this.target
-      if 'function' !== typeof target ::
-        throw new TypeError
-      targets_map.set @ this.id.id_target, target
+      if undefined === target :: target = this.target
+      targets_map.set @ this.id.id_target, as_func(target)
 
     until(p, target) ::
       // disable the ephemeral if same target
@@ -41,7 +38,7 @@ const reply_target_base_api = @{}
     return this.until @ this.ans = p, this.target
 
   untilReply(ms_timeout=1000, absent, on_reply) ::
-    if 2 === arguments.length ::
+    if undefined === on_reply ::
       on_reply = absent
       absent = undefined
 

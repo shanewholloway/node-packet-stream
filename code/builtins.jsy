@@ -4,3 +4,11 @@ export const ::{}
   freeze: o_freeze,
   defineProperties: o_defprop,
 = Object
+
+export const is_func = fn =>
+  'function' === typeof fn
+
+export const as_func = fn => ::
+  if 'function' !== typeof fn ::
+    throw new TypeError
+  return fn

@@ -1,4 +1,4 @@
-import { o_assign, o_create } from './builtins.jsy'
+import { o_assign, o_create, is_func } from './builtins.jsy'
 import { random_base64 } from './data_utils.jsy'
 import { discoverFirst } from './utils.jsy'
 import { bindCoreTargetAPI } from './targets_core.jsy'
@@ -21,10 +21,6 @@ export class TargetRouter ::
   _on_error(scope, err) :: console.error @ 'target', scope, err
 
   newTargetId() :: return random_base64(6)
-  createTarget(target) ::
-    return this.addTarget @
-      target.id_target || this.newTargetId()
-      target
 
   async discoverTarget(id_target, pktctx) ::
     let lstDiscovery = this.targetDiscovery
@@ -65,10 +61,11 @@ export class TargetRouter ::
     const eph = this.xtgt(ep.as_reply, ep.id_target)
     const ready = await @
         ep.endpoint ? ep.endpoint(eph)
-      : 'function' === typeof ep ? ep(eph)
+      : is_func(ep) ? ep(eph)
       : @ eph.use(ep.target.bind(ep)), true
     
-    return false === await ready ? null : eph.id
+    if is_func @ ready :: eph.use(ready)
+    return false === ready ? null : eph.id
 
 export default TargetRouter
 

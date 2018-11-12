@@ -1,4 +1,4 @@
-import { o_assign } from './builtins.jsy'
+import { o_assign, as_func } from './builtins.jsy'
 
 export function bindCoreDispatchRouter(hub_router, routes_map) ::
   // as closures over private variables (routes_map)
@@ -78,9 +78,7 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
   // Allow individual queries but not enumeration
   const router_api = @{}
     addRoute(id_route, route, override) ::
-      if 'function' !== typeof route ::
-        throw new TypeError
-
+      as_func(route)
       if ! override && routes_map.has(id_route) ::
         return routes_map.get(id_route)
 

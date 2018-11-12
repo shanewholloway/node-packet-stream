@@ -1,4 +1,4 @@
-import { o_assign, o_defprop } from './builtins.jsy'
+import { o_assign, o_defprop, as_func } from './builtins.jsy'
 import { bindXTargetAPI } from './target_api.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
@@ -49,9 +49,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
     __proto__: null,
 
     addTarget(id_target, target) ::
-      if 'function' !== typeof target ::
-        throw new TypeError
-      targets_map.set @ id_target, target
+      targets_map.set @ id_target, as_func(target)
       return @{} id_target, id_route
 
     removeTarget(id_target) ::
