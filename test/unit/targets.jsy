@@ -9,7 +9,7 @@ export default function test_target_router() ::
         body = @{} msg: 'a message', ts
 
       expect(log.calls[0]).to.be.deep.equal @#
-        'tgt recv', @{} id_route: '$unit$', id_target: 'a-tgt', meta, body
+        'tgt recv', @{} 0: '$unit$', 1: 'a-tgt', meta, body
 
       if log.calls[1] ::
         expect(log.calls[1][0]).to.be.equal @ 'replying to'
@@ -21,39 +21,48 @@ export default function test_target_router() ::
       hub.router.timeouts.interval @ 50
 
       hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
-        const {id_route, id_target, meta, body} = pkt
-        log @ 'tgt recv', @{} id_route, id_target, meta, body
+        const {0: id_route, 1: id_target, meta, body} = pkt
+        log @ 'tgt recv', @{} 0: id_route, 1: id_target, meta, body
 
         if body && body.id_reply ::
           log @ 'replying to', body.id_reply
           pktctx.send @ body.id_reply, @{} ts_echo: body.ts
 
 
-    it @ 'message pkt send({ id_route, id_target, body })', @=>> ::
+    it @ 'message pkt send({ 0, 1, body })', @=>> ::
       const ts = new Date()
       await hub.send @:
-        id_route: '$unit$'
-        id_target: 'a-tgt'
+        0: '$unit$'
+        1: 'a-tgt'
         body: @{} msg: 'a message', ts
 
       check_msg(ts)
 
 
-    it @ 'message pkt with meta send({ id_route, id_target, meta, body })', @=>> ::
+    it @ 'message pkt with meta send({ 0, 1, meta, body })', @=>> ::
       const ts = new Date()
       await hub.send @:
-        id_route: '$unit$'
-        id_target: 'a-tgt'
+        0: '$unit$'
+        1: 'a-tgt'
         meta: @{} ts
         body: @{} msg: 'a message', ts
 
       check_msg(ts, null, { ts })
 
 
-    it @ 'message addr body send({ id_route, id_target }, body )', @=>> ::
+    it @ 'message addr body send({ 0, 1 }, body )', @=>> ::
       const ts = new Date()
       await hub.send @
-        @{} id_route: '$unit$', id_target: 'a-tgt'
+        @{} 0: '$unit$', 1: 'a-tgt'
+        @{} msg: 'a message', ts
+
+      check_msg(ts)
+
+
+    it @ 'message addr body send([ 0, 1 ], body )', @=>> ::
+      const ts = new Date()
+      await hub.send @
+        @[] '$unit$', 'a-tgt'
         @{} msg: 'a message', ts
 
       check_msg(ts)

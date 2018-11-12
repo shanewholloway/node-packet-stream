@@ -47,7 +47,7 @@ export function createTestHub(name, log, use_cbor) ::
 
   if log ::
     hub.local.addTarget @ `tgt_${name}`
-      pkt => log @ `recv [${pkt.id_route} ${pkt.id_target}]`, pkt.body
+      pkt => log @ `recv [${pkt[0]} ${pkt[1]}]`, pkt.body
 
   expect(hub.local.id_route)
   .to.equal @ `$${name}$`

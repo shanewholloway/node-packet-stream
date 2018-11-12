@@ -26,8 +26,9 @@ export class FabricRouter ::
 
   async publishRoute(route) ::
     await route.ready
-    if 'string' === typeof route.id_route ::
-      this.public_routes.set @ route.id_route, route
+    const id_route = route.id_route
+    if 'string' === typeof id_route ::
+      this.public_routes.set @ id_route, route
       return route
 
   setUpstream(upstream) ::
@@ -44,7 +45,7 @@ export class FabricRouter ::
     if 0 === lstDiscovery.length :: return
 
     const route = await discoverFirst @
-      @{} key: id_route, id_route
+      @{} key: id_route, kind: 'route'
       lstDiscovery, this
 
     if 'string' === typeof route ::

@@ -53,8 +53,8 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     await test_api.during(hub_a, hub_b)
 
   await hub_b.send @:
-    id_route: '$one$'
-    id_target: 'tgt_one'
+    0: '$one$'
+    1: 'tgt_one'
     body: @{} msg: 'hello one'
 
   await sleep @ test_api.sleep || 10
@@ -63,8 +63,8 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
 
   await hub_a.send @:
-    id_route: '$two$'
-    id_target: 'tgt_two'
+    0: '$two$'
+    1: 'tgt_two'
     body: @{} msg: 'hello two'
 
   await sleep @ test_api.sleep || 0
@@ -116,8 +116,8 @@ export async function testSingleSidedChannelConnection(test_api) ::
     await test_api.during(hub)
 
   await hub.send @:
-    id_route: '$remote$'
-    id_target: 'tgt_remote'
+    0: '$remote$'
+    1: 'tgt_remote'
     body: @{} msg: 'hello remote'
 
   await sleep @ test_api.sleep || 0

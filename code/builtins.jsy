@@ -5,6 +5,8 @@ export const ::{}
   defineProperties: o_defprop,
 = Object
 
+export const is_array = Array.isArray
+
 export const is_func = fn =>
   'function' === typeof fn
 

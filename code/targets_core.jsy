@@ -10,7 +10,7 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
   return @{} ready
 
   async function target_route(pkt, pktctx) ::
-    const id_target = pkt.id_target || ''
+    const id_target = pkt[1] || ''
     let target = targets_map.get(id_target)
 
     if undefined === target ::
@@ -50,10 +50,10 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
 
     addTarget(id_target, target) ::
       targets_map.set @ id_target, as_func(target)
-      return @{} id_target, id_route
+      return @[] id_target, id_route
 
     removeTarget(id_target) ::
-      return targets_map.delete @ id_target.id_target || id_target
+      return targets_map.delete @ id_target[1] || id_target
 
     getTarget(id_target) :: return targets_map.get(id_target)
     hasTarget(id_target) :: return targets_map.has(id_target)
@@ -63,7 +63,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
         id_target = this.newTargetId()
       return @{}
         __proto__: as_reply ? reply_target_api : target_api
-        id: @{} id_target, id_route
+        id: @[] id_route, id_target
         disable() :: targets_map.delete(id_target)
 
 

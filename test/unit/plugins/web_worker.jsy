@@ -31,7 +31,7 @@ export default function () ::
       hub.local.addTarget @ `tgt_remote`, pkt => ::
         const {id_route, id_target} = pkt
         hub.send @:
-          id_route: '$one$', id_target: 'tgt_one',
+          0: '$one$', 1: 'tgt_one',
           body: @{}
             from: 'webworker'
             echo: pkt.body

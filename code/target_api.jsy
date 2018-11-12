@@ -9,11 +9,11 @@ export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
       return this
     enable(target) ::
       if undefined === target :: target = this.target
-      targets_map.set @ this.id.id_target, as_func(target)
+      targets_map.set @ this.id[1], as_func(target)
 
     until(p, target) ::
       // disable the ephemeral if same target
-      const k = this.id.id_target
+      const k = this.id[1]
       if true === target :: target = this.target
       const dis = null == target ? this.disable : @=> ::
         if target === targets_map.get(k) ::

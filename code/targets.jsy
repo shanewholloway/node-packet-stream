@@ -27,7 +27,7 @@ export class TargetRouter ::
     if 0 === lstDiscovery.length :: return
 
     const target = await discoverFirst @
-      @{} key: id_target, id_target, pktctx
+      @{} key: id_target, kind: 'target', pktctx
       lstDiscovery, this
 
     if null == target :: return
@@ -58,7 +58,7 @@ export class TargetRouter ::
       ms_timeout, absent, _pkt_body
 
   async addEndpoint(ep) ::
-    const eph = this.xtgt(ep.as_reply, ep.id_target)
+    const eph = this.xtgt(ep.as_reply, ep.id_target || ep[1])
     const ready = await @
         ep.endpoint ? ep.endpoint(eph)
       : is_func(ep) ? ep(eph)

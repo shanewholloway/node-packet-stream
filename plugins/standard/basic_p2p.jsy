@@ -44,7 +44,7 @@ export function bind_basic_p2p({ random_base64 }) ::
       return ans
 
     peerRoute(pkt) ::
-      const {id_target, body} = pkt
+      const {1: id_target, body} = pkt
       if 'basic' !== Object(body).version :: return
 
       if 'hello' !== id_target ::
