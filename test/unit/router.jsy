@@ -177,6 +177,6 @@ export default function test_hub_router() ::
         'route a :: a.b'
         @[] 'undeliverable', @{} id_route: 'c', id_target: 'tgt', mode: 'route'
         'route c.d :: c.d'
-        @[] 'undeliverable', @{} id_route: 'c.d.e', id_target: 'tgt', mode: 'route'
+        'route c.d :: c.d.e'
         'route a :: a.e'
         

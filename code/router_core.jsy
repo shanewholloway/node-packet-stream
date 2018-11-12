@@ -24,10 +24,9 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
     return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
 
   async function dispatch_one(pkt, pktctx) ::
-    if undefined === pkt :: return
     try ::
       pkt = await pkt
-      if undefined === pkt :: return
+      if undefined === pkt || null === pkt :: return
 
       const id_route = pkt.id_route || ''
       let route = id_route
@@ -45,31 +44,33 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
     catch err ::
       hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
 
-
-  async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
+  function _resolveRoute0(id_route) ::
     let route = routes_map.get(id_route)
     if undefined !== route :: return route
 
-    const parts = id_route.split('.', 2)
-    if 2 === parts.length ::
-      route = routes_map.get(parts[0])
-      if undefined !== route :: return route
+    let idx
+    while -1 !== @ idx = id_route.lastIndexOf('.', idx) ::
+      route = routes_map.get @
+        id_route.slice(0, idx)
 
-    if allowDiscover ::
-      route = await hub_router.discoverRoute(id_route)
-      if undefined !== route :: return route
+      if undefined !== route ::
+        return route
 
-    // the route could have been added during discovery
-    route = routes_map.get(id_route)
-    if undefined !== route :: return route
+  async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
+    let route = _resolveRoute0(id_route)
+    if undefined === route ::
 
-    if 2 === parts.length ::
-      route = routes_map.get(parts[0])
-      if undefined !== route :: return route
+      if allowDiscover ::
+        route = await hub_router.discoverRoute(id_route)
 
-    if allowUpstream ::
-      // otherwise just send upstream
-      route = await hub_router.upstreamRoute(id_route)
+        if undefined === route ::
+          // the route could have been added during discovery
+          route = _resolveRoute0(id_route)
+
+          if undefined === route && allowUpstream ::
+            // otherwise just send upstream
+            route = await hub_router.upstreamRoute(id_route)
+
     return route
 
 
