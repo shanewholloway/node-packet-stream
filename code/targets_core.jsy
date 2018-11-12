@@ -1,5 +1,5 @@
 import { o_assign, o_defprop } from './builtins.jsy'
-import { bindTransientAPI } from './transient_core.jsy'
+import { bindXTargetAPI } from './target_api.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
   // as closures over private variables (targets_map)
@@ -42,39 +42,31 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
-  const [transient_api, transient_reply_api] = bindTransientAPI(tgt_router, targets_map, id_route, router)
+  const [target_api, reply_target_api] = bindXTargetAPI @
+    tgt_router, targets_map, id_route, router
 
   const targets_api = @{}
     __proto__: null,
 
-    addTarget(id_target, target, override) ::
-      if 1 === arguments.length ::
-        target = id_target.target || id_target
-        override = id_target.override
-        id_target = id_target.id_target
-
+    addTarget(id_target, target) ::
       if 'function' !== typeof target ::
         throw new TypeError
-
-      if ! override && targets_map.has(id_target) ::
-        return targets_map.get(target)
-
       targets_map.set @ id_target, target
       return @{} id_target, id_route
 
     removeTarget(id_target) ::
       return targets_map.delete @ id_target.id_target || id_target
 
-    hasTarget(id_target) ::
-      return targets_map.has(id_target)
+    getTarget(id_target) :: return targets_map.get(id_target)
+    hasTarget(id_target) :: return targets_map.has(id_target)
 
-    transient(asReply) ::
-      const id_target = this.newTargetId()
+    xtgt(as_reply, id_target) ::
+      if ! id_target ::
+        id_target = this.newTargetId()
       return @{}
-        __proto__: asReply ? transient_reply_api : transient_api
+        __proto__: as_reply ? reply_target_api : target_api
         id: @{} id_target, id_route
-        disable() ::
-          targets_map.delete(id_target)
+        disable() :: targets_map.delete(id_target)
 
 
   return o_assign @ targets_api,

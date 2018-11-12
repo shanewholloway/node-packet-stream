@@ -77,13 +77,9 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
   // Allow individual queries but not enumeration
   const router_api = @{}
     addRoute(id_route, route, override) ::
-      if 1 === arguments.length ::
-        route = id_route.route || id_route
-        override = id_route.override
-        id_route = id_route.id_route
-
       if 'function' !== typeof route ::
         throw new TypeError
+
       if ! override && routes_map.has(id_route) ::
         return routes_map.get(id_route)
 

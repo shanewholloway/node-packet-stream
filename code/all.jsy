@@ -6,7 +6,7 @@ export * from './router_core.jsy'
 export * from './router.jsy'
 export * from './targets_core.jsy'
 export * from './targets.jsy'
-export * from './transient_core.jsy'
+export * from './target_api.jsy'
 export * from './hub.jsy'
 export { default } from './hub.jsy'
 

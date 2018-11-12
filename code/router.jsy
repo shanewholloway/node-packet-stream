@@ -82,9 +82,6 @@ export class FabricRouter ::
   /* // from bindCoreRouterAPI
 
   addRoute(id_route, route, override) : route function
-  addRoute({id_route, route, override}) : route function
-  addRoute(route function with id_route property) : route function
-
   removeRoute(id_route, route) : Boolean
   removeRoute(route function with id_route property) : Boolean
 
