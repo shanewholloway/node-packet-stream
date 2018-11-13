@@ -50,7 +50,7 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
     let idx
     while -1 !== @ idx = id_route.lastIndexOf('.', idx) ::
       route = routes_map.get @
-        id_route.slice(0, idx)
+        id_route.slice(0, idx--)
 
       if undefined !== route ::
         return route
