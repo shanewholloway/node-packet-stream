@@ -4,11 +4,11 @@ import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
 
 export class FabricRouter ::
-  constructor() ::
+  constructor(hub) ::
     o_assign @ this, @{}
       timeouts: bindTimeouts(),
       _channel_: @{} __proto__: base_channel, router: this
-      routeDiscovery: (this.routeDiscovery || []).slice()
+      discovery: (this.discovery || []).slice()
       public_routes: this._initPublicRoutes()
 
     const self = o_create(this)
@@ -16,7 +16,7 @@ export class FabricRouter ::
       return self
 
     o_assign @ this,
-      bindCoreRouterAPI @ self, this._initRoutes()
+      bindCoreRouterAPI @ self, hub, this._initRoutes()
     return self
 
   _initRoutes() :: return new Map()
@@ -41,7 +41,7 @@ export class FabricRouter ::
 
 
   async discoverRoute(id_route) ::
-    let lstDiscovery = this.routeDiscovery
+    let lstDiscovery = this.discovery
     if 0 === lstDiscovery.length :: return
 
     const route = await discoverFirst @

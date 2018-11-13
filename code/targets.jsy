@@ -7,7 +7,7 @@ export class TargetRouter ::
 
   constructor(id_route, router, hub) ::
     o_assign @ this, @{}
-      targetDiscovery: (this.targetDiscovery || []).slice()
+      discovery: (this.discovery || []).slice()
       timeouts: router.timeouts
 
     if this._skip_bind_api :: return this
@@ -23,7 +23,7 @@ export class TargetRouter ::
   newTargetId() :: return random_base64(6)
 
   async discoverTarget(id_target, pktctx) ::
-    let lstDiscovery = this.targetDiscovery
+    let lstDiscovery = this.discovery
     if 0 === lstDiscovery.length :: return
 
     const target = await discoverFirst @
@@ -53,20 +53,25 @@ export class TargetRouter ::
 
   */
 
-  addReply(ms_timeout=1000, absent) ::
-    return this.xtgt(true).untilReply @
-      ms_timeout, absent, _pkt_body
+  addReply(...args) ::
+    return this.xtgt(true)
+      .untilReply(...args)
 
-  async addEndpoint(ep) ::
-    const eph = this.xtgt(ep.as_reply, ep.id_target || ep[1])
+  async addEndpoint(ep, ...args) ::
+    const eph = this.xtgt @ ep.as_reply, ep.id_target || ep[1]
+    args.unshift(eph)
+
     const ready = await @
-        ep.endpoint ? ep.endpoint(eph)
-      : is_func(ep) ? ep(eph)
-      : @ eph.use(ep.target.bind(ep)), true
+      @ is_func(ep) ? ep : ep.endpoint || _ep_target
+      .apply(ep, args)
     
-    if is_func @ ready :: eph.use(ready)
-    return false === ready ? null : eph.id
+    if is_func(ready) :: eph.use(ready)
+    return false !== ready ? eph.id : null
 
 export default TargetRouter
 
-function _pkt_body(pkt) :: return pkt.body
+
+function _ep_target(eph) ::
+  eph.use @ this.target.bind(this)
+  return true
+

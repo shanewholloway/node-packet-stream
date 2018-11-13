@@ -1,22 +1,19 @@
 import { o_assign, as_func } from './builtins.jsy'
 
-export function bindCoreDispatchRouter(hub_router, routes_map) ::
-  // as closures over private variables (routes_map)
-
+export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
   // to create loopback, shim .dispatch onto a temporary prototype
   const loopback = @
       @{} dispatch, __proto__: hub_router
     .local_channel()
 
-  const pktctx0 = @{} __proto__: null,
-    redispatch: dispatch_one
-    hub_router, timeouts: hub_router.timeouts,
-    loopback, send: loopback.send,
-    get reply() :: return this.channel.send
-
   const router_ctx = @{} __proto__: null,
     hub_router, timeouts: hub_router.timeouts,
+    get local() :: return hub.local
     loopback, send: loopback.send
+
+  const pktctx0 = @{} __proto__: router_ctx,
+    get reply() :: return this.channel.send
+    redispatch: dispatch_one
 
   return @{} dispatch, resolveRoute, loopback, router_ctx
 
@@ -24,10 +21,10 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
     return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
 
   async function dispatch_one(pkt, pktctx) ::
-    try ::
-      pkt = await pkt
-      if undefined === pkt || null === pkt :: return
+    pkt = await pkt
+    if undefined === pkt || null === pkt :: return
 
+    try ::
       const id_route = pkt[0] || ''
       let route = id_route
         ? routes_map.get(id_route)
@@ -43,6 +40,8 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
       await route(pkt, pktctx)
     catch err ::
       hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
+    finally ::
+      pktctx.channel = undefined // release channel referenece
 
   function _resolveRoute0(id_route) ::
     let route = routes_map.get(id_route)
@@ -74,7 +73,7 @@ export function bindCoreDispatchRouter(hub_router, routes_map) ::
     return route
 
 
-export function bindCoreRouterAPI(hub_router, routes_map) ::
+export function bindCoreRouterAPI(hub_router, hub, routes_map) ::
   // Allow individual queries but not enumeration
   const router_api = @{}
     addRoute(id_route, route, override) ::
@@ -103,4 +102,4 @@ export function bindCoreRouterAPI(hub_router, routes_map) ::
 
   return o_assign @ router_api,
     bindCoreDispatchRouter @
-      hub_router, routes_map
+      hub_router, hub, routes_map

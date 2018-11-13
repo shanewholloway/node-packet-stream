@@ -1,5 +1,5 @@
 import { o_assign, o_defprop, as_func } from './builtins.jsy'
-import { bindXTargetAPI } from './target_api.jsy'
+import { bindXTargetAPI } from './xtgt_api.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
   // as closures over private variables (targets_map)
@@ -42,7 +42,7 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
 
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
-  const [target_api, reply_target_api] = bindXTargetAPI @
+  const [xtgt_api, reply_xtgt_api] = bindXTargetAPI @
     tgt_router, targets_map, id_route, router
 
   const targets_api = @{}
@@ -62,7 +62,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
       if ! id_target ::
         id_target = this.newTargetId()
       return @{}
-        __proto__: as_reply ? reply_target_api : target_api
+        __proto__: as_reply ? reply_xtgt_api : xtgt_api
         id: @[] id_route, id_target
         disable() :: targets_map.delete(id_target)
 

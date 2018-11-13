@@ -1,12 +1,11 @@
-import { o_assign, as_func } from './builtins.jsy'
+import { o_assign, is_func, as_func } from './builtins.jsy'
 
 export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
-  const target_api = @{}
+  const xtgt_api = @{}
     __proto__: router.router_ctx
 
-    use(target) ::
-      this.enable @ this.target = target
-      return this
+    is_active() ::
+      return !! targets_map.get(this.id[1])
     enable(target) ::
       if undefined === target :: target = this.target
       targets_map.set @ this.id[1], as_func(target)
@@ -22,24 +21,42 @@ export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
       p.then(dis, dis)
       return this
 
-  const reply_target_api = o_assign @
-    @{} __proto__: target_api
-    reply_target_base_api
+  const reply_xtgt_api = @{} __proto__: xtgt_api
 
-  return @[] target_api, reply_target_api
+  return @[]
+    o_assign @ xtgt_api, xtgt_base_api
+    o_assign @ reply_xtgt_api, reply_xtgt_base_api
 
 
-const reply_target_base_api = @{}
+const xtgt_base_api = @{}
+  use(target) ::
+    this.enable @ this.target = target
+    return this
+
+  use_serial(target) ::
+    let tip = Promise.resolve()
+    return this.use @\ ...args ::
+      const h = @=> target(...args)
+      return tip = tip.then(h, h) 
+
+
+const reply_xtgt_base_api = @{}
   then(y,n) :: return this.ans.then(y,n)
   catch(f) :: return this.ans.catch(f)
   finally(f) :: return this.ans.finally(f)
+
+  reset(...args) ::
+    return @
+      @ is_func @ Object(args[0]).then
+      ? this.untilAnswer @ args[0]
+      : this.untilReply @ ...args
 
   untilAnswer(p) ::
     return this.until @ this.ans = p, this.target
 
   untilReply(ms_timeout=1000, absent, on_reply) ::
     if undefined === on_reply ::
-      on_reply = absent
+      on_reply = absent || _pkt_body
       absent = undefined
 
     return this.untilAnswer @ 
@@ -49,4 +66,6 @@ const reply_target_base_api = @{}
         if ms_timeout ::
           this.timeouts.absent @
             ms_timeout, resolve, absent
+
+function _pkt_body(pkt) :: return pkt.body
 
