@@ -46,15 +46,19 @@ export function as_send_pkt(args) ::
   return as_send_pkt[k] @ ...args
 
 o_assign @ as_send_pkt, @{}
-  's,s,v': pkt_3, 's,s,s': pkt_3
-  's,s,v,v': pkt_4, 's,s,s,v': pkt_4, 's,s,v,s': pkt_4, 's,s,s,s': pkt_4
-  'v,v'(addr, body) :: return o_assign @ {body}, addr
-  'v,v,v'(addr, meta, body) :: return o_assign @ {meta, body}, addr
+  's,s,v': pkt_3, 's,s,s': pkt_3,
+  's,s,v,v': pkt_4, 's,s,s,v': pkt_4, 's,s,v,s': pkt_4, 's,s,s,s': pkt_4,
+  'v,v': pkt_o2, 'v,s': pkt_o2,
+  'v,v,v': pkt_o3, 'v,v,s': pkt_o3, 'v,s,s': pkt_o3,
 
 function pkt_4(id_route, id_target, meta, body) ::
   return @{} 0:id_route, 1:id_target, meta, body
 function pkt_3(id_route, id_target, body) ::
   return @{} 0:id_route, 1:id_target, body
+function pkt_o2(addr, body) ::
+  return o_assign @ {body}, addr
+function pkt_o3(addr, meta, body) ::
+  return o_assign @ {meta, body}, addr
 
 
 export function raw_channel(p2p, unpack, chan_ex) ::
