@@ -20,26 +20,25 @@ export class FabricHub ::
 
     applyPlugins @ 'pre', this._plugins_, self
 
-    const router = self._initHubRouter()
+    const router = self._initHubRouter(options)
     const loopback = router.loopback
     o_assign @ this, @{}
       _root_: this
       router, loopback, send: loopback.send,
       _url_protos: {}
 
-    this.local = false === options.id_route ? null
-      : self._initLocal(options.id_route)
+    this.local = self._initLocal(options)
 
     applyPlugins @ null, this._plugins_, self
     applyPlugins @ 'post', this._plugins_, self
     return self
 
-  _initHubRouter() ::
-    return new this.constructor.FabricRouter()
-  _initLocal(id_route) ::
-    return this.createLocalRoute(id_route)
+  _initHubRouter(options) ::
+    return new this.constructor.FabricRouter(this)
+  _initLocal(options) ::
+    return this.localRoute(options.id_route)
 
-  createLocalRoute(id_route, is_private) ::
+  localRoute(id_route, is_private) ::
     if null == id_route :: id_route = this.newRouteId()
     const local = new this.constructor.TargetRouter @
       id_route, this.router, this
