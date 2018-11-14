@@ -50,7 +50,7 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
 
     addTarget(id_target, target) ::
       targets_map.set @ id_target, as_func(target)
-      return @[] id_target, id_route
+      return @[] id_route, id_target
 
     removeTarget(id_target) ::
       return targets_map.delete @ id_target[1] || id_target
@@ -59,13 +59,9 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
     hasTarget(id_target) :: return targets_map.has(id_target)
 
     xtgt(as_reply, id_target) ::
-      if ! id_target ::
-        id_target = this.newTargetId()
       return @{}
         __proto__: as_reply ? reply_xtgt_api : xtgt_api
-        id: @[] id_route, id_target
-        disable() :: targets_map.delete(id_target)
-
+        id: @[] id_route, id_target || this.newTargetId()
 
   return o_assign @ targets_api,
     bindCoreDispatchTarget @

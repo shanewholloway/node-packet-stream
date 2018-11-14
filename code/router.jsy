@@ -40,36 +40,31 @@ export class FabricRouter ::
     return this.addDynamic @ id_route, this.upstream
 
 
-  async discoverRoute(id_route) ::
+  async discoverRoute(id_route, rtrctx) ::
     let lstDiscovery = this.discovery
     if 0 === lstDiscovery.length :: return
 
     const route = await discoverFirst @
-      @{} key: id_route, kind: 'route'
+      @{} key: id_route, kind: 'route', rtrctx
       lstDiscovery, this
 
     if 'string' === typeof route ::
       const alias = this.getRoute(route)
       return alias ? alias
-        : this.discoverRoute(route)
+        : this.discoverRoute(route, rtrctx)
 
     return this.addDynamic @ id_route, route
 
   _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
-  _on_discovery_error(err) :: this._on_error @ 'router.discovery', err
 
   addPeer(id_route, channel, override) ::
     const disp = channel.dispatch || channel.send
     const res = this.addRoute @ id_route, disp, override
     if channel.when_closed ::
-      channel.when_closed.then @ res[1]
+      channel.when_closed.then @ res.cancel
     return res
 
   addDynamic(id_route, route) ::
-    if 1 === arguments.length ::
-      route = id_route.route || id_route
-      id_route = id_route.id_route
-
     if null == route :: return
     if route.ephemeral :: return route
 
@@ -77,12 +72,12 @@ export class FabricRouter ::
       ? this.addRoute(id_route, route, true)
       : this.addPeer(id_route, route, true)
 
-    return res[0]
+    return res.route
 
 
   /* // from bindCoreRouterAPI
 
-  addRoute(id_route, route, override) : route function
+  addRoute(id_route, route, override) : [route, bound removeRoute]
   removeRoute(id_route, route) : Boolean
   removeRoute(route function with id_route property) : Boolean
 
@@ -93,8 +88,12 @@ export class FabricRouter ::
 
   */
 
+  expireRoute(ms_timeout, id_route, route) ::
+    this.timeouts @ ms_timeout || 300000, @=>
+      this.removeRoute(id_route, route)
+    return route
+
 
 o_assign @ FabricRouter.prototype, channel_kinds,
-
 export default FabricRouter
 

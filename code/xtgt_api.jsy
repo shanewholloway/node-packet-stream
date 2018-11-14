@@ -5,19 +5,24 @@ export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
     __proto__: router.router_ctx
 
     is_active() ::
-      return !! targets_map.get(this.id[1])
+      return !! targets_map.get @ this.id[1]
+
     enable(target) ::
       if undefined === target :: target = this.target
       targets_map.set @ this.id[1], as_func(target)
 
+    disable() ::
+      targets_map.delete @ this.id[1]
+
     until(p, target) ::
-      // disable the ephemeral if same target
+      if true === target ::
+        target = this.target
       const k = this.id[1]
-      if true === target :: target = this.target
-      const dis = null == target ? this.disable : @=> ::
+
+      // disable the ephemeral if same target
+      const dis = @=> ::
         if target === targets_map.get(k) ::
           targets_map.delete(k)
-
       p.then(dis, dis)
       return this
 

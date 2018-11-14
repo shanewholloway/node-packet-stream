@@ -49,9 +49,7 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
 
     let idx
     while -1 !== @ idx = id_route.lastIndexOf('.', idx) ::
-      route = routes_map.get @
-        id_route.slice(0, idx--)
-
+      route = routes_map.get @ id_route.slice(0, idx--)
       if undefined !== route ::
         return route
 
@@ -60,7 +58,7 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
     if undefined === route ::
 
       if allowDiscover ::
-        route = await hub_router.discoverRoute(id_route)
+        route = await hub_router.discoverRoute(id_route, router_ctx)
 
         if undefined === route ::
           // the route could have been added during discovery
@@ -78,11 +76,9 @@ export function bindCoreRouterAPI(hub_router, hub, routes_map) ::
   const router_api = @{}
     addRoute(id_route, route, override) ::
       as_func(route)
-      if ! override && routes_map.has(id_route) ::
-        return routes_map.get(id_route)
-
-      routes_map.set @ id_route, route
-      return @[] route, @=> this.removeRoute @ id_route, route
+      if override || ! routes_map.has(id_route) ::
+        routes_map.set @ id_route, route
+        return @{} route, cancel: @=> this.removeRoute @ id_route, route
 
     removeRoute(id_route, route) ::
       if 1 === arguments.length ::

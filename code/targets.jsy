@@ -22,12 +22,12 @@ export class TargetRouter ::
 
   newTargetId() :: return random_base64(6)
 
-  async discoverTarget(id_target, pktctx) ::
+  async discoverTarget(id_target, rtrctx) ::
     let lstDiscovery = this.discovery
     if 0 === lstDiscovery.length :: return
 
     const target = await discoverFirst @
-      @{} key: id_target, kind: 'target', pktctx
+      @{} key: id_target, kind: 'target', rtrctx
       lstDiscovery, this
 
     if null == target :: return
