@@ -18,7 +18,7 @@ export default function test_target_router() ::
     beforeEach @=>> ::
       log = newLog()
       hub = Hub.create('$unit$')
-      hub.router.timeouts.interval @ 50
+      hub.router.timeouts.changeInterval @ 50
 
       hub.local.addTarget @ 'a-tgt', (pkt, pktctx) => ::
         const {0: id_route, 1: id_target, meta, body} = pkt

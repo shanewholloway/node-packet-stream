@@ -1,6 +1,7 @@
 import { o_defprop, is_func, as_func } from './builtins.jsy'
 import data_utils from './data_utils.jsy'
 
+
 const sym_dedup = Symbol('msg_fabric_discovery')
 export function discoverFirst(query, lstFns, host) ::
   const key = query.key
@@ -52,17 +53,35 @@ export function bindTimeouts(ms_interval) ::
   const q = []
 
   tick_interval(ms_interval, q)
+  add.interval = interval
+
   add.absent = (ms_min_timeout, callback, value) =>
     add @ ms_min_timeout, @=> callback @
       is_func(value) ? value() : value
 
+  add.hashbelt = (ms_min_interval, max_length=4, create=Object) => ::
+    interval @ ms_min_interval, @=> ::
+      while max_length <= belt.length ::
+        belt.pop()
+      belt.unshift @ create()
+
+    const belt = [create()]
+    return belt
+    
+
   return add
 
-  function add(ms_min_timeout, fn_timeout) ::
+  function add(ms_min_timeout, callback) ::
     const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
     const qi = q[idx] || []
     if 0 === qi.length :: q[idx] = qi
-    qi.push @ as_func @ fn_timeout
+    qi.push @ as_func @ callback
+
+  function interval(ms_min_interval, callback) ::
+    as_func(callback)
+    add @ ms_min_interval, function _wrap_() ::
+      if false !== callback() ::
+        add @ ms_min_interval, _wrap_
 
   function tick_interval(ms, lq) ::
     ms_interval = (0 | ms) || 250
@@ -76,7 +95,7 @@ export function bindTimeouts(ms_interval) ::
     const tid = setInterval @ tick, ms_interval
     if tid.unref :: tid.unref()
 
-    add.interval = ms => ::
+    add.changeInterval = ms => ::
       if ms_interval != ms ::
         // fork and finish current queue
         if 0 !== lq.length ::
