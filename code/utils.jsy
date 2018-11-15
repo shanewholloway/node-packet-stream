@@ -68,8 +68,8 @@ export function bindTimeouts(ms_interval) ::
     const belt = [create()]
     return belt
     
+  return add.add = add
 
-  return add
 
   function add(ms_min_timeout, callback) ::
     const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
