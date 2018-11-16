@@ -30,11 +30,11 @@ export function bind_sendPacketStream(wstream) ::
 
     let pkt_hdr
     if len < 254 ::
-      (pkt_hdr = pkt_hdr_1).writeUInt8 @ len
+      ; (pkt_hdr = pkt_hdr_1).writeUInt8 @ len, 0
     else if len < 65536 ::
-      (pkt_hdr = pkt_hdr_3).writeUInt16BE @ len
+      ; (pkt_hdr = pkt_hdr_3).writeUInt16BE @ len, 1
     else ::
-      (pkt_hdr = pkt_hdr_5).writeUInt32BE @ len
+      ; (pkt_hdr = pkt_hdr_5).writeUInt32BE @ len, 1
 
     const s_pkt = Buffer.concat @# pkt_hdr, d_pkt
     if wstream.write(s_pkt) ::
