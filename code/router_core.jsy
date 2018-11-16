@@ -17,8 +17,8 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
 
   return @{} dispatch, resolveRoute, loopback, router_ctx
 
-  function dispatch(pkt, channel) ::
-    return dispatch_one @ pkt, @{} channel, __proto__: pktctx0
+  async function dispatch(pkt, channel) ::
+    dispatch_one @ pkt, @{} channel, __proto__: pktctx0
 
   async function dispatch_one(pkt, pktctx) ::
     pkt = await pkt
@@ -38,10 +38,10 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
           return channel && channel.undeliverable(pkt, 'route')
 
       await route(pkt, pktctx)
-    catch err ::
-      hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
-    finally ::
       pktctx.channel = undefined // release channel referenece
+    catch err ::
+      pktctx.channel = undefined // release channel referenece
+      hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
 
   function _resolveRoute0(id_route) ::
     let route = routes_map.get(id_route)

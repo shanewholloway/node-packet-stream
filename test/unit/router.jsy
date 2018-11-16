@@ -1,4 +1,4 @@
-import { Hub, expect, newLog } from './_setup.jsy'
+import { Hub, expect, newLog, sleep } from './_setup.jsy'
 
 export default function test_hub_router() ::
   var hub, log, test_chan
@@ -26,6 +26,8 @@ export default function test_hub_router() ::
         1: 'a-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'tgt recv', @{} id_route: '$unit$', id_target: 'a-tgt', body: @{} msg: 'a message'
 
@@ -50,6 +52,8 @@ export default function test_hub_router() ::
         0: '$dynamic$', 1: 'a-logical-tgt'
         body: @{} msg: 'a logical message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'dynamic route', 'a-logical-tgt', tgt_id
         @[] 'tgt recv', @{} id_route: '$unit$', id_target: tgt_id, body: @{} msg: 'a logical message'
@@ -62,6 +66,8 @@ export default function test_hub_router() ::
         1: 'dne-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(10)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
 
@@ -71,6 +77,8 @@ export default function test_hub_router() ::
         0: '$unit$'
         1: 'dne-tgt'
         body: @{} msg: 'a message'
+
+      await sleep(10)
 
       expect(log.calls).to.be.deep.equal @#
         @[] 'undeliverable', @{} mode: 'target', id_route: '$unit$', id_target: 'dne-tgt'
@@ -89,6 +97,8 @@ export default function test_hub_router() ::
         1: 'dne-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'discovery', @{} key: 'dne-route'
         @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
@@ -106,6 +116,8 @@ export default function test_hub_router() ::
         1: 'dne-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'discovery', @{} key: 'dne-route'
         @[] 'sent pkt', @{} id_route: 'dne-route', id_target: 'dne-tgt'
@@ -122,6 +134,8 @@ export default function test_hub_router() ::
         0: 'dne-route'
         1: 'dne-tgt'
         body: @{} msg: 'a message'
+
+      await sleep(0)
 
       expect(log.calls).to.be.deep.equal @#
         @[] 'discovery', @{} key: 'dne-route'
@@ -142,6 +156,8 @@ export default function test_hub_router() ::
         1: 'dne-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         'createDiscoveryTimeout'
         @[] 'discovery, no return', @{} key: 'dne-route'
@@ -159,6 +175,8 @@ export default function test_hub_router() ::
         1: 'dne-tgt'
         body: @{} msg: 'a message'
 
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         @[] 'upstream', 'dne-route', 'dne-tgt'
 
@@ -173,10 +191,12 @@ export default function test_hub_router() ::
       await test_chan.send @: 0: 'c.d.e', 1: 'tgt', body: {}
       await test_chan.send @: 0: 'a.e', 1: 'tgt', body: {}
       
+      await sleep(0)
+
       expect(log.calls).to.be.deep.equal @#
         'route a :: a.b'
-        @[] 'undeliverable', @{} id_route: 'c', id_target: 'tgt', mode: 'route'
         'route c.d :: c.d'
+        @[] 'undeliverable', @{} id_route: 'c', id_target: 'tgt', mode: 'route'
         'route c.d :: c.d.e'
         'route a :: a.e'
         

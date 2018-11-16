@@ -56,9 +56,9 @@ function pkt_4(id_route, id_target, meta, body) ::
 function pkt_3(id_route, id_target, body) ::
   return @{} 0:id_route, 1:id_target, body
 function pkt_o2(addr, body) ::
-  return o_assign @ {body}, addr
+  if addr :: return o_assign @ {body}, addr
 function pkt_o3(addr, meta, body) ::
-  return o_assign @ {meta, body}, addr
+  if addr :: return o_assign @ {meta, body}, addr
 
 
 export function raw_channel(p2p, unpack, chan_ex) ::
