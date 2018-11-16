@@ -32,7 +32,7 @@
   "browser": "umd/index.min.js",
   "dependencies": {},
   "devDependencies": {
-    "cbor-codec": "^0.0.9",
+    "cbor-codec": "^0.0.10",
     "rollup": "^0.67.1",
     "rollup-plugin-jsy-lite": "^1.4.0",
     "rollup-plugin-node-resolve": "^3.4.0",

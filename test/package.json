@@ -10,7 +10,7 @@
     "faye-websocket": "^0.11.1",
     "jsy-node": "^1.4.1",
     "mocha": "^5.2.0",
-    "rollup": "^0.66.6",
+    "rollup": "^0.67.1",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "sinon": "^7.1.1",

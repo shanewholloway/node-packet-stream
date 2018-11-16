@@ -18,8 +18,6 @@ export default function (use_cbor) ::
   describe @ 'RTCDataChannel', @=> ::
     it @ 'hub.web.connectStream is a channel', async function() ::
       try ::
-        this.slow(200)
-
         const [rtc_dc_a, rtc_dc_b] = await createRTCTestingDataChannels()
 
         await testChannelConnection @:

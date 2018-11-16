@@ -13,14 +13,20 @@ describe @ 'Target Router', test_target_router
 
 import test_pi_direct from './plugins/direct.jsy'
 
-describe @ 'General Plugins', @=> ::
-  describe @ 'direct', test_pi_direct
+describe @ 'General Plugins', function() ::
+
+  describe @ 'direct', function() ::
+    this.slow(500)
+
+    test_pi_direct()
 
 
 #IF PLAT_WEB
   import test_pi_web from './plugins/web.jsy'
 
-  describe @ 'Browser Plugins', @=> ::
+  describe @ 'Browser Plugins', function() ::
+    this.slow(500)
+
     describe @ 'web with JSON', @=> test_pi_web(false)
 
     describe @ 'web with CBOR', @=> test_pi_web(true)
@@ -32,7 +38,8 @@ describe @ 'General Plugins', @=> ::
   import test_pi_net_tls from './plugins/net_tls.jsy'
   import { test_websockets_faye, test_websockets_ws } from './plugins/web_node.jsy'
 
-  describe @ 'NodeJS Plugins', @=> ::
+  describe @ 'NodeJS Plugins', function() ::
+    this.slow(500)
 
     describe @ 'net with JSON', @=> ::
       describe @ 'hub.direct_stream', @=> test_pi_net_direct(false)

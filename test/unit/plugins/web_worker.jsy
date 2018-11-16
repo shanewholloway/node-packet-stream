@@ -4,8 +4,6 @@ import { testDoubleSidedChannelConnection, testSingleSidedChannelConnection } fr
 export default function () ::
 
   it @ 'hub.web.connect is a channel', async function() ::
-    this.slow(300)
-
     const src_wkr = asIIFEString('self', webWorkerActual)
       .replace @ 'URL_MSG_FABRIC_HUB',
         JSON.stringify(window.url_msg_fabric_hub)
@@ -59,8 +57,6 @@ export default function () ::
 
 
   it @ 'hub.web.connect is a channel (using relay)', async function() ::
-    this.slow(300)
-
     const url_wkr_relay = asIIFEWebWorkerURL @ webWorkerRelay
 
     await testDoubleSidedChannelConnection @:
@@ -78,8 +74,6 @@ export default function () ::
 
 
   it @ 'validate webWorkerRelay', async function() ::
-    this.slow(300)
-
     const log = newLog()
     const url_wkr_relay = asIIFEWebWorkerURL @ webWorkerRelay
 

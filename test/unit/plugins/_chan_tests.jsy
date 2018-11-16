@@ -73,6 +73,35 @@ export async function testDoubleSidedChannelConnection(test_api) ::
     @[] 'recv [$one$ tgt_one]', @{} msg: 'hello one'
     @[] 'recv [$two$ tgt_two]', @{} msg: 'hello two'
 
+  log.calls.splice(0, Infinity)
+  const s_256 = Array(256).fill('slot')
+  await hub_a.send @:
+    0: '$two$'
+    1: 'tgt_two'
+    body: s_256.slice()
+
+  await sleep @ test_api.sleep || 10
+
+  expect(log.calls[0][1]).to.have.lengthOf(256)
+  expect(log.calls).to.deep.equal @#
+    @[] 'recv [$two$ tgt_two]', s_256
+
+  log.calls.splice(0, Infinity)
+  const s_256_256 = Array(70).fill(s_256)
+  await hub_b.send @:
+    0: '$one$'
+    1: 'tgt_one'
+    body: s_256_256.map @ e=>e.slice()
+
+  await sleep @ test_api.sleep || 100
+
+  expect(log.calls[0][1]).to.have.lengthOf(70)
+  expect(log.calls[0][1][2]).to.have.lengthOf(256)
+  expect(log.calls).to.deep.equal @#
+    @[] 'recv [$one$ tgt_one]', s_256_256
+
+
+
   expect(chan.close).to.be.a('function')
   chan.close()
 
