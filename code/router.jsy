@@ -55,6 +55,7 @@ export class FabricRouter ::
 
     return this.addDynamic @ id_route, route
 
+  _discoveryCache() :: return this.timeouts.hashbelt(15000)
   _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
 
   addPeer(id_route, channel, override) ::

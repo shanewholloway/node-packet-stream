@@ -1,51 +1,44 @@
 import { o_defprop, is_func, as_func } from './builtins.jsy'
 import data_utils from './data_utils.jsy'
 
-
-const sym_dedup = Symbol('msg_fabric_discovery')
+const _discover_cache = new WeakMap()
 export function discoverFirst(query, lstFns, host) ::
+  let cache_belt = _discover_cache.get(lstFns)
+  if undefined === cache_belt ::
+    cache_belt = host._discoveryCache()
+    _discover_cache.set(lstFns, cache_belt)
+
   const key = query.key
-  let dedup = lstFns[sym_dedup]
-  if undefined !== dedup ::
-    const p_discover = dedup.get(key)
-    if undefined !== p_discover ::
-      return p_discover
+  for const cache of cache_belt ::
+    const p = cache[key]
+    if undefined !== p ::
+      console.log @ "cache hit", @{} key, p
+      return p
 
-  else ::
-    dedup = new Map()
-    o_defprop @ lstFns, sym_dedup, {value: dedup}
-
-
-  const p_search = _discoverFirst(query, lstFns, host)
-
-  const clear = @=> dedup.delete(key)
-  dedup.set @ key, p_search
-  p_search.then(clear, clear)
-  return p_search
+  const p = _discoverFirst(query, lstFns, host)
+  cache_belt[0][key] = p
+  return p
 
 function _discoverFirst(query, lstFns, host) ::
-  const p_search = new Promise(do_discovery)
-  const ctx = @{} host, done: false, p_search
-  return p_search
-
-  async function do_discovery(resolve) ::
-    const ans_null = @=> ::
-      ctx.done = resolve(null), true
-
-    host._discoveryTimeout(ans_null)
-
+  let p_search
+  return p_search = new Promise @ async resolve => ::
     await null
+
+    const ctx = @{} host, done: false, p_search
+    const done = e => :: resolve(e || null); ctx.done = true
 
     const resolveFirst = async fn_discover => ::
       const e = await fn_discover(query, ctx)
-      if undefined !== e ::
-        ctx.done = resolve(e), true
+      if undefined !== e :: done(e)
 
-    Promise.all @
-      Array.from @ lstFns, resolveFirst
-    .then @ ans_null,
-      err => host._on_error('discovery', err)
+    host._discoveryTimeout(done)
+    try ::
+      for const p of Array.from @ lstFns, resolveFirst ::
+        await p
 
+      done(null)
+    catch err ::
+      host._on_error('discovery', err)
 
 
 export function bindTimeouts(ms_interval) ::

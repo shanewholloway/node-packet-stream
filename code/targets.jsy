@@ -36,6 +36,7 @@ export class TargetRouter ::
       this.addTarget(id_target, target)
     return target
 
+  _discoveryCache() :: return this.timeouts.hashbelt(15000)
   _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
 
   /* // from bindCoreTargetAPI
