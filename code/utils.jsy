@@ -12,7 +12,6 @@ export function discoverFirst(query, lstFns, host) ::
   for const cache of cache_belt ::
     const p = cache[key]
     if undefined !== p ::
-      console.log @ "cache hit", @{} key, p
       return p
 
   const p = _discoverFirst(query, lstFns, host)
