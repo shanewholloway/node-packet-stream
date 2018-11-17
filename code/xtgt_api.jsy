@@ -26,6 +26,13 @@ export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
       p.then(dis, dis)
       return this
 
+    changeId(id_target) ::
+      this.disable()
+      if ! id_target || true === id_target ::
+        id_target = tgt_router.newTargetId()
+      this.id[1] = id_target
+      return this
+
   const reply_xtgt_api = @{} __proto__: xtgt_api
 
   return @[]
