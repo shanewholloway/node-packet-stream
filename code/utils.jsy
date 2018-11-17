@@ -64,19 +64,24 @@ export function bindTimeouts(ms_interval) ::
 
 
   function add(ms_min_timeout, callback) ::
-    const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
-    const qi = q[idx] || []
-    if 0 === qi.length :: q[idx] = qi
-    qi.push @ as_func @ callback
+    if callback ::
+      const idx = Math.max @ 1, Math.ceil @ (0|ms_min_timeout) / ms_interval
+      const qi = q[idx] || []
+      if 0 === qi.length :: q[idx] = qi
+      qi.push @ as_func @ callback
 
   function interval(ms_min_interval, callback) ::
     as_func(callback)
-    add @ ms_min_interval, function _wrap_() ::
-      if false !== callback() ::
-        add @ ms_min_interval, _wrap_
+    const cancel = @=> :: interval = null
+    let interval = @=> ::
+      callback(cancel)
+      add @ ms_min_interval, interval
+
+    add @ ms_min_interval, interval
+    return cancel
 
   function tick_interval(ms, lq) ::
-    ms_interval = (0 | ms) || 250
+    ms_interval = (0 | ms) || 67
 
     const tick = function () ::
       const tip = lq.shift()
