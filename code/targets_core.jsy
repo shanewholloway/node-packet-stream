@@ -1,11 +1,10 @@
 import { o_assign, o_defprop, as_func } from './builtins.jsy'
-import { bindXTargetAPI } from './xtgt_api.jsy'
 
 export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router) ::
   // as closures over private variables (targets_map)
   const ready = 'string' === typeof id_route
-    ? Promise.resolve @ addRoute @ id_route
-    : id_route.then @ addRoute
+    ? Promise.resolve @ _add_target_route @ id_route
+    : id_route.then @ _add_target_route
 
   return @{} ready
 
@@ -32,36 +31,41 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
     await target(pkt, pktctx)
 
 
-  function addRoute(id_route) ::
-    o_defprop @ tgt_router, @{}
-      id_route: @{} value: id_route, enumerable: true
-
-    target_route.id_route = id_route
+  function _add_target_route(id_route) ::
+    tgt_router.id_route = target_route.id_route = id_route
     router.addRoute @ id_route, target_route, true
     return true
 
 
 export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
-  const [xtgt_api, reply_xtgt_api] = bindXTargetAPI @
-    tgt_router, targets_map, id_route, router
+  const xtgt_api = @{} tgt_router, __proto__: router.xctx_apis.xtgt_api
+  const xresp_api = @{} tgt_router, __proto__: router.xctx_apis.xresp_api
+
+  const setTarget = (id_target, target) => ::
+    targets_map.set @ id_target, as_func(target)
 
   const targets_api = @{}
-    __proto__: null,
+    __proto__: null
 
+    setTarget
     addTarget(id_target, target) ::
-      targets_map.set @ id_target, as_func(target)
+      setTarget(id_target, target)
       return @[] id_route, id_target
 
     removeTarget(id_target) ::
       return targets_map.delete @ id_target[1] || id_target
+    cancelTarget(id_target, target) ::
+      if undefined === target ::
+        target = targets_map.get(id_target)
+      return @=> target === targets_map.get(id_target)
+        ? targets_map.delete(id_target) : null
 
     getTarget(id_target) :: return targets_map.get(id_target)
     hasTarget(id_target) :: return targets_map.has(id_target)
 
-    xtgt(as_reply, id_target) ::
-      return @{}
-        __proto__: as_reply ? reply_xtgt_api : xtgt_api
-        id: @[] id_route, id_target || this.newTargetId()
+    asId(id_target) :: return @[] id_route, id_target || this.newTargetId()
+    xresp(id_target) :: return @{} id: this.asId(id_target), __proto__: xresp_api
+    xtgt(id_target) :: return @{} id: this.asId(id_target), __proto__: xtgt_api
 
   return o_assign @ targets_api,
     bindCoreDispatchTarget @

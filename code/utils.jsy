@@ -59,7 +59,7 @@ export function bindTimeouts(ms_interval) ::
 
     const belt = [create()]
     return belt
-    
+
   return add.add = add
 
 

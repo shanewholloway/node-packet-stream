@@ -50,29 +50,12 @@ export class TargetRouter ::
   getTarget(id_target) : function(pkt, pktctx)
   hasTarget(id_target) : Boolean
 
-  xtgt(asReply, id_target) : target management object
+  xresp(id_target) : target management object
+  xtgt(id_target) : target management object
 
   */
 
-  addReply(...args) ::
-    return this.xtgt(true)
-      .untilReply(...args)
-
-  async addEndpoint(ep, ...args) ::
-    const eph = this.xtgt @ ep.as_reply, ep.id_target || ep[1]
-    args.unshift(eph)
-
-    const ready = await @
-      @ is_func(ep) ? ep : ep.endpoint || _ep_target
-      .apply(ep, args)
-    
-    if is_func(ready) :: eph.use(ready)
-    return false !== ready ? eph.id : null
+  addReply(...args) :: return this.xresp().untilReply(...args)
 
 export default TargetRouter
-
-
-function _ep_target(eph) ::
-  eph.use @ this.target.bind(this)
-  return true
 

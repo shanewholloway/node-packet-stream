@@ -1,83 +1,64 @@
-import { o_assign, is_func, as_func } from './builtins.jsy'
 
-export function bindXTargetAPI(tgt_router, targets_map, id_route, router) ::
+export function bindXTargetAPI(router_ctx) ::
   const xtgt_api = @{}
-    __proto__: router.router_ctx
+    __proto__: router_ctx
+    // tgt_router: instance of some TargetRouter-like object
+    // target: null || function (pkt, pktctx)
+    // id: [id_route, id_target]
 
     is_active() ::
-      return !! targets_map.get @ this.id[1]
+      return this.tgt_router.hasTarget @ this.id[1]
 
     enable(target) ::
       if undefined === target :: target = this.target
-      targets_map.set @ this.id[1], as_func(target)
+      this.tgt_router.setTarget @ this.id[1], target
 
     disable() ::
-      targets_map.delete @ this.id[1]
+      this.tgt_router.removeTarget @ this.id[1]
+
+    use(target) ::
+      this.enable @ this.target = target
+      return this
+
+    use_serial(target) ::
+      let tip = Promise.resolve()
+      return this.use @\ ...args ::
+        const h = @=> target(...args)
+        return tip = tip.then(h, h)
+
+
+  const xresp_api = @{} __proto__: xtgt_api
+    then(y,n) :: return this.ans.then(y,n)
+    catch(f) :: return this.ans.catch(f)
+    finally(f) :: return this.ans.finally(f)
 
     until(p, target) ::
-      if true === target ::
-        target = this.target
-      const k = this.id[1]
-
-      // disable the ephemeral if same target
-      const dis = @=> ::
-        if target === targets_map.get(k) ::
-          targets_map.delete(k)
-      p.then(dis, dis)
+      const cancel = this.tgt_router.cancelTarget @
+        this.id[1], target
+      p.then(cancel, cancel)
+      this.ans = p
       return this
 
-    changeId(id_target) ::
-      this.disable()
-      if ! id_target || true === id_target ::
-        id_target = tgt_router.newTargetId()
-      this.id[1] = id_target
-      return this
+    untilReply(ms_timeout, absent, on_reply) ::
+      this.reset = _bindUntilReply.apply(this, arguments)
+      return this.reset()
+    reset: _bindUntilReply()
 
-  const reply_xtgt_api = @{} __proto__: xtgt_api
-
-  return @[]
-    o_assign @ xtgt_api, xtgt_base_api
-    o_assign @ reply_xtgt_api, reply_xtgt_base_api
+  return @{} xresp_api, xtgt_api
 
 
-const xtgt_base_api = @{}
-  use(target) ::
-    this.enable @ this.target = target
-    return this
-
-  use_serial(target) ::
-    let tip = Promise.resolve()
-    return this.use @\ ...args ::
-      const h = @=> target(...args)
-      return tip = tip.then(h, h) 
-
-
-const reply_xtgt_base_api = @{}
-  then(y,n) :: return this.ans.then(y,n)
-  catch(f) :: return this.ans.catch(f)
-  finally(f) :: return this.ans.finally(f)
-
-  reset(...args) ::
-    return @
-      @ is_func @ Object(args[0]).then
-      ? this.untilAnswer @ args[0]
-      : this.untilReply @ ...args
-
-  untilAnswer(p) ::
-    return this.until @ this.ans = p, this.target
-
-  untilReply(ms_timeout=1000, absent, on_reply) ::
+  function _pkt_body(pkt) :: return pkt.body
+  function _bindUntilReply(ms_timeout_p=1000, absent, on_reply) ::
     if undefined === on_reply ::
       on_reply = absent || _pkt_body
       absent = undefined
 
-    return this.untilAnswer @ 
-      new Promise @ resolve => ::
-        this.enable @ pkt => resolve @ on_reply(pkt)
+    return function(ms_timeout=ms_timeout_p) ::
+      return this.until @
+        new Promise @ resolve => ::
+          this.enable @ pkt => resolve @ on_reply(pkt)
 
-        if ms_timeout ::
-          this.timeouts.absent @
-            ms_timeout, resolve, absent
-
-function _pkt_body(pkt) :: return pkt.body
+          if ms_timeout ::
+            this.timeouts.absent @
+              ms_timeout, resolve, absent
 

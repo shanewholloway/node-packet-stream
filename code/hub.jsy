@@ -118,7 +118,7 @@ o_assign @ FabricHub.prototype, @{}
   data_utils
 
   /* Plugin Provided (plugin/standard or similar):
-    
+
        stream_codec: @{}
          encode(pkt) : pkt_data
          decode(pkt_data) : pkt

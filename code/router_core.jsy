@@ -1,4 +1,5 @@
 import { o_assign, as_func } from './builtins.jsy'
+import { bindXTargetAPI } from './xtgt_api.jsy'
 
 export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
   // to create loopback, shim .dispatch onto a temporary prototype
@@ -15,7 +16,10 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
     get reply() :: return this.channel.send
     redispatch: dispatch_one
 
-  return @{} dispatch, resolveRoute, loopback, router_ctx
+  const xctx_apis = bindXTargetAPI @ router_ctx
+
+  return @{} dispatch, resolveRoute, loopback, router_ctx, xctx_apis
+
 
   async function dispatch(pkt, channel) ::
     dispatch_one @ pkt, @{} channel, __proto__: pktctx0
