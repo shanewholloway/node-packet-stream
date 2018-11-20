@@ -30,6 +30,7 @@ pi_direct()
 pi_net()
 pi_web()
 
+pi_rpc()
 
 function pi_standard() {
   add_plugin_jsy('standard/all', 'plugin-standard-all', {exports: 'named'})
@@ -59,6 +60,11 @@ function pi_web() {
   add_plugin_jsy('web/basic', 'plugin-web-basic', {exports: 'default'})
   add_plugin_jsy('web/stream', 'plugin-web-stream', {exports: 'default'})
   add_plugin_jsy('web/index', 'plugin-web', {exports: 'default'})
+}
+
+function pi_rpc() {
+  add_plugin_jsy('rpc/all', 'plugin-rpc-all', {exports: 'named'})
+  add_plugin_jsy('rpc/index', 'plugin-rpc', {})
 }
 
 

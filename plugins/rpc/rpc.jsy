@@ -1,0 +1,44 @@
+import { bind_rpc_client } from './rpc_client.jsy'
+import { bind_rpc_api_dispatch } from './rpc_api.jsy'
+
+export default rpc_plugin
+export function rpc_plugin() ::
+  return hub => ::
+    const { api_dispatch_binder } = bind_rpc_api_dispatch(hub)
+    const client = bind_rpc_client(hub)
+
+    hub.rpc = @{}
+      __proto__: @{}
+        __proto__: null
+
+        api_binder: api_dispatch_binder()
+        api_dispatch_binder
+
+      to: client, client,
+
+      api(id_target, api, parallel) ::
+        if api === undefined ::
+          api = id_target
+          id_target = null
+
+        const { local } = hub
+        return local.addTarget @
+          id_target || local.newTargetId(),
+          parallel
+            ? this.api_target_parallel(api)
+            : this.api_target_serial(api)
+
+      api_target_serial(api) ::
+        const binder = this.api_binder(api)
+        let tip = Promise.resolve()
+        return @\ pkt ::
+          const api_fn = binder(pkt.body)
+          if api_fn ::
+            return tip = tip.then(api_fn, api_fn)
+
+      api_target_parallel(api) ::
+        const binder = this.api_binder(api)
+        return @\ pkt ::
+          const api_fn = binder(pkt.body)
+          if api_fn :: api_fn()
+

@@ -12,6 +12,7 @@ describe @ 'Target Router', test_target_router
 
 
 import test_pi_direct from './plugins/direct.jsy'
+import test_pi_rpc from './plugins/rpc.jsy'
 
 describe @ 'General Plugins', function() ::
 
@@ -19,6 +20,9 @@ describe @ 'General Plugins', function() ::
     this.slow(500)
 
     test_pi_direct()
+
+  describe.only @ 'rpc', function() ::
+    test_pi_rpc()
 
 
 #IF PLAT_WEB

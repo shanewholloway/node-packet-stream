@@ -1,0 +1,34 @@
+const isArray = Array.isArray
+
+export function bind_rpc_api_dispatch({send}) ::
+  return @{} api_dispatch_binder
+
+  function api_dispatch_binder(prefix='m$', dnu='__dnu__') ::
+    return api_base => call => ::
+      if ! isArray(call) || '!' !== call[0] ::
+        return null
+
+      const id_reply = call[1]
+      const key = call[2]
+      if 'string' !== typeof key ::
+        return null
+
+      let fn, params
+      if key.startsWith(prefix) ::
+        fn = api_base[key]
+
+      if undefined !== fn ::
+        params = call.slice(3)
+      else ::
+        const fn_dnu = api_base[dnu]
+        if undefined === fn_dnu ::
+          return false
+        fn = api => fn_dnu.call(api, key, call)
+
+      return id_reply
+        ? async api => ::
+            const body = await fn.apply @ api, params
+            await send @: 0: id_reply[0], 1: id_reply[1], body
+
+        : api => fn.apply @ api, params
+

@@ -1,0 +1,72 @@
+import { Hub, expect, newLog, sleep } from '../_setup.jsy'
+
+export default function test_pi_rpc() ::
+  var hub, log, simple_api
+  beforeEach @=>> ::
+    log = newLog()
+    hub = Hub.create('$unit$')
+
+    let v = 100
+    simple_api = @{}
+      m$_one(...args) ::
+        const v0 = v++
+        log @ 'm$_one', v0, args
+        return v0
+      m$_two(...args) ::
+        const v0 = v++
+        log @ 'm$_two', v0, args
+        return v0
+      async m$_three(...args) ::
+        const v0 = v++
+        log @ 'm$_three', v0, args
+        await sleep(10)
+        log @ 'post m$_three', v0, v, args
+        return [v0, v]
+
+    
+  async function run_simple_rpc(id_api) ::
+    const client_api = hub.rpc.to(id_api)
+
+    let c_order = 20
+    const r_one0 = client_api.m$_one.post @
+      'first as post', c_order++
+
+    const r_two = client_api.m$_two @
+      'a', ['b'], {c: 1942}, c_order++
+
+    const r_three0 = client_api.m$_three.post @
+      'third as post', c_order++
+
+    const r_three = client_api.m$_three @
+      'third as query', c_order++
+
+    log @ 'await results', await Promise.all @#
+      r_one0, r_two, r_three0, r_three
+
+
+  it @ 'Serial RPC', @=>> ::
+    const id_api = hub.rpc.api @ 'an-api', simple_api
+    await run_simple_rpc @ id_api
+
+    expect(log.calls).to.be.deep.equal @#
+      @[] 'm$_one', 100, @[] 'first as post', 20
+      @[] 'm$_two', 101, @[] 'a', [ 'b' ], { c: 1942 }, 21
+      @[] 'm$_three', 102, @[] 'third as post', 22
+      @[] 'post m$_three', 102, 103, @[] 'third as post', 22
+      @[] 'm$_three', 103, @[] 'third as query', 23
+      @[] 'post m$_three', 103, 104, @[] 'third as query', 23
+      @[] 'await results', @[] undefined, 101, undefined, [ 103, 104 ]
+
+
+  it @ 'Parallel RPC', @=>> ::
+    const id_api = hub.rpc.api @ 'an-api', simple_api, true
+    await run_simple_rpc @ id_api
+
+    expect(log.calls).to.be.deep.equal @#
+      @[] 'm$_one', 100, @[] 'first as post', 20
+      @[] 'm$_two', 101, @[] 'a', [ 'b' ], { c: 1942 }, 21
+      @[] 'm$_three', 102, @[] 'third as post', 22
+      @[] 'm$_three', 103, @[] 'third as query', 23
+      @[] 'post m$_three', 102, 104, @[] 'third as post', 22
+      @[] 'post m$_three', 103, 104, @[] 'third as query', 23
+      @[] 'await results', @[] undefined, 101, undefined, [ 103, 104 ]

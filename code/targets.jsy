@@ -43,7 +43,7 @@ export class TargetRouter ::
 
   ready : Promise<Boolean>
 
-  addTarget(id_target, target, override) : {id_target, id_route}
+  addTarget(id_target, target) : {id_target, id_route}
   removeTarget(id_target) : Boolean
   removeTarget({id_target}) : Boolean
 

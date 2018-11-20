@@ -1,0 +1,37 @@
+const o_assign = Object.assign
+
+export function bind_rpc_client({local, send}) ::
+  const method_proxy = @{}
+    __proto__: null
+
+    get(obj_id, prop) ::
+      if 'string' === typeof prop ::
+        return bind_remote @ obj_id.concat(prop)
+
+  return id => @ undefined === id[2]
+    ? new Proxy @ [id[0], id[1]], method_proxy
+    : bind_remote(id)
+
+
+  function bind_remote(id) ::
+    let ms_timeout
+
+    const remote = @{}
+      id
+
+      timeout(ms) ::
+        ms_timeout = ms
+        return this
+
+      async query(...args) ::
+        const r = local.addReply(ms_timeout)
+        await send @: 0: id[0], 1: id[1],
+          body: @[] '!', r.id, id[2], ...args
+        return await r
+
+      async post(...args) ::
+        await send @: 0: id[0], 1: id[1],
+          body: @[] '!', null, id[2], ...args
+
+    return o_assign @ remote.query, remote
+

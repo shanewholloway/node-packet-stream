@@ -8,11 +8,13 @@
 
   import pi_direct from 'msg-fabric-core/esm/web/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/web/plugin-web.js'
+  import pi_rpc from 'msg-fabric-core/esm/web/plugin-rpc.js'
 
   const FabricHub = FabricBaseHub.plugin @
     pi_standard()
     pi_direct()
     pi_web()
+    pi_rpc()
 
   const FabricHubCBOR = FabricHub.plugin @
     pi_cbor()
@@ -24,6 +26,7 @@
 
   import pi_direct from 'msg-fabric-core/esm/plugin-direct.js'
   import pi_web from 'msg-fabric-core/esm/plugin-web.js'
+  import pi_rpc from 'msg-fabric-core/esm/plugin-rpc.js'
 
   import pi_direct_stream from 'msg-fabric-core/esm/plugin-net-stream.js'
   import pi_tcp_stream from 'msg-fabric-core/esm/plugin-net-tcp.js'
@@ -33,6 +36,7 @@
     pi_standard()
     pi_direct()
     pi_web()
+    pi_rpc()
 
     pi_tcp_stream()
     pi_tls_stream()
