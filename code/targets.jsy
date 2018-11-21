@@ -6,9 +6,10 @@ import { bindCoreTargetAPI } from './targets_core.jsy'
 export class TargetRouter ::
 
   constructor(id_route, router, hub) ::
+    const {timeouts, send, loopback} = router.router_ctx
     o_assign @ this, @{}
       discovery: (this.discovery || []).slice()
-      timeouts: router.timeouts
+      timeouts, send, loopback
 
     if this._skip_bind_api :: return this
 

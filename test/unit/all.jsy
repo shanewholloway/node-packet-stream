@@ -21,7 +21,7 @@ describe @ 'General Plugins', function() ::
 
     test_pi_direct()
 
-  describe.only @ 'rpc', function() ::
+  describe @ 'rpc', function() ::
     test_pi_rpc()
 
 
