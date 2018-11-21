@@ -4,29 +4,13 @@ import { bind_rpc_api_dispatch } from './rpc_api.jsy'
 export default rpc_plugin
 export function rpc_plugin() ::
   return hub => ::
-    const { api_dispatch_binder } = bind_rpc_api_dispatch(hub)
-    const client = bind_rpc_client(hub)
+    const { api_dispatch_binder } = bind_rpc_api_dispatch(hub.send)
+    const _rpc_proto_ = @{}
+      __proto__: null
+      from: rpc_from
 
-    hub.rpc = @{}
-      __proto__: @{}
-        __proto__: null
-
-        api_binder: api_dispatch_binder()
-        api_dispatch_binder
-
-      to: client, client,
-
-      api(id_target, api, parallel) ::
-        if api === undefined ::
-          api = id_target
-          id_target = null
-
-        const { local } = hub
-        return local.addTarget @
-          id_target || local.newTargetId(),
-          parallel
-            ? this.api_target_parallel(api)
-            : this.api_target_serial(api)
+      api_dispatch_binder
+      api_binder: api_dispatch_binder()
 
       api_target_serial(api) ::
         const binder = this.api_binder(api)
@@ -41,4 +25,25 @@ export function rpc_plugin() ::
         return @\ pkt ::
           const api_fn = binder(pkt.body)
           if api_fn :: api_fn()
+
+
+    return hub.rpc = rpc_from(hub.local)
+
+    function rpc_from(tgt_router) ::
+      const client = bind_rpc_client(tgt_router)
+
+      return @{}
+        __proto__: _rpc_proto_
+        to: client, client,
+
+        api(id_target, api, parallel) ::
+          if api === undefined ::
+            api = id_target
+            id_target = null
+
+          return tgt_router.addTarget @
+            id_target || tgt_router.newTargetId(),
+            parallel
+              ? this.api_target_parallel(api)
+              : this.api_target_serial(api)
 

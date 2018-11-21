@@ -1,6 +1,6 @@
 const isArray = Array.isArray
 
-export function bind_rpc_api_dispatch({send}) ::
+export function bind_rpc_api_dispatch(send) ::
   return @{} api_dispatch_binder
 
   function api_dispatch_binder(prefix='m$', dnu='__dnu__') ::

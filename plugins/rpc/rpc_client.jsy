@@ -1,6 +1,7 @@
 const o_assign = Object.assign
 
-export function bind_rpc_client({local, send}) ::
+export function bind_rpc_client(tgt_router) ::
+  const { send } = tgt_router
   const method_proxy = @{}
     __proto__: null
 
@@ -24,7 +25,7 @@ export function bind_rpc_client({local, send}) ::
         return this
 
       async query(...args) ::
-        const r = local.addReply(ms_timeout)
+        const r = tgt_router.addReply(ms_timeout)
         await send @: 0: id[0], 1: id[1],
           body: @[] '!', r.id, id[2], ...args
         return await r
