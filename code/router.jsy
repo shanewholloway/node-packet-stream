@@ -1,14 +1,14 @@
-import { o_assign, o_create, is_func } from './builtins.jsy'
-import { discoverFirst, bindTimeouts } from './utils.jsy'
+import { o_assign, o_create, is_func, as_func } from './builtins.jsy'
+import { DiscoveryBase, bindTimeouts } from './utils.jsy'
 import { bindCoreRouterAPI } from './router_core.jsy'
 import { base_channel, channel_kinds } from './channel.jsy'
 
-export class FabricRouter ::
+export class FabricRouter extends DiscoveryBase ::
   constructor(hub) ::
+    super()
     o_assign @ this, @{}
       timeouts: bindTimeouts(),
       _channel_: @{} __proto__: base_channel, router: this
-      discovery: (this.discovery || []).slice()
       public_routes: this._initPublicRoutes()
 
     const self = o_create(this)
@@ -41,22 +41,15 @@ export class FabricRouter ::
 
 
   async discoverRoute(id_route, rtrctx) ::
-    let lstDiscovery = this.discovery
-    if 0 === lstDiscovery.length :: return
+    const route = await this._discoverFirst @
+      id_route, rtrctx, 'route'
 
-    const route = await discoverFirst @
-      @{} key: id_route, kind: 'route', rtrctx
-      lstDiscovery, this
+    if null != route ::
+      if 'string' === typeof route ::
+        return this.getRoute(route)
+            || this.discoverRoute(route, rtrctx)
 
-    if 'string' === typeof route ::
-      const alias = this.getRoute(route)
-      return alias ? alias
-        : this.discoverRoute(route, rtrctx)
-
-    return this.addDynamic @ id_route, route
-
-  _discoveryCache() :: return this.timeouts.hashbelt(15000)
-  _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
+      return this.addDynamic @ id_route, route
 
   addPeer(id_route, channel, override) ::
     const disp = channel.dispatch || channel.send
@@ -66,21 +59,18 @@ export class FabricRouter ::
     return res
 
   addDynamic(id_route, route) ::
-    if null == route :: return
-    if route.ephemeral :: return route
-
-    const res = is_func(route)
-      ? this.addRoute(id_route, route, true)
-      : this.addPeer(id_route, route, true)
-
-    return res.route
+    if null != route ::
+      const res = is_func(route)
+        ? this.addRoute(id_route, route, true)
+        : this.addPeer(id_route, route, true)
+      return res.route
 
 
   /* // from bindCoreRouterAPI
 
   addRoute(id_route, route, override) : [route, bound removeRoute]
   removeRoute(id_route, route) : Boolean
-  removeRoute(route function with id_route property) : Boolean
+  removeRoute({id_route}) : Boolean
 
   hasRoute(id_route) : Boolean
 
@@ -89,10 +79,10 @@ export class FabricRouter ::
 
   */
 
-  expireRoute(ms_timeout, id_route, route) ::
-    this.timeouts @ ms_timeout || 300000, @=>
-      this.removeRoute(id_route, route)
-    return route
+  ttlAddRoute(ms_timeout, id_route, route) ::
+    const res = this.addRoute(id_route, route)
+    this.timeouts @ ms_timeout || 300000, res.cancel
+    return res
 
 
 o_assign @ FabricRouter.prototype, channel_kinds,

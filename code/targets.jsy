@@ -1,15 +1,14 @@
 import { o_assign, o_create, is_func } from './builtins.jsy'
 import { random_base64 } from './data_utils.jsy'
-import { discoverFirst } from './utils.jsy'
+import { DiscoveryBase } from './utils.jsy'
 import { bindCoreTargetAPI } from './targets_core.jsy'
 
-export class TargetRouter ::
+export class TargetRouter extends DiscoveryBase ::
 
   constructor(id_route, router, hub) ::
+    super()
     const {timeouts, send, loopback} = router.router_ctx
-    o_assign @ this, @{}
-      discovery: (this.discovery || []).slice()
-      timeouts, send, loopback
+    o_assign @ this, @{} timeouts, send, loopback
 
     if this._skip_bind_api :: return this
 
@@ -23,22 +22,14 @@ export class TargetRouter ::
 
   newTargetId() :: return random_base64(6)
 
+
   async discoverTarget(id_target, rtrctx) ::
-    let lstDiscovery = this.discovery
-    if 0 === lstDiscovery.length :: return
+    const target = await this._discoverFirst @
+      id_target, rtrctx, 'target'
 
-    const target = await discoverFirst @
-      @{} key: id_target, kind: 'target', rtrctx
-      lstDiscovery, this
-
-    if null == target :: return
-
-    if ! target.ephemeral ::
+    if null != target ::
       this.addTarget(id_target, target)
-    return target
-
-  _discoveryCache() :: return this.timeouts.hashbelt(15000)
-  _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
+      return target
 
   /* // from bindCoreTargetAPI
 
@@ -55,6 +46,12 @@ export class TargetRouter ::
   xtgt(id_target) : target management object
 
   */
+
+  ttlAddTarget(ms_timeout, id_target, target) ::
+    const res = this.addTarget(id_target, target)
+    this.timeouts @ ms_timeout || 300000,
+      this.cancelTarget(id_target, target)
+    return res
 
   addReply(...args) :: return this.xresp().untilReply(...args)
 

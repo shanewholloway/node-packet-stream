@@ -1,8 +1,8 @@
-import { o_defprop, is_func, as_func } from './builtins.jsy'
+import { o_assign, o_defprop, is_func, as_func } from './builtins.jsy'
 import data_utils from './data_utils.jsy'
 
 const _discover_cache = new WeakMap()
-export function discoverFirst(query, lstFns, host) ::
+export function discoverFirst(host, lstFns, query) ::
   let cache_belt = _discover_cache.get(lstFns)
   if undefined === cache_belt ::
     cache_belt = host._discoveryCache()
@@ -14,20 +14,22 @@ export function discoverFirst(query, lstFns, host) ::
     if undefined !== p ::
       return p
 
-  const p = _discoverFirst(query, lstFns, host)
+  const p = _discoverFirst(host, lstFns, query)
   cache_belt[0][key] = p
   return p
 
-function _discoverFirst(query, lstFns, host) ::
+function _discoverFirst(host, lstFns, query) ::
   let p_search
   return p_search = new Promise @ async resolve => ::
     await null
+    o_assign @ query, @{} host, p_search, done: false
 
-    const ctx = @{} host, done: false, p_search
-    const done = e => :: resolve(e || null); ctx.done = true
+    const done = e => ::
+      query.done = true
+      resolve @ e && true !== e ? e : null
 
     const resolveFirst = async fn_discover => ::
-      const e = await fn_discover(query, ctx)
+      const e = await fn_discover(query)
       if undefined !== e :: done(e)
 
     host._discoveryTimeout(done)
@@ -38,6 +40,36 @@ function _discoverFirst(query, lstFns, host) ::
       done(null)
     catch err ::
       host._on_error('discovery', err)
+
+
+const discoveryTest = @{}
+  'function': accept => accept
+  'string': accept => q => q.key.startsWith(accept)
+  'object'(accept) ::
+    if is_func @ accept.test ::
+      return q => accept.test(q.key)
+
+
+export class DiscoveryBase ::
+  constructor() ::
+    this.discovery = (this.discovery || []).slice()
+
+  addDiscovery(accept, fn_discover) ::
+    const lst = this.discovery
+    if undefined === fn_discover ::
+      lst.push @ as_func @ accept
+
+    else ::
+      accept = discoveryTest[typeof accept](accept)
+      lst.push @\ q => accept(q) ? fn_discover(q) : undefined
+
+  async _discoverFirst(key, rtrctx, kind) ::
+    const lstFns = this.discovery
+    if 0 !== lstFns.length ::
+      return discoverFirst @ this, lstFns, @{} key, rtrctx, kind
+
+  _discoveryCache() :: return this.timeouts.hashbelt(15000)
+  _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
 
 
 export function bindTimeouts(ms_interval) ::
