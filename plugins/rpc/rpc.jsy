@@ -3,29 +3,32 @@ import { bind_rpc_api_dispatch } from './rpc_api.jsy'
 
 export default rpc_plugin
 export function rpc_plugin() ::
+
+  const dispatch_parallel = @\ binder ::
+    return @\ pkt ::
+      const api_fn = binder(pkt.body, pkt)
+      if api_fn :: return api_fn()
+
+  const dispatch_serial = @\ binder ::
+    let tip = Promise.resolve()
+    return @\ pkt ::
+      const api_fn = binder(pkt.body, pkt)
+      if api_fn ::
+        return tip = tip.then(api_fn, api_fn)
+
+  const dispatch = binder => binder.parallel
+    ? dispatch_parallel(binder)
+    : dispatch_serial(binder)
+
+
   return hub => ::
-    const { api_dispatch_binder } = bind_rpc_api_dispatch(hub.send)
+    const { api_binder } = bind_rpc_api_dispatch(hub.send)
     const _rpc_proto_ = @{}
       __proto__: null
       from: rpc_from
 
-      api_dispatch_binder
-      api_binder: api_dispatch_binder()
-
-      api_target_serial(api) ::
-        const binder = this.api_binder(api)
-        let tip = Promise.resolve()
-        return @\ pkt ::
-          const api_fn = binder(pkt.body)
-          if api_fn ::
-            return tip = tip.then(api_fn, api_fn)
-
-      api_target_parallel(api) ::
-        const binder = this.api_binder(api)
-        return @\ pkt ::
-          const api_fn = binder(pkt.body)
-          if api_fn :: api_fn()
-
+      api_binder
+      api_target(api) :: return dispatch @ this.api_binder(api)
 
     return hub.rpc = rpc_from(hub.local)
 
@@ -36,14 +39,12 @@ export function rpc_plugin() ::
         __proto__: _rpc_proto_
         to: client, client,
 
-        api(id_target, api, parallel) ::
+        api(id_target, api) ::
           if api === undefined ::
             api = id_target
             id_target = null
 
           return tgt_router.addTarget @
             id_target || tgt_router.newTargetId(),
-            parallel
-              ? this.api_target_parallel(api)
-              : this.api_target_serial(api)
+            this.api_target(api)
 

@@ -1,34 +1,71 @@
+const o_assign = Object.assign
 const isArray = Array.isArray
+const ident = v => v
 
-export function bind_rpc_api_dispatch(send) ::
-  return @{} api_dispatch_binder
+export function bind_rpc_api_dispatch(send, base_rpc_options) ::
+  base_rpc_options = o_assign @
+    @{} prefix: 'm$', dnu: '__dnu__'
+        extend_api: ident
+        params: false
+        parallel: false
 
-  function api_dispatch_binder(prefix='m$', dnu='__dnu__') ::
-    return api_base => call => ::
+    base_rpc_options
+
+  return @{} api_binder
+
+  function api_binder(api) ::
+    const rpc_options = o_assign @ {__proto__: base_rpc_options}, api.rpc_options
+    const { prefix, dnu, extend_api } = rpc_options
+    const bind_params = as_bind_params @ rpc_options.params
+
+    rpc_binder.parallel = rpc_options.parallel
+    return rpc_binder
+
+    function rpc_binder(call, pkt) ::
       if ! isArray(call) || '!' !== call[0] ::
         return null
 
-      const id_reply = call[1]
       const key = call[2]
       if 'string' !== typeof key ::
         return null
+      const valid = key.startsWith(prefix)
 
-      let fn, params
-      if key.startsWith(prefix) ::
-        fn = api_base[key]
+      const call_ctx = @{} pkt, call, key, valid
+      const _api = extend_api(api, call_ctx)
 
-      if undefined !== fn ::
-        params = call.slice(3)
-      else ::
-        const fn_dnu = api_base[dnu]
+      let fn, call_params
+      if valid :: fn = _api[key]
+
+      if undefined === fn ::
+        const fn_dnu = _api[dnu]
         if undefined === fn_dnu ::
           return false
-        fn = api => fn_dnu.call(api, key, call)
+        fn = @=> fn_dnu.call @ _api, key, call_ctx
 
+      else call_params = bind_params @ call.slice(3), call_ctx
+
+      const id_reply = call[1]
       return id_reply
-        ? async api => ::
-            const body = await fn.apply @ api, params
+        ? @=>> ::
+            const body = await fn.apply @ _api, call_params
             await send @: 0: id_reply[0], 1: id_reply[1], body
 
-        : api => fn.apply @ api, params
+        : @=> fn.apply @ _api, call_params
+
+
+  function as_bind_params(key) ::
+    if false === key :: return ident
+    if 'function' === typeof key :: return key
+
+    if true === key ::
+      return (params, {pkt}) => @
+        params.unshift @ pkt
+        params
+
+    if 'string' === typeof key ::
+      return (params, ns) => @
+        params.unshift @ ns[key]
+        params
+
+    throw TypeError
 

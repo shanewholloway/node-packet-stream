@@ -8,15 +8,17 @@ export function bind_rpc_client(tgt_router) ::
     get(obj_id, prop) ::
       if 'string' === typeof prop ::
         return bind_remote @ obj_id.concat(prop)
+      return obj_id[prop]
 
-  return id => @ undefined === id[2]
-    ? new Proxy @ [id[0], id[1]], method_proxy
-    : bind_remote(id)
+  return function (... id) ::
+    if 1 === id.length :: id = id[0]
+    return undefined === id[2]
+      ? new Proxy @ [id[0], id[1]], method_proxy
+      : bind_remote(id)
 
 
   function bind_remote(id) ::
     let ms_timeout
-
     const remote = @{}
       id
 

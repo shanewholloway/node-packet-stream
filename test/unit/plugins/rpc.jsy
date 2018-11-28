@@ -59,7 +59,8 @@ export default function test_pi_rpc() ::
 
 
   it @ 'Parallel RPC', @=>> ::
-    const id_api = hub.rpc.api @ 'an-api', simple_api, true
+    simple_api.rpc_options = @{} parallel: true
+    const id_api = hub.rpc.api @ 'an-api', simple_api
     await run_simple_rpc @ id_api
 
     expect(log.calls).to.be.deep.equal @#
