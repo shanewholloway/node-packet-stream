@@ -72,6 +72,26 @@ export class DiscoveryBase ::
   _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
 
 
+const timeout_ttl_base = @{}
+  __proto__: null
+
+  extend: false
+  reset() :: this.extend = true; return this
+  with_reset(fn) :: return (...args) => @ this.reset(), fn(...args)
+  bind_cleanup(cleanup_fns) ::
+    return async cancel => ::
+      try ::
+        for const cleanup of cleanup_fns ::
+          if cleanup && ! this.extend ::
+            await cleanup(this)
+
+      finally ::
+        if ! this.extend ::
+          await cancel()
+
+        this.extend = false
+
+
 export function bindTimeouts(ms_interval) ::
   const p0 = Promise.resolve(), p_then = p0.then.bind(p0)
   const q = []
@@ -94,22 +114,9 @@ export function bindTimeouts(ms_interval) ::
       return belt
 
     ttl(ms_min_interval, ... cleanup_fns) ::
-      return @{}
-        extend: false
-        reset() :: this.extend = true; return this
-        with_reset(fn) :: return (...args) => @ this.reset(), fn(...args)
-
-        cancel: interval @ ms_min_interval || 60000, cancel => ::
-          if this.extend ::
-            this.extend = false
-            return
-
-          for const cleanup of cleanup_fns ::
-            if cleanup && ! this.extend ::
-              cleanup(this)
-
-          if ! this.extend ::
-            cancel()
+      const ttl = @{} __proto__: timeout_ttl_base
+      ttl.cancel = interval @ ms_min_interval || 60000, ttl.bind_cleanup(cleanup_fns)
+      return ttl
 
   return add.add = add
 
@@ -125,8 +132,9 @@ export function bindTimeouts(ms_interval) ::
     as_func(callback)
     const cancel = @=> :: interval = null
     let interval = @=> ::
-      callback(cancel)
-      add @ ms_min_interval, interval
+      if null !== interval ::
+        callback(cancel)
+        add @ ms_min_interval, interval
 
     add @ ms_min_interval, interval
     return cancel
