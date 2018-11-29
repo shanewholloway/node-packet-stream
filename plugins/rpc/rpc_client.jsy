@@ -12,9 +12,10 @@ export function bind_rpc_client(tgt_router) ::
 
   return function (... id) ::
     if 1 === id.length :: id = id[0]
-    return undefined === id[2]
-      ? new Proxy @ [id[0], id[1]], method_proxy
-      : bind_remote(id)
+    if null != id ::
+      return undefined === id[2]
+        ? new Proxy @ [id[0], id[1]], method_proxy
+        : bind_remote(id)
 
 
   function bind_remote(id) ::
