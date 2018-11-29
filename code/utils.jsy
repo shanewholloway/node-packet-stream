@@ -93,7 +93,7 @@ export function bindTimeouts(ms_interval) ::
       const belt = [create()]
       return belt
 
-    ttl(ms_min_interval, cleanup) ::
+    ttl(ms_min_interval, ... cleanup_fns) ::
       return @{}
         extend: false
         reset() :: this.extend = true; return this
@@ -104,7 +104,9 @@ export function bindTimeouts(ms_interval) ::
             this.extend = false
             return
 
-          cleanup(this)
+          for const cleanup of cleanup_fns ::
+            if cleanup && ! this.extend ::
+              cleanup(this)
 
           if ! this.extend ::
             cancel()
