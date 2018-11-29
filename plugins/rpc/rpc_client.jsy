@@ -1,41 +1,51 @@
+const isArray = Array.isArray
 const o_assign = Object.assign
 
 export function bind_rpc_client(tgt_router) ::
   const { send } = tgt_router
-  const method_proxy = @{}
+
+  const rpc_api_proxy = @{}
     __proto__: null
 
-    get(obj_id, prop) ::
+    get(obj, prop, pxy) ::
       if 'string' === typeof prop ::
-        return bind_remote @ obj_id.concat(prop)
-      return obj_id[prop]
+        if prop.includes('$') ::
+          const method_obj = o_assign @ () => prop, obj
+          return new Proxy @ method_obj, rpc_method_proxy
 
-  return function (... id) ::
-    if 1 === id.length :: id = id[0]
-    if null != id ::
-      return undefined === id[2]
-        ? new Proxy @ [id[0], id[1]], method_proxy
-        : bind_remote(id)
+        const rpc_fn = this['rpc_'+prop]
+        if 'function' === typeof rpc_fn ::
+          return rpc_fn.bind(pxy, obj)
+
+      return obj
+
+    rpc_timeout(obj, ms) ::
+      obj.ms_timeout = ms
+      return this
 
 
-  function bind_remote(id) ::
-    let ms_timeout
-    const remote = @{}
-      id
+  const rpc_method_proxy = @{}
+    __proto__: rpc_api_proxy
 
-      timeout(ms) ::
-        ms_timeout = ms
-        return this
+    apply(method_obj, a_this, args) ::
+      return this.rpc_query @ method_obj, ...args
 
-      async query(...args) ::
-        const r = tgt_router.addReply(ms_timeout)
-        await send @: 0: id[0], 1: id[1],
-          body: @[] '!', r.id, id[2], ...args
-        return await r
+    async rpc_query(method_obj, ...args) ::
+      const { id, meta, ms_timeout } = method_obj
+      const r = tgt_router.addReply(ms_timeout)
+      await send @: 0: id[0], 1: id[1], meta,
+        body: @[] '!', r.id, method_obj(), ...args
+      return await r
 
-      async post(...args) ::
-        await send @: 0: id[0], 1: id[1],
-          body: @[] '!', null, id[2], ...args
+    async rpc_post(method_obj, ...args) ::
+      const { id, meta, ms_timeout } = method_obj
+      await send @: 0: id[0], 1: id[1], meta,
+        body: @[] '!', null, method_obj(), ...args
 
-    return o_assign @ remote.query, remote
+
+  return (id, meta) => ::
+    if ! isArray(id) || ! id[0] ::
+      throw new TypeError
+
+    return new Proxy @ {id, meta}, rpc_api_proxy
 
