@@ -63,10 +63,10 @@ export class DiscoveryBase ::
       accept = discoveryTest[typeof accept](accept)
       lst.push @\ q => accept(q) ? fn_discover(q) : undefined
 
-  async _discoverFirst(key, rtrctx, kind) ::
+  async _discoverFirst(query) ::
     const lstFns = this.discovery
     if 0 !== lstFns.length ::
-      return discoverFirst @ this, lstFns, @{} key, rtrctx, kind
+      return discoverFirst @ this, lstFns, query
 
   _discoveryCache() :: return this.timeouts.hashbelt(15000)
   _discoveryTimeout(resolve) :: return this.timeouts(2000, resolve)
@@ -77,20 +77,37 @@ export function bindTimeouts(ms_interval) ::
   const q = []
 
   tick_interval(ms_interval, q)
-  add.interval = interval
+  o_assign @ add, @{}
+    interval
 
-  add.absent = (ms_min_timeout, callback, value) =>
-    add @ ms_min_timeout, @=> callback @
-      is_func(value) ? value() : value
+    absent: (ms_min_timeout, callback, value) =>
+      add @ ms_min_timeout, @=> callback @
+        is_func(value) ? value() : value
 
-  add.hashbelt = (ms_min_interval, max_length=4, create=Object) => ::
-    interval @ ms_min_interval, @=> ::
-      while max_length <= belt.length ::
-        belt.pop()
-      belt.unshift @ create()
+    hashbelt: (ms_min_interval, max_length=4, create=Object) => ::
+      interval @ ms_min_interval, @=> ::
+        while max_length <= belt.length ::
+          belt.pop()
+        belt.unshift @ create()
 
-    const belt = [create()]
-    return belt
+      const belt = [create()]
+      return belt
+
+    ttl(ms_min_interval, cleanup) ::
+      return @{}
+        extend: false
+        reset() :: this.extend = true; return this
+        with_reset(fn) :: return (...args) => @ this.reset(), fn(...args)
+
+        cancel: interval @ ms_min_interval || 60000, cancel => ::
+          if this.extend ::
+            this.extend = false
+            return
+
+          cleanup(this)
+
+          if ! this.extend ::
+            cancel()
 
   return add.add = add
 

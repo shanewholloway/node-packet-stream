@@ -6,12 +6,9 @@ export default function test_hub_router() ::
     log = newLog()
     hub = Hub.create('$unit$')
 
-    test_chan = @{}
+    test_chan = Object.assign @ hub.router.local_channel(), @{}
       undeliverable({0: id_route, 1: id_target}, mode) ::
         log @ 'undeliverable', @{} mode, id_route, id_target
-
-      send(pkt) ::
-        return hub.router.dispatch @ pkt, this
 
 
   describe @ 'messages to targets', @=> ::
@@ -86,82 +83,149 @@ export default function test_hub_router() ::
 
   describe @ 'discovery', @=> ::
 
-    it @ 'should call router.routeDiscovery if route does not exist', @=>> ::
-      hub.router.discovery.push @
-        ({key}) => ::
+    describe @ 'direct', @=> ::
+      it @ 'should call router.routeDiscovery if route does not exist', @=>> ::
+        hub.router.discovery.push @
+          ({key}) => ::
+            log @ 'discovery', @{} key
+            return null
+
+        await test_chan.send @:
+          0: 'dne-route'
+          1: 'dne-tgt'
+          body: @{} msg: 'a message'
+
+        await sleep(0)
+
+        expect(log.calls).to.be.deep.equal @#
+          @[] 'discovery', @{} key: 'dne-route'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
+
+
+      it @ 'should use router.routeDiscovery channel answer if route found', @=>> ::
+        hub.router.discovery.push @
+          ({key, host}) => ::
+            log @ 'discovery', @{} key
+            host.addPeer @ key, @:
+              send({0: id_route, 1: id_target}) ::
+                log @ 'sent pkt', @{} id_route, id_target
+
+        await test_chan.send @:
+          0: 'dne-route'
+          1: 'dne-tgt'
+          body: @{} msg: 'a message'
+
+        await sleep(0)
+
+        expect(log.calls).to.be.deep.equal @#
+          @[] 'discovery', @{} key: 'dne-route'
+          @[] 'sent pkt', @{} id_route: 'dne-route', id_target: 'dne-tgt'
+
+
+      it @ 'should use router.routeDiscovery function answer if route found', @=>> ::
+        hub.router.discovery.push @
+          ({key, host}) => ::
+            log @ 'discovery', @{} key
+            host.addRoute @ key, 
+              ({0: id_route, 1: id_target}) => ::
+                log @ 'route pkt', @{} id_route, id_target
+
+        await test_chan.send @:
+          0: 'dne-route'
+          1: 'dne-tgt'
+          body: @{} msg: 'a message'
+
+        await sleep(0)
+
+        expect(log.calls).to.be.deep.equal @#
+          @[] 'discovery', @{} key: 'dne-route'
+          @[] 'route pkt', @{} id_route: 'dne-route', id_target: 'dne-tgt'
+
+
+      it @ 'should timeout router.routeDiscovery if no response', @=>> ::
+        hub.router._discoveryTimeout = resolve => ::
+          log @ 'createDiscoveryTimeout'
+          setTimeout @ resolve, 10
+
+        hub.router.discovery.push @
+          ({key}) => ::
+            log @ 'discovery, no return', @{} key
+
+        await test_chan.send @:
+          0: 'dne-route'
+          1: 'dne-tgt'
+          body: @{} msg: 'a message'
+
+        await sleep(0)
+
+        expect(log.calls).to.be.deep.equal @#
+          'createDiscoveryTimeout'
+          @[] 'discovery, no return', @{} key: 'dne-route'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
+
+    describe @ 'addDiscovery', @=> ::
+
+      it @ 'should find routes via addDiscovery with prefix', @=>> ::
+        hub.router.addDiscovery @ 'bingo-', ({key, host}) => ::
           log @ 'discovery', @{} key
-          return null
+          host.addRoute @ key,
+            pkt => :: log @ 'route pkt', @{} id_route: pkt[0], id_target: pkt[1]
 
-      await test_chan.send @:
-        0: 'dne-route'
-        1: 'dne-tgt'
-        body: @{} msg: 'a message'
+        await test_chan.send @ 'bingo-barge', 'some-tgt', 'a message'
+        await test_chan.send @ 'bingo-wrong', 'other-tgt', 'a message'
+        await test_chan.send @ 'trash-barge', 'third-tgt', 'a message'
+        await sleep(0)
 
-      await sleep(0)
+        expect(log.calls.sort()).to.be.deep.equal @#
+          @[] 'discovery', @{} key: 'bingo-barge'
+          @[] 'discovery', @{} key: 'bingo-wrong'
+          @[] 'route pkt', @{} id_route: 'bingo-barge', id_target: 'some-tgt'
+          @[] 'route pkt', @{} id_route: 'bingo-wrong', id_target: 'other-tgt'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'trash-barge', id_target: 'third-tgt'
 
-      expect(log.calls).to.be.deep.equal @#
-        @[] 'discovery', @{} key: 'dne-route'
-        @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
 
-
-    it @ 'should use router.routeDiscovery channel answer if route found', @=>> ::
-      hub.router.discovery.push @
-        ({key}) => ::
+      it @ 'should find routes via addDiscovery with regexp', @=>> ::
+        hub.router.addDiscovery @ /-barge$/, ({key, host}) => ::
           log @ 'discovery', @{} key
-          return @{} send({0: id_route, 1: id_target}) ::
-            log @ 'sent pkt', @{} id_route, id_target
+          host.addRoute @ key,
+            pkt => :: log @ 'route pkt', @{} id_route: pkt[0], id_target: pkt[1]
 
-      await test_chan.send @:
-        0: 'dne-route'
-        1: 'dne-tgt'
-        body: @{} msg: 'a message'
+        await test_chan.send @ 'bingo-barge', 'some-tgt', 'a message'
+        await test_chan.send @ 'bingo-wrong', 'other-tgt', 'a message'
+        await test_chan.send @ 'trash-barge', 'third-tgt', 'a message'
+        await sleep(0)
 
-      await sleep(0)
+        expect(log.calls.sort()).to.be.deep.equal @#
+          @[] 'discovery', @{} key: 'bingo-barge'
+          @[] 'discovery', @{} key: 'trash-barge'
+          @[] 'route pkt', @{} id_route: 'bingo-barge', id_target: 'some-tgt'
+          @[] 'route pkt', @{} id_route: 'trash-barge', id_target: 'third-tgt'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'bingo-wrong', id_target: 'other-tgt'
 
-      expect(log.calls).to.be.deep.equal @#
-        @[] 'discovery', @{} key: 'dne-route'
-        @[] 'sent pkt', @{} id_route: 'dne-route', id_target: 'dne-tgt'
 
+      it @ 'should find routes via addDiscovery with prefix', @=>> ::
+        const test_fn = ({key}) => ::
+          log @ 'a prefix test', @{} key
+          return key.endsWith('-wrong')
 
-    it @ 'should use router.routeDiscovery function answer if route found', @=>> ::
-      hub.router.discovery.push @
-        ({key}) => ::
+        hub.router.addDiscovery @ test_fn, ({key, host}) => ::
           log @ 'discovery', @{} key
-          return ({0: id_route, 1: id_target}) => ::
-            log @ 'route pkt', @{} id_route, id_target
+          host.addRoute @ key,
+            pkt => :: log @ 'route pkt', @{} id_route: pkt[0], id_target: pkt[1]
 
-      await test_chan.send @:
-        0: 'dne-route'
-        1: 'dne-tgt'
-        body: @{} msg: 'a message'
+        await test_chan.send @ 'bingo-barge', 'some-tgt', 'a message'
+        await test_chan.send @ 'bingo-wrong', 'other-tgt', 'a message'
+        await test_chan.send @ 'trash-barge', 'third-tgt', 'a message'
+        await sleep(0)
 
-      await sleep(0)
-
-      expect(log.calls).to.be.deep.equal @#
-        @[] 'discovery', @{} key: 'dne-route'
-        @[] 'route pkt', @{} id_route: 'dne-route', id_target: 'dne-tgt'
-
-
-    it @ 'should timeout router.routeDiscovery if no response', @=>> ::
-      hub.router._discoveryTimeout = resolve => ::
-        log @ 'createDiscoveryTimeout'
-        setTimeout @ resolve, 10
-
-      hub.router.discovery.push @
-        ({key}) => ::
-          log @ 'discovery, no return', @{} key
-
-      await test_chan.send @:
-        0: 'dne-route'
-        1: 'dne-tgt'
-        body: @{} msg: 'a message'
-
-      await sleep(0)
-
-      expect(log.calls).to.be.deep.equal @#
-        'createDiscoveryTimeout'
-        @[] 'discovery, no return', @{} key: 'dne-route'
-        @[] 'undeliverable', @{} mode: 'route', id_route: 'dne-route', id_target: 'dne-tgt'
+        expect(log.calls.sort()).to.be.deep.equal @#
+          @[] 'a prefix test', @{} key: 'bingo-barge'
+          @[] 'a prefix test', @{} key: 'bingo-wrong'
+          @[] 'a prefix test', @{} key: 'trash-barge'
+          @[] 'discovery', @{} key: 'bingo-wrong'
+          @[] 'route pkt', @{} id_route: 'bingo-wrong', id_target: 'other-tgt'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'bingo-barge', id_target: 'some-tgt'
+          @[] 'undeliverable', @{} mode: 'route', id_route: 'trash-barge', id_target: 'third-tgt'
 
 
   describe @ 'upstream and hierarchical', @=> ::
@@ -195,8 +259,8 @@ export default function test_hub_router() ::
 
       expect(log.calls).to.be.deep.equal @#
         'route a :: a.b'
-        'route c.d :: c.d'
         @[] 'undeliverable', @{} id_route: 'c', id_target: 'tgt', mode: 'route'
+        'route c.d :: c.d'
         'route c.d :: c.d.e'
         'route a :: a.e'
         

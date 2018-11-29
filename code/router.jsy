@@ -31,40 +31,34 @@ export class FabricRouter extends DiscoveryBase ::
       this.public_routes.set @ id_route, route
       return route
 
-  setUpstream(upstream) ::
-    const disp = upstream.dispatch || upstream.send || upstream
-    if is_func @ disp ::
-      return this.upstream = disp
+  setUpstream(upstream, opt) ::
+    if null != opt :: this.upstream_opt = opt
+
+    return this.upstream = as_func @
+      upstream.dispatch || upstream.send || upstream
 
   upstreamRoute(id_route) ::
-    return this.addDynamic @ id_route, this.upstream
+    const { upstream, upstream_opt } = this
+    if upstream ::
+      this.addDynamic @ id_route, upstream, upstream_opt
 
 
   async discoverRoute(id_route, rtrctx) ::
-    const route = await this._discoverFirst @
-      id_route, rtrctx, 'route'
+    await this._discoverFirst @:
+      key: id_route, id_route, kind: 'route', rtrctx
 
-    if null != route ::
-      if 'string' === typeof route ::
-        return this.getRoute(route)
-            || this.discoverRoute(route, rtrctx)
 
-      return this.addDynamic @ id_route, route
-
-  addPeer(id_route, channel, override) ::
+  addPeer(id_route, channel, opt) ::
     const disp = channel.dispatch || channel.send
-    const res = this.addRoute @ id_route, disp, override
+    const res = this.addRoute @ id_route, disp, opt
     if channel.when_closed ::
       channel.when_closed.then @ res.cancel
     return res
 
-  addDynamic(id_route, route) ::
-    if null != route ::
-      const res = is_func(route)
-        ? this.addRoute(id_route, route, true)
-        : this.addPeer(id_route, route, true)
-      return res.route
-
+  addDynamic(id_route, route, opt) ::
+    return is_func(route)
+      ? this.addRoute(id_route, route, opt)
+      : this.addPeer(id_route, route, opt)
 
   /* // from bindCoreRouterAPI
 
@@ -79,12 +73,10 @@ export class FabricRouter extends DiscoveryBase ::
 
   */
 
-  ttlAddRoute(ms_timeout, id_route, route) ::
-    const res = this.addRoute(id_route, route)
-    this.timeouts @ ms_timeout || 300000, res.cancel
-    return res
 
 
-o_assign @ FabricRouter.prototype, channel_kinds,
+o_assign @ FabricRouter.prototype, channel_kinds, @{}
+  upstream_opt: @{} ms_ttl: 60000
+  
 export default FabricRouter
 

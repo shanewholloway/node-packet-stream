@@ -13,11 +13,8 @@ export function bindCoreDispatchTarget(tgt_router, targets_map, id_route, router
     let target = targets_map.get(id_target)
 
     if undefined === target ::
-      target = await tgt_router.discoverTarget(id_target, pktctx)
-
-      if undefined === target ::
-        // the target could have been added during discovery
-        target = targets_map.get(id_target)
+      await tgt_router.discoverTarget(id_target, pktctx)
+      target = targets_map.get(id_target)
 
       if undefined === target ::
         const channel = pktctx.channel
@@ -48,12 +45,22 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
     __proto__: null
 
     setTarget
-    addTarget(id_target, target) ::
-      setTarget(id_target, target)
-      return @[] id_route, id_target
+    addTarget(id_target, target, opt) ::
+      const id = @[] id_route, id_target
+      if !opt || !opt.ms_ttl ::
+        setTarget @ id_target, target
+        return id
+
+      else ::
+        const cancel = @=> this.removeTarget @ id_target, target
+        const ttl = router.timeouts.ttl @ opt.ms_ttl, cancel
+        setTarget @ id_target, target = ttl.with_reset(target)
+        ttl.id = id
+        return ttl
 
     removeTarget(id_target) ::
       return targets_map.delete @ id_target[1] || id_target
+
     cancelTarget(id_target, target) ::
       if undefined === target ::
         target = targets_map.get(id_target)

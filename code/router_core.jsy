@@ -59,18 +59,15 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
 
   async function resolveRoute(id_route, allowDiscover, allowUpstream) ::
     let route = _resolveRoute0(id_route)
-    if undefined === route ::
 
-      if allowDiscover ::
-        route = await hub_router.discoverRoute(id_route, router_ctx)
+    if undefined === route && allowDiscover ::
+      await hub_router.discoverRoute(id_route, router_ctx)
+      route = _resolveRoute0(id_route)
 
-        if undefined === route ::
-          // the route could have been added during discovery
-          route = _resolveRoute0(id_route)
-
-          if undefined === route && allowUpstream ::
-            // otherwise just send upstream
-            route = await hub_router.upstreamRoute(id_route)
+      if undefined === route && allowUpstream ::
+        // otherwise just send upstream
+        await hub_router.upstreamRoute(id_route)
+        route = routes_map.get(id_route)
 
     return route
 
@@ -78,11 +75,22 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
 export function bindCoreRouterAPI(hub_router, hub, routes_map) ::
   // Allow individual queries but not enumeration
   const router_api = @{}
-    addRoute(id_route, route, override) ::
+    addRoute(id_route, route, opt) ::
       as_func(route)
-      if override || ! routes_map.has(id_route) ::
-        routes_map.set @ id_route, route
-        return @{} route, cancel: @=> this.removeRoute @ id_route, route
+      if ! opt :: opt = {}
+      if ! opt.override && routes_map.has(id_route) ::
+        return
+
+      routes_map.set @ id_route, route
+      const cancel = @=> this.removeRoute @ id_route, route
+
+      if ! opt.ms_ttl ::
+        return @{} route, cancel
+
+      else ::
+        const ttl = hub_router.timeouts.ttl @ opt.ms_ttl, cancel
+        ttl.route = route = ttl.with_reset(route)
+        return ttl
 
     removeRoute(id_route, route) ::
       if 1 === arguments.length ::

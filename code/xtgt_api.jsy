@@ -11,7 +11,7 @@ export function bindXTargetAPI(router_ctx) ::
 
     enable(target) ::
       if undefined === target :: target = this.target
-      this.tgt_router.setTarget @ this.id[1], target
+      this.tgt_router.addTarget @ this.id[1], target, this.target_opt
 
     disable() ::
       this.tgt_router.removeTarget @ this.id[1]
@@ -32,9 +32,8 @@ export function bindXTargetAPI(router_ctx) ::
     catch(f) :: return this.ans.catch(f)
     finally(f) :: return this.ans.finally(f)
 
-    until(p, target) ::
-      const cancel = this.tgt_router.cancelTarget @
-        this.id[1], target
+    until(p) ::
+      const cancel = this.tgt_router.cancelTarget @ this.id[1]
       p.then(cancel, cancel)
       this.ans = p
       return this

@@ -24,12 +24,8 @@ export class TargetRouter extends DiscoveryBase ::
 
 
   async discoverTarget(id_target, rtrctx) ::
-    const target = await this._discoverFirst @
-      id_target, rtrctx, 'target'
-
-    if null != target ::
-      this.addTarget(id_target, target)
-      return target
+    await this._discoverFirst @:
+      key: id_target, id_target, kind: 'target', rtrctx
 
   /* // from bindCoreTargetAPI
 
@@ -46,12 +42,6 @@ export class TargetRouter extends DiscoveryBase ::
   xtgt(id_target) : target management object
 
   */
-
-  ttlAddTarget(ms_timeout, id_target, target) ::
-    const res = this.addTarget(id_target, target)
-    this.timeouts @ ms_timeout || 300000,
-      this.cancelTarget(id_target, target)
-    return res
 
   addReply(...args) :: return this.xresp().untilReply(...args)
 
