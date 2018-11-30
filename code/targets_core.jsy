@@ -55,7 +55,9 @@ export function bindCoreTargetAPI(tgt_router, targets_map, id_route, router) ::
         const cancel = @=> this.removeTarget @ id_target, target
         const ttl = router.timeouts.ttl @ opt.ms_ttl,
           opt.pre_cancel, cancel, opt.on_cancel
-        setTarget @ id_target, target = ttl.with_reset(target)
+        setTarget @ id_target,
+          false === opt.ttl_reset ? target
+            : target = ttl.with_reset(target)
         ttl.id = id
         return ttl
 

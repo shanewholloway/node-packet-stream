@@ -90,7 +90,8 @@ export function bindCoreRouterAPI(hub_router, hub, routes_map) ::
       else ::
         const ttl = hub_router.timeouts.ttl @ opt.ms_ttl,
           opt.pre_cancel, cancel, opt.on_cancel
-        ttl.route = route = ttl.with_reset(route)
+        ttl.route = false === opt.ttl_reset ? route
+          : route = ttl.with_reset(route)
         return ttl
 
     removeRoute(id_route, route) ::
