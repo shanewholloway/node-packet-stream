@@ -42,10 +42,10 @@ export function bindCoreDispatchRouter(hub_router, hub, routes_map) ::
           return channel && channel.undeliverable(pkt, 'route')
 
       await route(pkt, pktctx)
-      pktctx.channel = undefined // release channel referenece
     catch err ::
-      pktctx.channel = undefined // release channel referenece
       hub_router._on_error @ 'dispatch', err, {pkt, pktctx}
+    finally ::
+      pktctx.channel = undefined // release channel referenece
 
   function _resolveRoute0(id_route) ::
     let route = routes_map.get(id_route)

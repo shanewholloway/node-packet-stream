@@ -82,9 +82,9 @@ export function send_channel(p2p, dispatch) ::
   return this.raw_channel @ p2p, null, @{}
     dispatch
     send: async (...args) =>
-      await dispatch @ as_send_pkt @ args
+      dispatch @ await as_send_pkt @ args
     send_pkt: async pkt =>
-      await dispatch @ await pkt
+      dispatch @ await pkt
 
 
 export function codec_channel(p2p, dispatch, {encode, decode}) ::
