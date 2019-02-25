@@ -22,25 +22,26 @@ export function bind_rpc_api_dispatch(send, base_rpc_options) ::
     return rpc_binder
 
     function rpc_binder(call, pkt) ::
+      // call: @[] '!', id_reply, method, 
       if ! isArray(call) || '!' !== call[0] ::
         return null
 
-      const key = call[2]
-      if 'string' !== typeof key ::
+      const method = call[2]
+      if 'string' !== typeof method ::
         return null
-      const valid = key.startsWith(prefix)
+      const valid = method.startsWith(prefix)
 
-      const call_ctx = @{} pkt, call, key, valid
+      const call_ctx = @{} pkt, call, method, valid, send
       const _api = extend_api(api, call_ctx)
 
       let fn, call_params
-      if valid :: fn = _api[key]
+      if valid :: fn = _api[method]
 
       if undefined === fn ::
         const fn_dnu = _api[dnu]
         if undefined === fn_dnu ::
           return false
-        fn = @=> fn_dnu.call @ _api, key, call_ctx
+        fn = @=> fn_dnu.call @ _api, method, call_ctx
 
       else call_params = bind_params @ call.slice(3), call_ctx
 
@@ -48,7 +49,7 @@ export function bind_rpc_api_dispatch(send, base_rpc_options) ::
       return id_reply
         ? @=>> ::
             const body = await fn.apply @ _api, call_params
-            await send @: 0: id_reply[0], 1: id_reply[1], body
+            await call_ctx.send @: 0: id_reply[0], 1: id_reply[1], body
 
         : @=> fn.apply @ _api, call_params
 
