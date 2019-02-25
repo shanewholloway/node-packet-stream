@@ -45,15 +45,15 @@ export function bind_basic_p2p({ random_base64 }) ::
 
     peerRoute(pkt) ::
       const {1: id_target, body} = pkt
+      const fn = this[ '_m$_' + id_target ]
+      return fn ? fn.call(this, body) : null
+
+    _m$_hello(body) ::
       if 'basic' !== Object(body).version :: return
+      if ! body.id_reply :: return
 
-      if 'hello' !== id_target ::
-        const fn = this[ '_m$_' + id_target ]
-        return fn ? fn.call(this, body) : null
-
-      if body.id_reply ::
-        return this.channel.send @ '', body.id_reply, @{}
-          version: 'basic', ts: new Date
-          routes: Array.from @
-            this.router.public_routes.keys()
+      return this.channel.send @ '', body.id_reply, @{}
+        version: 'basic', ts: new Date
+        routes: Array.from @
+          this.router.public_routes.keys()
 
