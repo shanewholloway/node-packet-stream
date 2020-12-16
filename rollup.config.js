@@ -1,4 +1,4 @@
-import rpi_resolve from 'rollup-plugin-node-resolve'
+import rpi_resolve from '@rollup/plugin-node-resolve'
 import rpi_jsy from 'rollup-plugin-jsy-lite'
 
 import pkg from './package.json'
@@ -19,9 +19,9 @@ const min_plugins = true
 const plugins_min = plugins_web.concat([ rpi_terser({}) ])
 
 
-add_core_jsy('all', null)
-add_core_jsy('core', true, {module_name: pkg_name})
-add_core_jsy('index', true, {module_name: pkg_name})
+add_core_jsy('all', null, {exports: 'auto'})
+add_core_jsy('core', true, {module_name: pkg_name, exports: 'auto'})
+add_core_jsy('index', true, {module_name: pkg_name, exports: 'auto'})
 
 pi_standard()
 pi_cbor()
@@ -34,26 +34,26 @@ pi_rpc()
 
 function pi_standard() {
   add_plugin_jsy('standard/all', 'plugin-standard-all', {exports: 'named'})
-  add_plugin_jsy('standard/index', 'plugin-standard', {})
+  add_plugin_jsy('standard/index', 'plugin-standard', {exports: 'auto'})
 }
 
 function pi_cbor() {
   add_plugin_jsy('cbor/all', 'plugin-cbor-all', {exports: 'named'})
-  add_plugin_jsy('cbor/index', 'plugin-cbor', {})
+  add_plugin_jsy('cbor/index', 'plugin-cbor', {exports: 'auto'})
 }
 
 function pi_direct() {
   add_plugin_jsy('direct/all', 'plugin-direct-all', {exports: 'named'})
-  add_plugin_jsy('direct/index', 'plugin-direct', {})
+  add_plugin_jsy('direct/index', 'plugin-direct', {exports: 'auto'})
 }
 function pi_net() {
   const external_nodejs = ['net', 'tls', 'stream']
 
   add_plugin_jsy('net/all', 'plugin-net-all', {plat_web: false, exports: 'named'})
-  add_plugin_jsy('net/index', 'plugin-net', {plat_web: false, external_nodejs})
-  add_plugin_jsy('net/tcp', 'plugin-net-tcp', {plat_web: false, external_nodejs})
-  add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs})
-  add_plugin_jsy('net/stream', 'plugin-net-stream', {plat_web: false, external_nodejs})
+  add_plugin_jsy('net/index', 'plugin-net', {plat_web: false, external_nodejs, exports: 'auto'})
+  add_plugin_jsy('net/tcp', 'plugin-net-tcp', {plat_web: false, external_nodejs, exports: 'auto'})
+  add_plugin_jsy('net/tls', 'plugin-net-tls', {plat_web: false, external_nodejs, exports: 'auto'})
+  add_plugin_jsy('net/stream', 'plugin-net-stream', {plat_web: false, external_nodejs, exports: 'auto'})
 }
 function pi_web() {
   add_plugin_jsy('web/all', 'plugin-web-all', {exports: 'named'})
@@ -64,7 +64,7 @@ function pi_web() {
 
 function pi_rpc() {
   add_plugin_jsy('rpc/all', 'plugin-rpc-all', {exports: 'named'})
-  add_plugin_jsy('rpc/index', 'plugin-rpc', {})
+  add_plugin_jsy('rpc/index', 'plugin-rpc', {exports: 'auto'})
 }
 
 
